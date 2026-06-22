@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lowkal.fm - Mix Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400&amp;family=Syne:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#D5FF00",
+                        "background-base": "#050511",
+                        "surface": "rgba(20, 20, 43, 0.4)",
+                        "text-main": "#FFFFFF",
+                        "muted": "#8A8A9D",
+                        "accent": "#FF0055",
+                    },
+                    fontFamily: {
+                        "display": ["Syne", "sans-serif"],
+                        "ui": ["Outfit", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "12px",
+                        "xl": "32px",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "float": "0 16px 48px rgba(0,0,0,0.8)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #050511;
+            color: #FFFFFF;
+            overflow: hidden;
+            cursor: none; /* Custom cursor would go here via JS, defaulting to none for authentic feel per PRD */
+        }
+        
+        h1, h2, h3, .font-display {
+            font-family: 'Syne', sans-serif;
+        }
+
+        /* Custom Scrollbar for Info Panel */
+        .glass-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+        .glass-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .glass-panel::-webkit-scrollbar-thumb {
+            background: #8A8A9D;
+            border-radius: 99px;
+        }
+        .glass-panel::-webkit-scrollbar-thumb:hover {
+            background: #D5FF00;
+        }
+
+        /* Scrubber Customization */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #D5FF00;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: linear-gradient(to right, #D5FF00 45%, #8A8A9D 45%);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen w-full relative flex items-center justify-center">
+<!-- Abstract Background -->
+<div class="absolute inset-0 z-0 opacity-40 mix-blend-screen pointer-events-none">
+<webgl-shader class="w-full h-full" src="{{DATA:ANIMATION:ANIMATION_2}}"></webgl-shader>
+</div>
+<!-- Back Navigation (Exception applied for focused view) -->
+<button class="absolute top-8 left-8 z-50 flex items-center gap-2 text-white hover:text-primary transition-colors font-display text-sm font-bold uppercase tracking-wider group">
+<span class="material-symbols-outlined text-2xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
+        Back to Archive
+    </button>
+<!-- Main Content Container -->
+<main class="relative z-10 w-full max-w-7xl mx-auto px-8 flex flex-row items-center justify-center gap-16 lg:gap-24 h-screen">
+<!-- Left: Cover Art Panel -->
+<div class="flex-shrink-0 w-[400px] h-[400px] rounded-lg shadow-float overflow-hidden relative group">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Abstract fluid 3D render resembling liquid metal and neon colors. The scene is dark, moody, and highly textured, fitting a modern electronic music aesthetic. High contrast lighting accentuates deep purples, stark blacks, and bright electric lime highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeD_Glqi9ENXdJkZHTLsCSjBe4kSgUGVMQ-uc5RR7UieuUgwXVCVeaBjIzxep5Gc-9vBV-U0jjZO5LjENNpzV_xQy2PaZM1vMLUMH4-D7fLxJD3IDAZU9t0MnCaxrjT5XjZNgrmmILUxWaejmBqo53Rskvx8898YlIsOkaM4_nF8Axe9IvaGhZmipnqfRfea-KT-oXLTqLIWW2wmSgGjTgUznb9FYsp60y4RGikCYAdlUK37WSq4T-m_5Q2lGOYeP_mJYjIiOamaXn"/>
+<!-- Play overlay (optional based on state, added for visual completeness) -->
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+<button class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-black hover:scale-110 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Right: Glassmorphic Info Panel -->
+<div class="glass-panel w-[480px] h-[819px] bg-surface backdrop-blur-[24px] border border-white/5 rounded-xl shadow-float flex flex-col overflow-y-auto relative">
+<!-- Sticky Header inside Panel -->
+<div class="sticky top-0 bg-surface/80 backdrop-blur-md z-20 p-8 pb-6 border-b border-white/10">
+<p class="text-primary font-display font-bold text-sm tracking-widest uppercase mb-2">Guest Mix</p>
+<h1 class="font-display font-extrabold text-[48px] leading-tight text-white mb-1">
+                    Kinetic Drift
+                </h1>
+<p class="text-muted text-lg mb-8">Hosted by <span class="text-white">DJ Void</span> • 24 Oct 2023</p>
+<!-- Scrubber / Player Controls -->
+<div class="w-full">
+<div class="flex items-center justify-between text-xs font-light text-muted mb-2 font-ui">
+<span>45:12</span>
+<span>1:00:00</span>
+</div>
+<input class="w-full mb-6" max="100" min="0" type="range" value="45"/>
+<div class="flex items-center gap-6 justify-center">
+<button class="text-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-3xl">skip_previous</span>
+</button>
+<button class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-black hover:scale-105 transition-transform shadow-lg">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="text-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-3xl">skip_next</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Tracklist -->
+<div class="p-8 pt-4 flex-grow">
+<h3 class="font-display font-bold text-xl text-white mb-6 uppercase tracking-wide">Tracklist</h3>
+<ul class="space-y-2 flex flex-col">
+<!-- Track Item -->
+<li class="group flex items-start gap-4 p-2 -mx-2 rounded-lg hover:bg-[rgba(213,255,0,0.1)] transition-colors cursor-pointer">
+<button class="text-primary font-ui font-medium min-w-[48px] text-left hover:underline">00:00</button>
+<div class="flex flex-col">
+<span class="text-white font-medium text-sm">Intro (Atmosphere)</span>
+<span class="text-muted text-xs">Unknown</span>
+</div>
+</li>
+<li class="group flex items-start gap-4 p-2 -mx-2 rounded-lg hover:bg-[rgba(213,255,0,0.1)] transition-colors cursor-pointer">
+<button class="text-primary font-ui font-medium min-w-[48px] text-left hover:underline">04:15</button>
+<div class="flex flex-col">
+<span class="text-white font-medium text-sm">Sub-bass Frequency</span>
+<span class="text-muted text-xs">Autechre</span>
+</div>
+</li>
+<li class="group flex items-start gap-4 p-2 -mx-2 rounded-lg hover:bg-[rgba(213,255,0,0.1)] transition-colors cursor-pointer">
+<button class="text-primary font-ui font-medium min-w-[48px] text-left hover:underline">12:30</button>
+<div class="flex flex-col">
+<span class="text-white font-medium text-sm">Glitch Sequence 01</span>
+<span class="text-muted text-xs">Aphex Twin</span>
+</div>
+</li>
+<!-- Active Track Example -->
+<li class="group flex items-start gap-4 p-2 -mx-2 rounded-lg bg-[rgba(213,255,0,0.05)] border-l-2 border-primary transition-colors cursor-pointer">
+<button class="text-primary font-ui font-medium min-w-[48px] text-left pl-2">45:12</button>
+<div class="flex flex-col flex-grow">
+<span class="text-primary font-bold text-sm flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+                                Now Playing
+                            </span>
+<span class="text-white font-medium text-sm mt-1">Neon Drift</span>
+<span class="text-muted text-xs">Overmono</span>
+</div>
+</li>
+<li class="group flex items-start gap-4 p-2 -mx-2 rounded-lg hover:bg-[rgba(213,255,0,0.1)] transition-colors cursor-pointer">
+<button class="text-primary font-ui font-medium min-w-[48px] text-left hover:underline">52:40</button>
+<div class="flex flex-col">
+<span class="text-white font-medium text-sm">Outro (Static)</span>
+<span class="text-muted text-xs">Burial</span>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</main>
+<!-- Script to handle scrubber gradient logic conceptually -->
+<script>
+        document.querySelector('input[type="range"]').addEventListener('input', function(e) {
+            const val = e.target.value;
+            e.target.style.background = `linear-gradient(to right, #D5FF00 ${val}%, #8A8A9D ${val}%)`;
+        });
+    </script>
+</body></html>

@@ -1,0 +1,212 @@
+# Kinetic Abstract
+
+## Product Overview
+
+**The Pitch:** Lowkal.fm is an immersive, art-forward community radio experience. It discards traditional web navigation in favor of a fluid, living digital canvas that prioritizes sonic discovery and visual mood over conventional structure.
+
+**For:** Underground music enthusiasts and digital art appreciators who want a distraction-free, aesthetically engaging listening experience.
+
+**Device:** desktop
+
+**Design Direction:** A high-energy, fluid kinetic abstract direction featuring morphing organic shapes, stark high contrast, and freely drifting navigational elements. 
+
+**Inspired by:** NTS Radio, Poolside FM, abstract WebGL experiments.
+
+---
+
+## Screens
+
+- **Homepage (Live Player):** Full-bleed fluid motion canvas with a central floating player widget and minimal archive portal.
+- **Archive (Drifting Cloud):** Asymmetrical, freely-floating physics-based canvas of mix covers drifting in space.
+- **Mix Detail (Expanded Player):** Focused listening view with tracklist and host details overlaying the abstract background.
+- **About/Info Overlay:** Minimalist glassmorphic panel detailing station manifest and schedule.
+
+---
+
+## Key Flows
+
+**Enter the Archive:** User transitions from live broadcast to past mixes.
+1. User is on Homepage -> sees fluid background, central live player, and small pulsing circle bottom-right.
+2. User clicks bottom-right pulsing circle (`Archive` portal) -> Background shifts color, live player shrinks/fades.
+3. Drifting cloud of mix covers fades in and begins floating across the viewport.
+
+**Play an Archived Mix:** User selects a mix from the cloud.
+1. User is on Archive (Drifting Cloud) -> sees slowly floating square artworks.
+2. User clicks an artwork -> Other artworks scatter outward.
+3. Selected mix scales up, expands into Mix Detail player, and audio begins.
+
+---
+
+<details>
+<summary>Design System</summary>
+
+## Color Palette
+
+- **Primary:** `#D5FF00` - Electric Lime (Play buttons, active states, cursors)
+- **Background:** `#050511` - Ink Blue (Deep canvas base)
+- **Surface:** `#14142B` - Deep Violet (Translucent widgets, floating panels)
+- **Text:** `#FFFFFF` - Pure White (Main typography)
+- **Muted:** `#8A8A9D` - Ash Blue (Timestamps, secondary info)
+- **Accent:** `#FF0055` - Neon Magenta (Live indicator, morphing blob gradient stops)
+
+## Typography
+
+- **Headings:** `Syne`, 800, 32-64px
+- **Body:** `Outfit`, 400, 16px
+- **Small text:** `Outfit`, 300, 12px
+- **Buttons:** `Syne`, 700, 14px, uppercase
+
+**Style notes:** Aggressive border radii (`32px` on floating panels), severe backdrop blur (`24px`), stark contrast (electric lime on ink blue). No hard borders; everything is defined by glow and shadow (`0 12px 48px rgba(0,0,0,0.6)`). Custom cursor replacing default pointer with an inverted lime dot.
+
+## Design Tokens
+
+```css
+:root {
+  --color-primary: #D5FF00;
+  --color-background: #050511;
+  --color-surface: rgba(20, 20, 43, 0.4);
+  --color-text: #FFFFFF;
+  --color-muted: #8A8A9D;
+  --color-accent: #FF0055;
+  --font-display: 'Syne', sans-serif;
+  --font-ui: 'Outfit', sans-serif;
+  --radius-panel: 32px;
+  --radius-pill: 99px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 32px;
+  --blur-heavy: blur(24px);
+  --shadow-float: 0 16px 48px rgba(0,0,0,0.8);
+}
+```
+
+</details>
+
+---
+
+<details>
+<summary>Screen Specifications</summary>
+
+### Homepage (Live Player)
+
+**Purpose:** Primary entry point playing the live community radio broadcast.
+
+**Layout:** Full viewport canvas. No header, no footer. Central floating player. Bottom-right archive trigger. Top-left discreet logo.
+
+**Key Elements:**
+- **Background Canvas:** WebGL or CSS-animated morphing blobs. `#050511` base with slow-moving `#FF0055` and `#D5FF00` soft-edged gradients.
+- **Live Player Widget:** Centered floating pill. `400px` wide, `120px` tall. `--color-surface` with `--blur-heavy`.
+- **Play/Pause Button:** `64x64px` circle, `#D5FF00` background, black icon.
+- **Now Playing Text:** `Syne` 800, `24px`. Marquee scrolling if too long.
+- **Archive Portal:** Bottom right. `80px` circle, pulsing outline. Hover reveals "ENTER ARCHIVE".
+
+**States:**
+- **Loading:** Background is static ink blue. Simple electric lime spinner in center.
+- **Error:** Player widget reads "STREAM OFFLINE" in `--color-accent`.
+
+**Components:**
+- **Live Indicator:** `8x8px` pulsing `#FF0055` dot next to "LIVE" text.
+
+**Interactions:**
+- **Hover Play:** Button scales to `1.1`.
+- **Hover Archive:** Circle expands to `120px`, text fades in, background motion speeds up slightly.
+
+**Responsive:**
+- **Desktop:** Centered layout, massive background elements.
+
+---
+
+### Archive (Drifting Cloud)
+
+**Purpose:** Unstructured, discovery-focused browsing of past radio mixes.
+
+**Layout:** Full viewport. No grid. Items float across the screen at varying depths (sizes and speeds).
+
+**Key Elements:**
+- **Canvas:** Darker `#050511` background, less color bleeding than homepage to make artworks pop.
+- **Mix Nodes:** Square album artworks. Sizes vary (`150px`, `250px`, `350px`) to simulate depth. 
+- **Back/Exit Node:** Top left floating pill. `120x40px`, reads "BACK TO LIVE".
+
+**States:**
+- **Empty:** "ARCHIVE EMPTY" text floating in center.
+- **Loading:** Nodes fade in one by one from random opacities.
+
+**Components:**
+- **Mix Node:** Image container, `12px` border radius, `--shadow-float`. 
+
+**Interactions:**
+- **Hover Node:** Node pauses movement. Play icon (`#D5FF00`) fades in over center. Z-index increases.
+- **Click Node:** Triggers transition to Mix Detail screen.
+
+**Responsive:**
+- **Desktop:** 15-20 nodes visible at once, complex physics.
+
+---
+
+### Mix Detail (Expanded Player)
+
+**Purpose:** Focused playback of an archived mix with contextual information.
+
+**Layout:** Split focus. Artwork large on left, tracklist/info scrolling panel on right.
+
+**Key Elements:**
+- **Artwork Panel:** `400x400px` cover art, perfectly centered vertically on left half.
+- **Info Panel:** Right half. Glassmorphic `--color-surface` container, `480px` wide, `80vh` tall.
+- **Title:** `Syne` 800, `48px`, `#FFFFFF`.
+- **Scrubber:** Linear progress bar. `2px` thick track (`#8A8A9D`), `4px` thick progress (`#D5FF00`), `16px` handle.
+- **Tracklist:** Vertical list of timestamps and track names. `Outfit`, `14px`.
+
+**States:**
+- **Loading:** Skeleton pulses in tracklist area.
+
+**Components:**
+- **Track Item:** Hover background `rgba(213, 255, 0, 0.1)`, `8px` padding, left-aligned timestamp in `--color-primary`.
+
+**Interactions:**
+- **Click Timestamp:** Scrubber jumps to time, audio skips.
+
+**Responsive:**
+- **Desktop:** Left/right split perfectly balanced.
+
+---
+
+### About/Info Overlay
+
+**Purpose:** Station manifesto and schedule details without leaving the current context.
+
+**Layout:** Centered modal overlay covering 70% of the screen.
+
+**Key Elements:**
+- **Backdrop:** `#050511` at `80%` opacity, heavily blurred.
+- **Content Container:** `800px` max-width. `--color-surface`, `1px` border of `rgba(255,255,255,0.1)`.
+- **Header:** "LOWKAL MANIFESTO" in `Syne` 800, `64px`.
+- **Schedule Grid:** 2-column layout mapping out weekly resident DJs.
+
+**States:**
+- **Static:** Only state required.
+
+**Components:**
+- **Close Button:** `48x48px` circular button, top right corner of overlay. `#FFFFFF` "X" icon.
+
+**Interactions:**
+- **Click Close:** Overlay slides down `40px` and fades out to `0` opacity over `300ms`.
+
+**Responsive:**
+- **Desktop:** Centered floating card.
+
+</details>
+
+---
+
+<details>
+<summary>Build Guide</summary>
+
+**Stack:** HTML + Tailwind CSS v3 + GSAP (for fluid layout/drifting archive) + Three.js (optional, for background morphing)
+
+**Build Order:**
+1. **Homepage (Live Player):** Establishes the core WebGL/CSS morphing background, primary font stacking, and the aesthetic anchor.
+2. **About/Info Overlay:** Easy win to set up glassmorphism tokens (`--blur-heavy`, `--color-surface`).
+3. **Archive (Drifting Cloud):** The most complex engineering task. Requires setting up a randomized physics/drift loop for the DOM elements.
+4. **Mix Detail:** Standard UI implementation reusing components from the homepage player and overlay.
+
+</details>

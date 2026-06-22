@@ -1,0 +1,182 @@
+# Subterranean Minimal
+
+## Product Overview
+
+**The Pitch:** Lowkal.fm is an immersive, distraction-free community radio platform designed for deep listening. It strips away conventional navigation in favor of a brutalist, atmospheric interface driven by audio and texture.
+
+**For:** Underground electronic music listeners who value curation, focus, and digital brutalism over commercialized, noisy UI.
+
+**Device:** desktop
+
+**Design Direction:** A deep, moody aesthetic featuring moving, grainy gradient meshes in dark charcoal and obsidian. Sharp-edged, brutalist controls and stark typography contrast against the subterranean atmosphere.
+
+**Inspired by:** NTS Radio, The Lot Radio
+
+---
+
+## Screens
+
+- **Live Player (Homepage):** Immersive, full-viewport generative grain mesh with a razor-thin brutalist music player.
+- **Archive:** Free-floating, staggered spatial grid of past broadcasts and mixes.
+- **Mix Detail:** Modal overlay with tracklist, DJ notes, and dedicated playback controls.
+- **Station Manifesto:** Stark, monospaced typography overlay explaining the station's ethos and schedule.
+
+---
+
+## Key Flows
+
+**Listening Live:** User opens the application and immediately engages with the live stream.
+1. User lands on Live Player -> sees shifting obsidian grain mesh and current DJ name
+2. User clicks `[PLAY]` -> audio starts, brutalist equalizer activates
+3. Stream plays continuously while user leaves tab open.
+
+**Exploring the Archive:** User navigates past broadcasts.
+1. User is on Live Player -> sees `[ARCHIVE]` widget in bottom right
+2. User clicks widget -> viewport transitions to spatial, staggered grid of past shows
+3. User hovers over show -> monochromatic thumbnail inverts, details appear
+4. User clicks show -> Mix Detail opens, audio switches to recorded mix.
+
+---
+
+<details>
+<summary>Design System</summary>
+
+## Color Palette
+
+- **Primary:** `#D0FF00` (Acid Yellow) - Active playback, hover states, crucial actions
+- **Background:** `#050505` (Vanta Black) - Base page canvas
+- **Surface:** `#121214` (Obsidian) - Modal backgrounds, player wrapper
+- **Mesh Base:** `#1C1C1F` (Charcoal) - Generative gradient base
+- **Text:** `#E6E6E6` (Industrial White) - Primary headings, active copy
+- **Muted:** `#5C5C61` (Ash) - Inactive controls, timestamps, secondary text
+
+## Typography
+
+- **Headings:** Syne, 700, 32-64px
+- **UI Elements:** JetBrains Mono, 500, 12px, uppercase tracking 0.05em
+- **Body/Notes:** Inter (tightly kerned), 400, 14px
+- **Buttons:** JetBrains Mono, 700, 12px
+
+**Style notes:** 
+- **0px border radius** everywhere. Absolute sharp edges.
+- **Heavy grain:** SVG or CSS noise overlay (`opacity: 0.15`, `mix-blend-mode: overlay`) across the entire viewport.
+- **No drop shadows:** Depth is created through stark borders (`1px solid #1C1C1F`) and color contrast.
+- **Micro-interactions:** Instant, zero-easing hover states. Brutalist snap transitions.
+
+## Design Tokens
+
+```css
+:root {
+  --color-primary: #D0FF00;
+  --color-bg: #050505;
+  --color-surface: #121214;
+  --color-mesh: #1C1C1F;
+  --color-text: #E6E6E6;
+  --color-muted: #5C5C61;
+  
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+  
+  --radius: 0px;
+  --border-thin: 1px solid var(--color-mesh);
+  
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 48px;
+  --space-xl: 96px;
+}
+```
+
+</details>
+
+---
+
+<details>
+<summary>Screen Specifications</summary>
+
+### Live Player (Homepage)
+
+**Purpose:** The default state. A living visual representation of the audio stream with zero distractions.
+
+**Layout:** Full viewport height/width. Background is a slowly shifting CSS gradient mesh overlaid with static noise. Content anchored absolute bottom.
+
+**Key Elements:**
+- **Visualizer Background:** `#050505` to `#1C1C1F` slow CSS radial gradient animation (20s cycle). `pointer-events: none` SVG noise filter overlay.
+- **Player Bar:** Bottom anchored. 48px height, 100% width. `border-top: 1px solid #1C1C1F`. 
+- **Play/Pause Toggle:** `48x48px` square. Border right. Stark `[PLAY]` / `[STOP]` monospace text.
+- **Metadata Marquee:** DJ Name & Track ID. `Syne`, 24px, `#E6E6E6`. Scrolling continuously right-to-left if longer than container.
+- **Archive Widget:** Fixed bottom right, slightly above player bar (bottom: 64px, right: 16px). `48x48px` square box, `#121214` background, thin border. Text: `ARC`.
+
+**States:**
+- **Loading:** Audio buffering. Metadata shows `[ ESTABLISHING CONNECTION ]`.
+- **Error:** Metadata shows `[ SIGNAL LOST ]` in `#D0FF00`.
+
+**Interactions:**
+- **Click Play:** Text snaps to `[STOP]`. Mesh gradient animation speed doubles.
+- **Hover Archive Widget:** Background snaps to `#D0FF00`, text snaps to `#050505`.
+
+### Archive
+
+**Purpose:** Exploration of past mixes in a non-linear, spatial layout.
+
+**Layout:** Full viewport, scrollable in both X and Y directions. Elements placed in a rigid, staggered, asymmetric grid. No conventional rows/columns.
+
+**Key Elements:**
+- **Canvas:** Infinite scrolling `#050505` background with grain.
+- **Mix Node:** `320x320px` square container. Monochromatic image. 
+- **Node Metadata:** Overlay on hover. `Date`, `DJ`, `Genre tags`.
+- **Return Anchor:** Fixed top left `[X] LIVE` button to return to Homepage.
+
+**States:**
+- **Empty:** "NO ARCHIVES FOUND" centered in 12px monospace.
+
+**Interactions:**
+- **Hover Mix Node:** Image inverts (CSS `filter: invert(1)`). Metadata block appears, snapping into place with no transition.
+- **Click Mix Node:** Triggers Mix Detail overlay.
+
+### Mix Detail
+
+**Purpose:** Focused playback and information for a specific archived mix.
+
+**Layout:** 50% width panel, anchored to the right side of the viewport. `height: 100vh`. Left 50% becomes a dark translucent overlay (`rgba(5,5,5,0.8)`).
+
+**Key Elements:**
+- **Cover Art:** `100%` width of panel, `400px` height. Grayscale.
+- **Title Block:** DJ Name and Mix Title. `Syne`, 48px, `#E6E6E6`.
+- **Playback Controls:** Dedicated `[PLAY MIX]` button, heavy borders, timeline scrubber (`height: 2px`, `#5C5C61` background, `#D0FF00` fill).
+- **Tracklist:** Monospaced list. `Time` | `Artist - Track`. 
+
+**Interactions:**
+- **Click Overlay (Left 50%):** Closes panel, returns to Archive grid.
+- **Click Play:** Main live stream pauses, mix audio begins. Scrubber animates.
+
+### Station Manifesto
+
+**Purpose:** Minimal informational screen about the radio station.
+
+**Layout:** Modal overlay. Centered text block. `max-width: 600px`.
+
+**Key Elements:**
+- **Close Button:** Top right `[CLOSE]`.
+- **Manifesto Copy:** `Syne`, 32px, left-aligned, jagged right edge.
+- **Schedule Grid:** 2-column monospaced grid of upcoming shows.
+
+</details>
+
+---
+
+<details>
+<summary>Build Guide</summary>
+
+**Stack:** HTML + Tailwind CSS v3 + CSS Variables
+
+**Build Order:**
+1. **Design Tokens & Base CSS:** Establish the `0px` radius, noise overlay (`::before` pseudo-element on body), and typography scale.
+2. **Live Player (Homepage):** Build the full-bleed layout. Implement CSS gradient animation and bottom-anchored player. Ensure grain renders performantly over animation.
+3. **Archive Grid:** Implement the X/Y overflow canvas. Position `Mix Node` components using absolute positioning with percentage values to create the staggered effect.
+4. **Mix Detail Panel:** Build the right-anchored slide-out panel and tracklist typography.
+5. **Global State:** Wire up the audio player logic to handle switching between Live stream and Archive tracks without interrupting the visual flow.
+
+</details>

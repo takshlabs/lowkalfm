@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lowkal.fm - Live Player</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400&amp;family=Syne:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#ccf20d",
+          "background-light": "#f8f8f5",
+          "background-dark": "#050511", 
+          "surface": "rgba(20, 20, 43, 0.4)",
+          "muted": "#8A8A9D",
+          "accent": "#FF0055",
+        },
+        fontFamily: {
+          "display": ["Syne", "sans-serif"],
+          "ui": ["Outfit", "sans-serif"],
+        },
+        borderRadius: {
+            "DEFAULT": "0.5rem", 
+            "lg": "1rem", 
+            "xl": "1.5rem", 
+            "2xl": "2rem",
+            "full": "9999px"
+        },
+        boxShadow: {
+            'float': '0 16px 48px rgba(0,0,0,0.8)',
+        }
+      },
+    },
+  }
+</script>
+<style>
+    body {
+        cursor: none; /* Custom cursor implemented via JS/CSS */
+        overflow: hidden;
+    }
+
+    /* Custom Cursor */
+    .custom-cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 20px;
+        height: 20px;
+        background-color: #ccf20d;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        mix-blend-mode: difference;
+        transform: translate(-50%, -50%);
+        transition: width 0.2s, height 0.2s;
+    }
+    .custom-cursor.hover {
+        width: 40px;
+        height: 40px;
+    }
+
+    /* Fluid Background Canvas (CSS fallback/base) */
+    .fluid-bg {
+        background: #050511;
+        background: radial-gradient(circle at 50% 50%, rgba(255,0,85,0.15) 0%, rgba(5,5,17,1) 50%),
+                    radial-gradient(circle at 80% 20%, rgba(204,242,13,0.1) 0%, rgba(5,5,17,0) 40%);
+        animation: pulseBg 20s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseBg {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 100% 100%; }
+    }
+
+    /* Marquee */
+    .marquee-container {
+        overflow: hidden;
+        white-space: nowrap;
+        width: 100%;
+        mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    }
+    .marquee-content {
+        display: inline-block;
+        animation: marquee 15s linear infinite;
+        padding-left: 100%;
+    }
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-100%); }
+    }
+
+    /* Pulse animation for live indicator */
+    @keyframes pulse-dot {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 85, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 0, 85, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 85, 0); }
+    }
+    .animate-pulse-dot {
+        animation: pulse-dot 2s infinite;
+    }
+
+    /* Archive Portal Expansion */
+    .archive-portal {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .archive-portal:hover {
+        width: 140px;
+        height: 140px;
+        border-radius: 9999px;
+    }
+    .archive-text {
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s ease-out;
+    }
+    .archive-portal:hover .archive-text {
+        opacity: 1;
+        transform: scale(1);
+    }
+    .archive-icon {
+        transition: opacity 0.3s ease-out;
+    }
+    .archive-portal:hover .archive-icon {
+        opacity: 0;
+        position: absolute;
+    }
+
+    /* Player hover scale */
+    .play-btn {
+        transition: transform 0.2s ease;
+    }
+    .play-btn:hover {
+        transform: scale(1.1);
+    }
+
+</style>
+</head>
+<body class="bg-background-dark text-white font-ui min-h-screen relative overflow-hidden antialiased">
+<!-- Custom Cursor Element -->
+<div class="custom-cursor" id="cursor"></div>
+<!-- Background Animation Layer -->
+<div class="absolute inset-0 z-0 fluid-bg pointer-events-none">
+<webgl-shader class="absolute inset-0 w-full h-full opacity-60" src="{{DATA:ANIMATION:ANIMATION_2}}"></webgl-shader>
+</div>
+<!-- Main UI Container -->
+<div class="relative z-10 w-full h-screen flex flex-col justify-between p-8">
+<!-- Top Left Logo -->
+<header class="flex justify-between items-start">
+<h1 class="font-display font-extrabold text-2xl tracking-tighter mix-blend-difference cursor-pointer hover:text-primary transition-colors duration-300" id="hover-target-logo">
+                LOWKAL.FM
+            </h1>
+</header>
+<!-- Central Player Canvas Area -->
+<main class="flex-1 flex items-center justify-center relative">
+<!-- Live Player Widget -->
+<div class="w-full max-w-[400px] h-[120px] bg-surface backdrop-blur-[24px] rounded-[32px] shadow-float border border-white/5 flex items-center p-6 gap-6 relative overflow-hidden group">
+<!-- Play Button -->
+<button aria-label="Play Live Stream" class="play-btn shrink-0 w-16 h-16 bg-primary rounded-full flex items-center justify-center text-background-dark focus:outline-none focus:ring-4 focus:ring-primary/30" id="hover-target-play">
+<span class="material-symbols-outlined text-4xl" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+<!-- Track Info -->
+<div class="flex-1 min-w-0 flex flex-col justify-center h-full">
+<!-- Live Status -->
+<div class="flex items-center gap-2 mb-1">
+<div class="w-2 h-2 rounded-full bg-accent animate-pulse-dot"></div>
+<span class="text-[10px] font-bold tracking-widest text-accent uppercase font-display">Live</span>
+</div>
+<!-- Marquee Title -->
+<div class="marquee-container w-full relative h-8 flex items-center">
+<div class="marquee-content font-display font-extrabold text-2xl text-white whitespace-nowrap">
+                            Now Playing: Unknown Artist - Untitled Track (Live Session)
+                        </div>
+</div>
+</div>
+<!-- Ambient glow behind player -->
+<div class="absolute inset-0 bg-primary/5 blur-2xl -z-10 group-hover:bg-primary/10 transition-colors duration-700"></div>
+</div>
+<!-- Error State Example (Hidden by default, uncomment to preview) -->
+<!-- 
+            <div class="w-full max-w-[400px] h-[120px] bg-surface backdrop-blur-[24px] rounded-[32px] shadow-float border border-accent/20 flex items-center justify-center relative overflow-hidden">
+                <span class="font-display font-extrabold text-2xl text-accent tracking-wider">STREAM OFFLINE</span>
+            </div> 
+            -->
+<!-- Loading State Example (Hidden by default) -->
+<!--
+            <div class="w-full max-w-[400px] h-[120px] flex items-center justify-center relative">
+                 <div class="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+            </div>
+            -->
+</main>
+<!-- Bottom Right Archive Portal -->
+<footer class="flex justify-end items-end relative h-32">
+<button aria-label="Enter Archive" class="archive-portal absolute bottom-0 right-0 w-20 h-20 bg-surface backdrop-blur-[24px] border border-primary/30 rounded-full shadow-float flex items-center justify-center group focus:outline-none focus:ring-4 focus:ring-primary/20 overflow-hidden" id="hover-target-archive">
+<!-- Default State: Pulsing Outline/Icon -->
+<div class="archive-icon absolute inset-0 flex items-center justify-center">
+<div class="absolute inset-0 border border-primary/50 rounded-full animate-ping opacity-20"></div>
+<span class="material-symbols-outlined text-primary text-3xl opacity-70 group-hover:opacity-100 transition-opacity" data-icon="all_inclusive">all_inclusive</span>
+</div>
+<!-- Hover State Text -->
+<span class="archive-text font-display font-bold text-sm tracking-widest text-primary uppercase text-center leading-tight absolute px-4">
+                    Enter<br/>Archive
+                </span>
+</button>
+</footer>
+</div>
+<!-- Script for Custom Cursor -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cursor = document.getElementById('cursor');
+            const hoverTargets = document.querySelectorAll('[id^="hover-target"]');
+
+            // Move cursor
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+
+            // Hover effects
+            hoverTargets.forEach(target => {
+                target.addEventListener('mouseenter', () => {
+                    cursor.classList.add('hover');
+                });
+                target.addEventListener('mouseleave', () => {
+                    cursor.classList.remove('hover');
+                });
+            });
+
+            // Hide default cursor when leaving window
+            document.addEventListener('mouseleave', () => {
+                cursor.style.display = 'none';
+            });
+            document.addEventListener('mouseenter', () => {
+                cursor.style.display = 'block';
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Lowkal.fm - Connected Abstract Player</title>
+  
+  <!-- SEO & Social Sharing Meta Tags -->
+  <meta name="description" content="Lowkal.fm is an art-forward, distraction-free digital canvas dedicated to underground electronic music." />
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lowkal.fm/" />
+  <meta property="og:title" content="Lowkal.fm - Connected Abstract Player" />
+  <meta property="og:description" content="Lowkal.fm is an art-forward, distraction-free digital canvas dedicated to underground electronic music." />
+  <meta property="og:image" content="logo.jpg" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://lowkal.fm/" />
+  <meta property="twitter:title" content="Lowkal.fm - Connected Abstract Player" />
+  <meta property="twitter:description" content="Lowkal.fm is an art-forward, distraction-free digital canvas dedicated to underground electronic music." />
+  <meta property="twitter:image" content="logo.jpg" />
+  
+  <!-- CSS & Fonts -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#D5FF00", // Electric Lime
+            "background-base": "#050511", // Ink Blue
+            "surface": "rgba(20, 20, 43, 0.4)", // Deep Violet Translucent
+            "text-main": "#FFFFFF",
+            "muted": "#8A8A9D", // Ash Blue
+            "accent": "#FF0055", // Neon Magenta
+          },
+          fontFamily: {
+            "display": ["Syne", "sans-serif"],
+            "ui": ["Outfit", "sans-serif"],
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "12px",
+            "xl": "20px", // matching reference image rounded card
+            "full": "9999px"
+          },
+          boxShadow: {
+            "float": "0 16px 48px rgba(0,0,0,0.8)",
+          }
+        },
+      },
+    }
+  </script>
+
+  <style>
+    /* Prevent default scrollbars on full-viewport app */
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #050511;
+      color: #FFFFFF;
+      font-family: 'Outfit', sans-serif;
+      cursor: none !important;
+    }
+    
+    h1, h2, h3, .font-display {
+      font-family: 'Syne', sans-serif;
+    }
+
+    /* Force cursor none for interactive elements */
+    a, button, input, select, textarea, [role="button"], img {
+      cursor: none !important;
+    }
+
+    /* Custom Cursor */
+    .custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 16px;
+      height: 16px;
+      background-color: #D5FF00;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      mix-blend-mode: difference;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background-color 0.2s;
+    }
+    .custom-cursor.hover {
+      width: 36px;
+      height: 36px;
+      background-color: #FF0055;
+    }
+
+    /* Glassmorphism styling */
+    .glass-panel {
+      background: rgba(18, 18, 38, 0.45);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* Scrollbar customization */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(138, 138, 157, 0.4);
+      border-radius: 99px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #D5FF00;
+    }
+
+    /* Custom range input styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 12px;
+      width: 12px;
+      border-radius: 50%;
+      background: #D5FF00;
+      cursor: pointer;
+      margin-top: -4px;
+      transition: transform 0.1s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.25);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 4px;
+      cursor: pointer;
+      background: #8A8A9D;
+      border-radius: 2px;
+    }
+
+    /* Ambient animated mesh background underneath WebGL */
+    .ambient-bg {
+      background: radial-gradient(circle at 30% 30%, rgba(255, 0, 85, 0.15) 0%, rgba(5, 5, 17, 1) 70%),
+                  radial-gradient(circle at 70% 80%, rgba(213, 255, 0, 0.1) 0%, rgba(5, 5, 17, 0) 50%);
+      background-size: 200% 200%;
+      animation: pulseBg 25s infinite alternate ease-in-out;
+    }
+    @keyframes pulseBg {
+      0% { background-position: 0% 0%; }
+      50% { background-position: 100% 100%; }
+      100% { background-position: 0% 0%; }
+    }
+
+    /* Rotate animation for vinyl thumbnail in mini player */
+    @keyframes rotate-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-rotate {
+      animation: rotate-slow 15s linear infinite;
+    }
+
+    /* Kinetic Archive Node transitions */
+    .node-transition {
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+    }
+
+    /* Active page wrapper transitions */
+    .screen-fade {
+      transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-background-dark text-white select-none relative w-full h-screen overflow-hidden antialiased">
+
+  <!-- Custom Cursor -->
+  <div class="custom-cursor" id="custom-cursor"></div>
+
+  <!-- Ambient Animated Color Layer -->
+  <div class="absolute inset-0 z-0 ambient-bg pointer-events-none"></div>
+
+  <!-- Three.js Canvas Layer -->
+  <canvas class="absolute inset-0 z-10 w-full h-full pointer-events-none opacity-50" id="visualizer-canvas"></canvas>
+
+  <!-- Global Header (Logo, Navigation & Manifesto Trigger) -->
+  <header class="absolute top-8 left-8 right-8 z-40 flex justify-between items-center mix-blend-difference">
+    <!-- Left Navigation Arrow (Symmetric page swap) -->
+    <div class="flex items-center gap-6">
+      <button class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-all duration-300 focus:outline-none" id="header-nav-btn">
+        <span class="material-symbols-outlined text-xl" id="header-nav-icon">arrow_forward</span>
+        <span id="header-nav-text">Enter Archive</span>
+      </button>
+    </div>
+
+    <!-- Right elements: Station tag & manifesto button -->
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3 cursor-pointer group" id="header-logo">
+        <img src="logo.jpg" class="w-8 h-8 rounded-md border border-white/10 group-hover:border-primary/30 transition-all duration-300" alt="Lowkal.fm Logo" />
+        <h1 class="font-display font-extrabold text-lg tracking-tighter group-hover:text-primary transition-colors duration-300">
+          LOWKAL.FM
+        </h1>
+      </div>
+      <button class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-colors py-2 px-4 rounded-full border border-white/10 hover:border-primary/30 bg-surface/30 backdrop-blur-md" id="btn-manifesto-open">
+        <span class="material-symbols-outlined text-lg">info</span>
+        <span>manifesto</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- SCREEN 1: HOMEPAGE (COMPREHENSIVE SPLIT PLAYER) -->
+  <div class="absolute inset-0 z-20 flex flex-col justify-between p-8 screen-fade opacity-100 pointer-events-auto transform scale-100" id="screen-home">
+    <main class="w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-center gap-12 md:gap-16 lg:gap-20 h-full pt-20">
+      <!-- Left: Cover Art Panel -->
+      <div class="flex-shrink-0 w-[260px] h-[260px] md:w-[380px] md:h-[380px] rounded-2xl shadow-float overflow-hidden relative group border border-white/5">
+        <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" id="main-cover-img" src="" alt="Mix Artwork"/>
+        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-background-base hover:scale-110 transition-transform shadow-lg" id="btn-main-play-art">
+            <span class="material-symbols-outlined text-4xl" id="icon-main-play-art" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Detailed Player Card (matching reference design layout) -->
+      <div class="w-full md:w-[460px] h-[55vh] md:h-[72vh] glass-panel rounded-xl shadow-float flex flex-col overflow-hidden relative border border-white/10">
+        
+        <!-- TOP STICKY AREA: Music controls and timers -->
+        <div class="p-6 md:p-8 pb-5 border-b border-white/10 shrink-0 bg-[#121226]/20">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-primary font-display font-bold text-xs tracking-widest uppercase" id="main-genre">GENRE</p>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-muted" id="main-status-dot"></span>
+              <span class="text-[9px] font-bold tracking-widest text-muted uppercase font-ui" id="main-status-text">OFFLINE</span>
+            </div>
+          </div>
+          <!-- Title text matching double-line block from reference -->
+          <h2 class="font-display font-extrabold text-3xl md:text-[36px] leading-[1.1] text-white mb-2 tracking-tight uppercase max-h-[80px] overflow-hidden" id="main-title">
+            Mix Title
+          </h2>
+          <p class="text-muted text-sm truncate font-ui" id="main-host-date">Hosted by DJ Name • Date</p>
+          
+          <!-- Scrubber section -->
+          <div class="w-full mt-6">
+            <div class="flex items-center justify-between text-[11px] font-mono text-muted/80 mb-2">
+              <span id="main-time-current">45:12</span>
+              <span id="main-time-total">1:00:00</span>
+            </div>
+            <input class="w-full mb-5" id="main-scrubber" max="100" min="0" type="range" value="0"/>
+            
+            <!-- Dynamic Controls Strip -->
+            <div class="flex items-center justify-between px-2 mb-6">
+              <!-- Shuffle -->
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-shuffle" title="Shuffle Mixes">
+                <span class="material-symbols-outlined text-xl">shuffle</span>
+              </button>
+              
+              <!-- Replay 10s -->
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-replay-10" title="Rewind 10s">
+                <span class="material-symbols-outlined text-2xl">replay_10</span>
+              </button>
+              
+              <!-- Skip Previous -->
+              <button class="text-white hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-prev" title="Previous Mix">
+                <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+              </button>
+              
+              <!-- Circular Play / Pause (Massive center) -->
+              <button class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-background-base hover:scale-105 active:scale-95 transition-transform shadow-lg focus:outline-none" id="btn-main-play" aria-label="Play / Pause">
+                <span class="material-symbols-outlined text-3.5xl" id="icon-main-play" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+              </button>
+              
+              <!-- Skip Next -->
+              <button class="text-white hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-next" title="Next Mix">
+                <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+              </button>
+              
+              <!-- Forward 30s -->
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-forward-30" title="Forward 30s">
+                <span class="material-symbols-outlined text-2xl">forward_30</span>
+              </button>
+              
+              <!-- Repeat Loop -->
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-repeat" title="Repeat Mix">
+                <span class="material-symbols-outlined text-xl">repeat</span>
+              </button>
+            </div>
+
+            <!-- Volume Control Bar -->
+            <div class="flex items-center gap-3 w-[90%] mx-auto text-muted">
+              <button class="focus:outline-none hover:text-primary" id="btn-volume-mute" title="Mute/Unmute">
+                <span class="material-symbols-outlined text-lg" id="icon-volume-low">volume_mute</span>
+              </button>
+              <input class="w-full" id="main-volume-slider" max="100" min="0" type="range" value="60"/>
+              <span class="material-symbols-outlined text-lg">volume_up</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM SCROLLABLE AREA: Mix Description and Artist Details -->
+        <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6 bg-transparent" id="main-details-scroll">
+          
+          <!-- Mix Description -->
+          <div class="space-y-2">
+            <h3 class="font-display font-extrabold text-[12px] tracking-widest text-white uppercase">Mix Description</h3>
+            <p class="text-white/70 text-sm leading-relaxed font-ui italic" id="detail-mix-desc">
+              Mix description copy goes here.
+            </p>
+          </div>
+          
+          <!-- Artist Details -->
+          <div class="space-y-2 pt-2 border-t border-white/5">
+            <h3 class="font-display font-extrabold text-[12px] tracking-widest text-white uppercase">Artist Profile</h3>
+            <p class="text-white/60 text-sm leading-relaxed font-ui" id="detail-artist-bio">
+              Artist bio copy goes here.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- SCREEN 2: ARCHIVE (DRIFTING CLOUD) -->
+  <div class="absolute inset-0 z-20 overflow-hidden screen-fade opacity-0 pointer-events-none transform scale-95" id="screen-archive">
+    <!-- Drifting Archive Cloud Canvas -->
+    <div class="absolute inset-0 w-full h-full" id="archive-canvas">
+      <!-- Nodes will be inserted dynamically in JS to track physics states correctly -->
+    </div>
+
+    <!-- Floating Mini-Player Pill -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-xl z-40 transition-all duration-500 transform translate-y-2 opacity-0 pointer-events-none" id="archive-mini-player">
+      <div class="glass-panel w-full h-18 px-5 py-3 rounded-full flex items-center justify-between shadow-float relative overflow-hidden">
+        <!-- Progress Fill along bottom edge -->
+        <div class="absolute bottom-0 left-6 right-6 h-[2.5px] bg-white/10 rounded-full overflow-hidden">
+          <div class="h-full bg-primary transition-all duration-300" id="mini-progress-fill" style="width: 0%;"></div>
+        </div>
+
+        <!-- Left metadata (click redirects to home player) -->
+        <div class="flex items-center min-w-0 flex-1 hover:opacity-90 active:scale-98 transition-all cursor-none" id="mini-player-info-click">
+          <!-- Thumbnail cover -->
+          <div class="w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0 relative bg-black/40">
+            <img class="w-full h-full object-cover" id="mini-art-img" src="" alt="Thumbnail"/>
+          </div>
+          <!-- Title details -->
+          <div class="flex flex-col ml-4 min-w-0">
+            <span class="text-white font-display font-extrabold text-sm truncate" id="mini-title">Mix Title</span>
+            <span class="text-muted font-ui text-xs truncate" id="mini-subtext">DJ Name • Track title</span>
+          </div>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="flex items-center gap-3 shrink-0 ml-4">
+          <!-- Play / Pause -->
+          <button class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-background-base hover:scale-105 active:scale-95 transition-transform focus:outline-none" id="btn-mini-play" aria-label="Play/Pause">
+            <span class="material-symbols-outlined text-2.5xl" id="icon-mini-play" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+          </button>
+          <!-- Maximize -->
+          <button class="w-10 h-10 bg-surface border border-white/10 hover:border-primary/30 rounded-full flex items-center justify-center text-white hover:text-primary hover:scale-105 active:scale-95 transition-all focus:outline-none" id="btn-mini-maximize" aria-label="Maximize Player" title="Back to Main Player">
+            <span class="material-symbols-outlined text-2xl">open_in_full</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATION MANIFESTO MODAL -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-8 bg-[#050511]/85 backdrop-blur-[24px] opacity-0 pointer-events-none transition-all duration-500 ease-out" id="modal-manifesto">
+    <!-- Close Button -->
+    <button class="absolute top-8 right-8 w-12 h-12 rounded-full border border-white/20 hover:border-primary/45 bg-surface/30 flex items-center justify-center text-white hover:text-primary hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none" id="btn-manifesto-close">
+      <span class="material-symbols-outlined text-2xl">close</span>
+    </button>
+
+    <!-- Content Container -->
+    <div class="w-full max-w-3xl glass-panel p-8 md:p-12 rounded-xl shadow-float border border-white/10 flex flex-col gap-8 max-h-[85vh] overflow-y-auto custom-scrollbar">
+      
+      <!-- Brand Logo Header Block -->
+      <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+        <!-- Logo Image -->
+        <img src="logo.jpg" class="w-24 h-24 rounded-xl border border-white/10 shadow-float shrink-0" alt="Lowkal.fm Logo" />
+        <div class="flex-1 text-center md:text-left">
+          <span class="text-primary font-display font-bold text-xs tracking-widest uppercase">our ethos</span>
+          <h2 class="font-display font-extrabold text-4xl md:text-5xl text-white mt-2 leading-none uppercase">LOWKAL MANIFESTO</h2>
+        </div>
+      </div>
+
+      <div class="font-ui text-md text-white/80 leading-relaxed space-y-4">
+        <p>
+          Lowkal.fm is an art-forward, distraction-free digital canvas dedicated to underground electronic music. We discard traditional cluttered interfaces, social media integrations, and analytics tracking in favor of deep visual atmosphere and focused sonic discovery.
+        </p>
+        <p>
+          We operate as an independent station. Every stream is synthesized or curated in real time to generate deep, atmospheric, and kinetic sonic moods. This is radio for deep listening, programming, and spatial exploration.
+        </p>
+      </div>
+
+      <!-- Weekly Schedule Grid -->
+      <div class="border-t border-white/10 pt-8">
+        <h3 class="font-display font-bold text-lg text-primary mb-6 uppercase tracking-wider">Weekly Broadcast Schedule</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-ui text-sm">
+          <div class="flex justify-between items-center py-2 border-b border-white/5">
+            <span class="font-medium text-white/90">Monday // 20:00 - 22:00</span>
+            <span class="text-muted text-right">DJ Oblivion (Industrial Techno)</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-white/5">
+            <span class="font-medium text-white/90">Tuesday // 21:00 - 23:00</span>
+            <span class="text-muted text-right">Silent Servant (Darkwave & EBM)</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-white/5">
+            <span class="font-medium text-white/90">Wednesday // 22:00 - 00:00</span>
+            <span class="text-muted text-right">System Fault (Noise & Ambient)</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-white/5">
+            <span class="font-medium text-white/90">Thursday // 20:00 - 22:00</span>
+            <span class="text-muted text-right">Acid Trax (Chicago House & Acid)</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-white/5">
+            <span class="font-medium text-white/90">Friday // 22:00 - 00:00</span>
+            <span class="text-muted text-right">Void Dweller (Drone & Experimental)</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-white/5">
+            <span class="font-medium text-white/90">Saturday // 20:00 - 23:00</span>
+            <span class="text-muted text-right">Rotary Club (Deep House & Dub)</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-white/5 md:col-span-2">
+            <span class="font-medium text-primary">Sunday // 18:00 - 20:00 (Resident)</span>
+            <span class="text-primary font-bold">DJ Void // Kinetic Garage & Breaks</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Libraries -->
+  <script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+
+  <!-- Core JavaScript Code -->
+  <script>
+    // -------------------------------------------------------------
+    // DATABASE: Mixes & Broadcasts
+    // -------------------------------------------------------------
+    const MIXES = [
+      {
+        id: 'kinetic_drift',
+        title: 'Kinetic Drift',
+        dj: 'DJ Void',
+        date: '24 Oct 2023',
+        genre: 'Garage / Breakbeat',
+        artUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCCrG1DEKigJH48GRUlWYb1VYtxtuP6kq_koycGF3__RW4S0Br82tZ3Dz8NcXBRH-u3cfmQmADJP6RObkX90wPTwgrTvfaRBWbMyXRVhBYlX07VCrD40S_ZxfdfEcezgPYblYwxCSmcOrs6nTe1S6u41TFHLh0TS8VrD8Qf3aicEzhYoUOhmahjAjbnOGLwDLik4FSVmBcFx1uBjYpRDyTdd7LiGmZD-3ouRH2jQ915ghHBT73zlHhNIbBntGzLhSzvxSlo5c4Clda3',
+        description: '<em>Kinetic Drift</em> is a deep exploration into the architecture of silence and the weight of sub-bass textures. Curated by <strong>DJ Void</strong>, this hour-long session serves as a sonic bridge between structural industrial design and organic fluid dynamics.<br/><br/>The emotional arc begins with a stark, cavernous opening that slowly fractures into complex glitch sequences. Each transition is meticulously hand-crafted, favoring slow-burn harmonic crossfades that blur the lines between tracks until the individual pieces become a singular, breathing unit.',
+        artistBio: '<strong>DJ Void</strong> is a London-based sound designer and visual artist whose work focuses on the intersection of early UK breakbeat culture and modern software synthesis. He has been a resident at Lowkal.fm since its inception, running the weekly Sunday bass transmissions.',
+        duration: 3600, // 60 mins
+        synthStyle: 'garage',
+        tracks: [
+          { time: 0, title: 'Intro (Atmosphere)', artist: 'Unknown' },
+          { time: 255, title: 'Sub-bass Frequency', artist: 'Autechre' },
+          { time: 750, title: 'Glitch Sequence 01', artist: 'Aphex Twin' },
+          { time: 2712, title: 'Neon Drift', artist: 'Overmono' },
+          { time: 3160, title: 'Outro (Static)', artist: 'Burial' }
+        ],
+        cloud: { size: 350, speedClass: 'fast', zIndex: 30, basePos: { top: 20, left: 15 }, vx: 0.25, vy: -0.15 }
+      },
+      {
+        id: 'industrial_techno',
+        title: 'Kontrol Archive 001',
+        dj: 'DJ Oblivion',
+        date: '12 Sep 2023',
+        genre: 'Industrial / Techno',
+        artUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA6ZPUrl4NUSxcjmLS0hUDqZQutT8AJhxxG93Bv6TacFHgGtzZZYw4lw_SXQYnAdWHP-YSst4tMxT3V17DxN1bD3b8PCgSEVQ9Wl0_MYeLJTMYEDdcZZ2UF21LaWlo8LjwWk_1c3RYmYaUdjL3HUV9ZEaVpPwfSixwHOOg0Zdz6js9Hw7P3Ol6S72BL8Jd7o935P3y14b1e7PO2Ruq5kromlAsKNKKHMkNYcxdnSNnDsGox3NgX9i6uiAzIHY3GWIkwMB-Nc-vlwETJ',
+        description: '<em>Kontrol Archive 001</em> is a cold, driving, concrete warehouse session. Curated by <strong>DJ Oblivion</strong>, this mix showcases modular techno loops, harsh distortions, and dense reverbs designed for cavernous sound spaces.<br/><br/>Relying on custom analog patch-bays and real-time filter sweeps, the mix builds an unrelenting momentum that peaks with heavy, industrial kicks and acid-like bass elements.',
+        artistBio: '<strong>DJ Oblivion</strong> is an underground techno producer known for his brutalist hardware-only live sets. His sound is heavily influenced by the early Birmingham industrial sound and Berlin basement raves.',
+        duration: 2400, // 40 mins
+        synthStyle: 'techno',
+        tracks: [
+          { time: 0, title: 'La Real', artist: 'Surgeon' },
+          { time: 270, title: 'Why They Hide Their Bodies Under My Garage', artist: 'Blawan' },
+          { time: 555, title: 'Pace Yourself', artist: 'Karenn' },
+          { time: 945, title: 'Penny & Pound', artist: 'Ansome' },
+          { time: 1280, title: 'Look What Your Love Has Done To Me', artist: 'Perc' },
+          { time: 1685, title: 'Fist', artist: 'British Murder Boys' }
+        ],
+        cloud: { size: 250, speedClass: 'med', zIndex: 20, basePos: { top: 50, left: 60 }, vx: -0.18, vy: 0.12 }
+      },
+      {
+        id: 'glitch_experimental',
+        title: 'Signal Degradation',
+        dj: 'System Fault',
+        date: '05 Nov 2023',
+        genre: 'Glitch / Experimental',
+        artUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAexaABiZKhpNDZ2zxqd8cKeIAeiWlTQ8iExIT1LE-f75kECnimQkJka35W0mdY_rn7bb1qeT1IqpJCwwSweQJWkVf3CJIEOYaLXNYs2dOr4O-rRR48rhcd3kTA9LN1_gzf7V1d4KCrbnWbR7njdeuSg41A4nuCLP6L9lHJp2u6Zz7Cr0IsIfYgMxW_RhaZXJt_Lj-zPz_ZeEabCMa3wdIr_0Bt6UFulm3-Btppg1qIBF0Lh826bGjW2qjuifZ0lCNlYUTqYfAmPtV0',
+        description: '<em>Signal Degradation</em> documents hardware failure, feedback loops, and digital glitches. Curated by <strong>System Fault</strong>, this mix is a dense tapestry of experimental clicks, generative bleeps, and tape saturation effects.<br/><br/>Rather than conventional musical structures, this performance prioritizes sonic texture, rhythmic errors, and microtonal oscillations.',
+        artistBio: '<strong>System Fault</strong> is an anonymous generative audio collective using obsolete digital gear and custom DSP patches to explore themes of data loss and digital decay.',
+        duration: 1800, // 30 mins
+        synthStyle: 'glitch',
+        tracks: [
+          { time: 0, title: 'Gantz Graf', artist: 'Autechre' },
+          { time: 322, title: 'Vordhosbn', artist: 'Aphex Twin' },
+          { time: 645, title: 'Rubber Johnny', artist: 'Aphex Twin' },
+          { time: 970, title: 'Glitch 03', artist: 'Alva Noto' },
+          { time: 1350, title: 'Untitled', artist: 'Ryoji Ikeda' }
+        ],
+        cloud: { size: 250, speedClass: 'med', zIndex: 20, basePos: { top: 10, left: 80 }, vx: 0.15, vy: 0.18 }
+      },
+      {
+        id: 'ambient_monolith',
+        title: 'Subterranean Drones',
+        dj: 'Void Dweller',
+        date: '02 Dec 2023',
+        genre: 'Ambient / Drone',
+        artUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBGzuejsDiuXFtiYoSfYlzyh1TYM54yXdGojk_UMQsdyC9nb2zFSt5L9YmKk1aKslrSe0DeiixMX3XmahR3WoFaRHz8A3mcN1T3meGn_CVXmU0anANXO9f7Z19WgTcCzuKOB5wNmoPqXSsv7_aBcrntj5n3TUyAEeOE9FajSRu6955vRpsPqYYzIpFIeqIZoiQQEyWNVt0NRl__s4rSKtyUg1cXjDRclWak--6On_vzPaeRTKhdjiw_-vyoHeFoG2s1tkjx1dU1g8es',
+        description: '<em>Subterranean Drones</em> is a deep listening ambient exploration of sustained frequencies and micro-tonal shifts. Curated by <strong>Void Dweller</strong>, this mix is designed to alter spatial perception and slow down time.<br/><br/>Lush chord layers rise and decay over low-frequency drones, creating a continuous, dark, and protective sonic blanket suitable for deep focus.',
+        artistBio: '<strong>Void Dweller</strong> is an ambient composer and synthesist specializing in long-form drones and acoustic resonance, currently residing in the Pacific Northwest.',
+        duration: 2400, // 40 mins
+        synthStyle: 'ambient',
+        tracks: [
+          { time: 0, title: 'Drone Pad I', artist: 'Brian Eno' },
+          { time: 360, title: 'Ambient Waves', artist: 'Stars of the Lid' },
+          { time: 840, title: 'Monolithic Deep', artist: 'Tim Hecker' },
+          { time: 1500, title: 'Space Drone', artist: 'William Basinski' }
+        ],
+        cloud: { size: 150, speedClass: 'slow', zIndex: 10, basePos: { top: 75, left: 35 }, vx: -0.08, vy: -0.06 }
+      }
+    ];
+
+    // Helper: MIDI Note to Frequency
+    function midiToFreq(note) {
+      return 440 * Math.pow(2, (note - 69) / 12);
+    }
+
+    // Helper: format seconds to MM:SS
+    function formatTime(secs) {
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // -------------------------------------------------------------
+    // WEBAUDIO SYNTHESIZER ENGINE
+    // -------------------------------------------------------------
+    class LowkalAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.isPlaying = false;
+        
+        this.masterGain = null;
+        this.analyser = null;
+        
+        // Sequencer timing
+        this.timerId = null;
+        this.nextNoteTime = 0.0;
+        this.step = 0;
+        this.tempo = 130;
+        
+        this.scheduleAheadTime = 0.15;
+        this.lookahead = 30.0;
+        
+        this.synthStyle = 'live';
+        this.noiseBuffer = null;
+      }
+
+      init() {
+        if (this.ctx) return;
+        
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioContext();
+        
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.6; // default 60%
+        
+        this.analyser = this.ctx.createAnalyser();
+        this.analyser.fftSize = 64;
+        
+        this.masterGain.connect(this.analyser);
+        this.analyser.connect(this.ctx.destination);
+        
+        this.noiseBuffer = this.createNoiseBuffer();
+      }
+
+      createNoiseBuffer() {
+        const bufferSize = this.ctx.sampleRate * 2;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+      }
+
+      start() {
+        this.init();
+        if (this.isPlaying) return;
+        
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        
+        this.isPlaying = true;
+        this.nextNoteTime = this.ctx.currentTime + 0.05;
+        this.step = 0;
+        
+        this.schedulerLoop();
+      }
+
+      stop() {
+        this.isPlaying = false;
+        if (this.timerId) {
+          clearTimeout(this.timerId);
+          this.timerId = null;
+        }
+      }
+
+      setSynthStyle(style) {
+        this.synthStyle = style;
+        
+        if (style === 'live') {
+          this.tempo = 80;
+        } else if (style === 'garage') {
+          this.tempo = 130;
+        } else if (style === 'techno') {
+          this.tempo = 135;
+        } else if (style === 'glitch') {
+          this.tempo = 120;
+        } else if (style === 'ambient') {
+          this.tempo = 60;
+        }
+      }
+
+      schedulerLoop() {
+        if (!this.isPlaying) return;
+        
+        while (this.nextNoteTime < this.ctx.currentTime + this.scheduleAheadTime) {
+          this.scheduleStep(this.step, this.nextNoteTime);
+          this.advanceStep();
+        }
+        
+        this.timerId = setTimeout(() => this.schedulerLoop(), this.lookahead);
+      }
+
+      advanceStep() {
+        const secondsPerStep = 60.0 / this.tempo / 4.0;
+        this.nextNoteTime += secondsPerStep;
+        this.step = (this.step + 1) % 16;
+      }
+
+      scheduleStep(step, time) {
+        switch (this.synthStyle) {
+          case 'live':
+            this.playLivePatch(step, time);
+            break;
+          case 'garage':
+            this.playGaragePatch(step, time);
+            break;
+          case 'techno':
+            this.playTechnoPatch(step, time);
+            break;
+          case 'glitch':
+            this.playGlitchPatch(step, time);
+            break;
+          case 'ambient':
+            this.playAmbientPatch(step, time);
+            break;
+        }
+      }
+
+      playLivePatch(step, time) {
+        if (step % 8 === 0) {
+          const notes = [45, 52, 57, 60, 64];
+          notes.forEach((note) => {
+            this.playPadOsc(time + Math.random() * 0.05, note, 2.5, 0.06);
+          });
+        }
+        if (step === 0) {
+          this.playSubBass(time, 33, 1.8);
+        }
+      }
+
+      playGaragePatch(step, time) {
+        const kickPattern = [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0];
+        if (kickPattern[step]) {
+          this.playKick(time);
+        }
+        
+        const hatPattern = [0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0];
+        if (hatPattern[step]) {
+          this.playHat(time, step === 4 || step === 12);
+        }
+        
+        const bassPattern = [38, -1, 38, 41, -1, 45, 38, -1, -1, 41, -1, 43, 38, -1, 48, -1];
+        if (bassPattern[step] !== -1) {
+          this.playBassSynth(time, bassPattern[step], 0.15, 600, 4);
+        }
+      }
+
+      playTechnoPatch(step, time) {
+        if (step % 4 === 0) {
+          this.playKick(time, true);
+        }
+        
+        if (step % 4 === 2) {
+          this.playHat(time, true);
+        } else if (step % 2 === 1) {
+          this.playHat(time, false);
+        }
+        
+        const synthNotes = [36, 36, 48, 36, 36, 51, 36, 48, 36, 36, 48, 36, 51, 36, 55, 36];
+        if (step % 2 === 0) {
+          this.playBassSynth(time, synthNotes[step], 0.1, 400 + Math.sin(time) * 200, 10);
+        }
+      }
+
+      playGlitchPatch(step, time) {
+        if (Math.random() < 0.3) {
+          this.playClick(time);
+        }
+        if (step % 6 === 0) {
+          this.playSubBass(time, 30, 0.4);
+        }
+        if (step % 4 === 1 && Math.random() < 0.6) {
+          const notes = [60, 62, 65, 67, 72, 74];
+          const note = notes[Math.floor(Math.random() * notes.length)];
+          this.playBassSynth(time, note, 0.08, 1500, 8);
+        }
+      }
+
+      playAmbientPatch(step, time) {
+        if (step % 8 === 0) {
+          const chord = [43, 50, 55, 59, 62];
+          chord.forEach((note) => {
+            this.playPadOsc(time + Math.random() * 0.1, note, 3.5, 0.05);
+          });
+        }
+        if (step % 16 === 0) {
+          this.playSubBass(time, 28, 4.0);
+        }
+      }
+
+      playKick(time, isHard = false) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.frequency.setValueAtTime(isHard ? 180 : 130, time);
+        osc.frequency.exponentialRampToValueAtTime(0.01, time + (isHard ? 0.2 : 0.12));
+        
+        gain.gain.setValueAtTime(1.0, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + (isHard ? 0.22 : 0.13));
+        
+        osc.start(time);
+        osc.stop(time + (isHard ? 0.23 : 0.14));
+      }
+
+      playHat(time, isOpen = false) {
+        if (!this.noiseBuffer) return;
+        
+        const source = this.ctx.createBufferSource();
+        source.buffer = this.noiseBuffer;
+        
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = isOpen ? 6000 : 8000;
+        
+        const gain = this.ctx.createGain();
+        
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        
+        const duration = isOpen ? 0.25 : 0.04;
+        gain.gain.setValueAtTime(isOpen ? 0.12 : 0.22, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+        
+        source.start(time);
+        source.stop(time + duration + 0.01);
+      }
+
+      playBassSynth(time, note, duration, filterFreq, Q) {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(midiToFreq(note), time);
+        
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(filterFreq, time);
+        filter.frequency.exponentialRampToValueAtTime(filterFreq * 0.1, time + duration);
+        filter.Q.setValueAtTime(Q, time);
+        
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.15, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.start(time);
+        osc.stop(time + duration + 0.01);
+      }
+
+      playPadOsc(time, note, duration, vol) {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(midiToFreq(note), time);
+        
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, time);
+        filter.frequency.linearRampToValueAtTime(300, time + duration * 0.5);
+        filter.frequency.linearRampToValueAtTime(600, time + duration);
+        
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.001, time);
+        gain.gain.linearRampToValueAtTime(vol, time + duration * 0.3);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+        
+        const delay = this.ctx.createDelay();
+        delay.delayTime.value = 0.04;
+        const delayGain = this.ctx.createGain();
+        delayGain.gain.value = 0.3;
+        
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+        
+        gain.connect(delay);
+        delay.connect(delayGain);
+        delayGain.connect(this.masterGain);
+        
+        osc.start(time);
+        osc.stop(time + duration + 0.02);
+      }
+
+      playSubBass(time, note, duration) {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(midiToFreq(note), time);
+        
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.35, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.start(time);
+        osc.stop(time + duration + 0.01);
+      }
+
+      playClick(time) {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(4000 + Math.random() * 2000, time);
+        
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.18, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + 0.005);
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        
+        osc.start(time);
+        osc.stop(time + 0.01);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // THREE.JS ANIMATED REACTIVE VISUALIZER
+    // -------------------------------------------------------------
+    class LowkalVisualizer {
+      constructor(canvasId, audioEngine) {
+        this.canvas = document.getElementById(canvasId);
+        this.audioEngine = audioEngine;
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.mesh = null;
+        this.geometry = null;
+        
+        this.time = 0;
+        this.animationId = null;
+        this.dataArray = new Uint8Array(32);
+        
+        this.limeColor = 0xd5ff00;
+        this.magentaColor = 0xff0055;
+      }
+
+      init() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(65, width / height, 0.1, 1000);
+        this.camera.position.z = 4.5;
+        
+        this.renderer = new THREE.WebGLRenderer({
+          canvas: this.canvas,
+          alpha: true,
+          antialias: true
+        });
+        this.renderer.setSize(width, height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        
+        this.geometry = new THREE.IcosahedronGeometry(1.8, 4);
+        this.initialPositions = this.geometry.attributes.position.clone();
+        
+        this.material = new THREE.MeshPhongMaterial({
+          color: 0x14142b,
+          emissive: 0x050511,
+          specular: this.limeColor,
+          shininess: 90,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.28
+        });
+        
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.scene.add(this.mesh);
+        
+        const pointLight1 = new THREE.PointLight(this.limeColor, 1.2, 100);
+        pointLight1.position.set(5, 5, 5);
+        this.scene.add(pointLight1);
+        
+        const pointLight2 = new THREE.PointLight(this.magentaColor, 1.0, 100);
+        pointLight2.position.set(-5, -5, 5);
+        this.scene.add(pointLight2);
+        
+        const ambientLight = new THREE.AmbientLight(0x101018);
+        this.scene.add(ambientLight);
+        
+        window.addEventListener('resize', () => this.onResize());
+        this.animate();
+      }
+
+      onResize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(w, h);
+      }
+
+      animate() {
+        this.animationId = requestAnimationFrame(() => this.animate());
+        this.time += 0.008;
+        
+        let avgVolume = 0;
+        let bassVolume = 0;
+        
+        if (this.audioEngine && this.audioEngine.isPlaying && this.audioEngine.analyser) {
+          this.audioEngine.analyser.getByteFrequencyData(this.dataArray);
+          
+          let sum = 0;
+          for (let i = 0; i < this.dataArray.length; i++) {
+            sum += this.dataArray[i];
+          }
+          avgVolume = sum / this.dataArray.length / 255.0;
+          
+          let bassSum = 0;
+          for (let i = 0; i < 4; i++) {
+            bassSum += this.dataArray[i];
+          }
+          bassVolume = bassSum / 4 / 255.0;
+        }
+        
+        const rotationFactor = 1.0 + avgVolume * 2.5;
+        this.mesh.rotation.x += 0.001 * rotationFactor;
+        this.mesh.rotation.y += 0.0015 * rotationFactor;
+        
+        const scalePulse = 1.0 + Math.sin(this.time * 2) * 0.05 + bassVolume * 0.35;
+        this.mesh.scale.set(scalePulse, scalePulse, scalePulse);
+        
+        if (avgVolume > 0) {
+          this.material.opacity = 0.28 + avgVolume * 0.25;
+          this.material.shininess = 90 + avgVolume * 60;
+        } else {
+          this.material.opacity = 0.28;
+          this.material.shininess = 90;
+        }
+        
+        const position = this.geometry.attributes.position;
+        const initial = this.initialPositions;
+        
+        for (let i = 0; i < position.count; i++) {
+          const ix = initial.getX(i);
+          const iy = initial.getY(i);
+          const iz = initial.getZ(i);
+          
+          const noiseFreq = 1.8 + avgVolume * 2.0;
+          const noiseSpeed = this.time * (1.0 + avgVolume * 3.0);
+          
+          const vertexNoise = Math.sin(ix * noiseFreq + noiseSpeed) * 0.12 + 
+                              Math.cos(iy * noiseFreq + noiseSpeed) * 0.12;
+                              
+          const deformation = 1.0 + vertexNoise * (0.15 + avgVolume * 0.65);
+          position.setXYZ(i, ix * deformation, iy * deformation, iz * deformation);
+        }
+        
+        position.needsUpdate = true;
+        this.renderer.render(this.scene, this.camera);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // APPLICATION STATE MANAGER & ARCHIVE CANVAS PHYSICS
+    // -------------------------------------------------------------
+    class LowkalApp {
+      constructor() {
+        // Active Screen State
+        this.currentScreen = 'home'; // 'home', 'archive'
+        this.activeMix = MIXES[0]; // Default Kinetic Drift
+        
+        // Playback parameters
+        this.playbackTime = 0; // seconds
+        this.isPlaying = false;
+        this.timerInterval = null;
+        
+        // Additional player settings
+        this.isShuffled = false;
+        this.isRepeat = false;
+        this.volumeLevel = 60; // 0 to 100
+        this.isMuted = false;
+        this.preMuteVolume = 60;
+        
+        // Core Engines
+        this.audioEngine = new LowkalAudioEngine();
+        this.visualizer = new LowkalVisualizer('visualizer-canvas', this.audioEngine);
+        
+        // Archive Nodes positioning & drifting physics array
+        this.archiveNodes = [];
+        this.driftLoopId = null;
+        this.isDrifting = false;
+        this.isTransitioningNode = false;
+      }
+
+      init() {
+        this.visualizer.init();
+        this.setupCursor();
+        this.bindEvents();
+        this.setupArchiveNodes();
+        
+        // Load default mix Kinetic Drift into Player elements
+        this.loadMixToPlayer(this.activeMix, false);
+      }
+
+      // Cursor tracking and hovers
+      setupCursor() {
+        const cursor = document.getElementById('custom-cursor');
+        
+        document.addEventListener('mousemove', (e) => {
+          cursor.style.left = e.clientX + 'px';
+          cursor.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('mouseleave', () => cursor.style.opacity = 0);
+        document.addEventListener('mouseenter', () => cursor.style.opacity = 1);
+
+        const addHoverEvents = (el) => {
+          el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+          el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        };
+
+        const hoverSelectors = 'button, a, input[type=range], #header-logo, #mini-player-info-click';
+        document.querySelectorAll(hoverSelectors).forEach(addHoverEvents);
+        this.bindHoverCursor = addHoverEvents;
+      }
+
+      // Setup DOM elements for Archive nodes
+      setupArchiveNodes() {
+        const container = document.getElementById('archive-canvas');
+        container.innerHTML = '';
+        
+        this.archiveNodes = MIXES.map((mix) => {
+          const node = document.createElement('div');
+          node.id = `node-${mix.id}`;
+          node.className = 'absolute node-transition group overflow-hidden shadow-float rounded-lg cursor-none';
+          node.style.width = `${mix.cloud.size}px`;
+          node.style.height = `${mix.cloud.size}px`;
+          node.style.zIndex = mix.cloud.zIndex;
+          
+          const innerWrapper = document.createElement('div');
+          innerWrapper.className = 'w-full h-full relative rounded-lg overflow-hidden';
+          
+          const img = document.createElement('img');
+          img.className = 'w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-70 group-hover:opacity-100';
+          img.src = mix.artUrl;
+          img.alt = mix.title;
+          
+          const overlay = document.createElement('div');
+          overlay.className = 'absolute inset-0 bg-background-base/50 group-hover:bg-background-base/15 transition-colors duration-300';
+          
+          const playOverlay = document.createElement('div');
+          playOverlay.className = 'absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300';
+          
+          const playBtn = document.createElement('div');
+          const btnSize = mix.cloud.size > 200 ? (mix.cloud.size > 300 ? 'w-20 h-20' : 'w-16 h-16') : 'w-12 h-12';
+          const iconSize = mix.cloud.size > 200 ? (mix.cloud.size > 300 ? 'text-4xl' : 'text-3xl') : 'text-2xl';
+          playBtn.className = `${btnSize} rounded-full bg-primary flex items-center justify-center shadow-[0_0_25px_rgba(213,255,0,0.45)] transform group-hover:scale-105 transition-transform duration-300`;
+          
+          const icon = document.createElement('span');
+          icon.className = 'material-symbols-outlined text-background-base font-bold ' + iconSize;
+          icon.style.fontVariationSettings = "'FILL' 1";
+          icon.textContent = 'play_arrow';
+          
+          playBtn.appendChild(icon);
+          playOverlay.appendChild(playBtn);
+          
+          innerWrapper.appendChild(img);
+          innerWrapper.appendChild(overlay);
+          innerWrapper.appendChild(playOverlay);
+          node.appendChild(innerWrapper);
+          
+          const infoOverlay = document.createElement('div');
+          infoOverlay.className = 'absolute bottom-4 left-4 right-4 glass-panel rounded-lg p-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0 pointer-events-none';
+          infoOverlay.innerHTML = `
+            <p class="text-primary font-display font-bold text-[10px] tracking-widest uppercase">${mix.genre}</p>
+            <h4 class="font-display font-extrabold text-lg text-white truncate">${mix.title}</h4>
+            <p class="text-muted text-[11px] font-medium">${mix.dj} // ${mix.date}</p>
+          `;
+          node.appendChild(infoOverlay);
+          container.appendChild(node);
+          
+          const x = (mix.cloud.basePos.left / 100) * window.innerWidth;
+          const y = (mix.cloud.basePos.top / 100) * window.innerHeight;
+          
+          node.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+          this.bindHoverCursor(node);
+          
+          node.addEventListener('click', () => {
+            if (this.isTransitioningNode) return;
+            this.handleMixNodeClick(mix);
+          });
+          
+          const nodeObj = {
+            id: mix.id,
+            mix: mix,
+            el: node,
+            x: x,
+            y: y,
+            vx: mix.cloud.vx * (1.0 + Math.random() * 0.2),
+            vy: mix.cloud.vy * (1.0 + Math.random() * 0.2),
+            size: mix.cloud.size,
+            isHovered: false
+          };
+          
+          node.addEventListener('mouseenter', () => { nodeObj.isHovered = true; });
+          node.addEventListener('mouseleave', () => { nodeObj.isHovered = false; });
+          
+          return nodeObj;
+        });
+      }
+
+      startDriftingCloud() {
+        if (this.isDrifting) return;
+        this.isDrifting = true;
+        this.driftLoop();
+      }
+
+      stopDriftingCloud() {
+        this.isDrifting = false;
+        if (this.driftLoopId) {
+          cancelAnimationFrame(this.driftLoopId);
+          this.driftLoopId = null;
+        }
+      }
+
+      driftLoop() {
+        if (!this.isDrifting) return;
+        
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        
+        this.archiveNodes.forEach((node) => {
+          if (!node.isHovered && !this.isTransitioningNode) {
+            node.x += node.vx;
+            node.y += node.vy;
+            
+            if (node.x < 0) {
+              node.x = 0;
+              node.vx *= -1;
+            } else if (node.x + node.size > w) {
+              node.x = w - node.size;
+              node.vx *= -1;
+            }
+            
+            const minY = 100;
+            if (node.y < minY) {
+              node.y = minY;
+              node.vy *= -1;
+            } else if (node.y + node.size > h) {
+              node.y = h - node.size;
+              node.vy *= -1;
+            }
+            
+            node.el.style.transform = `translate3d(${node.x}px, ${node.y}px, 0)`;
+          }
+        });
+        
+        this.driftLoopId = requestAnimationFrame(() => this.driftLoop());
+      }
+
+      // Event bindings setup
+      bindEvents() {
+        // App header logo resets
+        document.getElementById('header-logo').addEventListener('click', () => this.navigate('home'));
+
+        // Manifesto trigger modal
+        document.getElementById('btn-manifesto-open').addEventListener('click', () => this.showManifesto(true));
+        document.getElementById('btn-manifesto-close').addEventListener('click', () => this.showManifesto(false));
+        document.getElementById('modal-manifesto').addEventListener('click', (e) => {
+          if (e.target.id === 'modal-manifesto') this.showManifesto(false);
+        });
+
+        // Top Left Nav Button (Symmetric page swap)
+        document.getElementById('header-nav-btn').addEventListener('click', () => {
+          if (this.currentScreen === 'home') {
+            this.navigate('archive');
+          } else {
+            this.navigate('home');
+          }
+        });
+
+        // Homepage detailed player controls
+        document.getElementById('btn-main-play').addEventListener('click', () => this.togglePlayback());
+        document.getElementById('btn-main-play-art').addEventListener('click', () => this.togglePlayback());
+        document.getElementById('btn-main-prev').addEventListener('click', () => this.navigateNextPrevMix(-1));
+        document.getElementById('btn-main-next').addEventListener('click', () => this.navigateNextPrevMix(1));
+        
+        // Replay 10 / Forward 30
+        document.getElementById('btn-main-replay-10').addEventListener('click', () => this.replaySeconds(10));
+        document.getElementById('btn-main-forward-30').addEventListener('click', () => this.forwardSeconds(30));
+        
+        // Shuffle / Repeat toggles
+        document.getElementById('btn-main-shuffle').addEventListener('click', () => this.toggleShuffle());
+        document.getElementById('btn-main-repeat').addEventListener('click', () => this.toggleRepeat());
+
+        // Volume controls
+        const volSlider = document.getElementById('main-volume-slider');
+        volSlider.addEventListener('input', (e) => {
+          this.setVolume(e.target.value);
+        });
+        document.getElementById('btn-volume-mute').addEventListener('click', () => this.toggleMute());
+
+        // Archive Mini player controls
+        document.getElementById('btn-mini-play').addEventListener('click', () => this.togglePlayback());
+        document.getElementById('btn-mini-maximize').addEventListener('click', () => this.navigate('home'));
+        document.getElementById('mini-player-info-click').addEventListener('click', () => this.navigate('home'));
+
+        // Scrubber range changes
+        const scrubber = document.getElementById('main-scrubber');
+        scrubber.addEventListener('input', (e) => {
+          const val = e.target.value;
+          scrubber.style.background = `linear-gradient(to right, #D5FF00 ${val}%, #8A8A9D ${val}%)`;
+        });
+        scrubber.addEventListener('change', (e) => {
+          this.scrubPlayback(e.target.value);
+        });
+        
+        window.addEventListener('resize', () => {
+          if (this.currentScreen === 'archive' && !this.isTransitioningNode) {
+            this.setupArchiveNodes();
+          }
+        });
+      }
+
+      // -------------------------------------------------------------
+      // ROUTING SYSTEM
+      // -------------------------------------------------------------
+      navigate(screen) {
+        if (screen === this.currentScreen) return;
+        
+        const homeScreen = document.getElementById('screen-home');
+        const archiveScreen = document.getElementById('screen-archive');
+        
+        const navIcon = document.getElementById('header-nav-icon');
+        const navText = document.getElementById('header-nav-text');
+        
+        const hideScreen = (el) => {
+          el.style.opacity = 0;
+          el.style.pointerEvents = 'none';
+          el.style.transform = 'scale(0.95)';
+        };
+
+        const showScreen = (el) => {
+          el.style.opacity = 1;
+          el.style.pointerEvents = 'auto';
+          el.style.transform = 'scale(1)';
+        };
+
+        if (this.currentScreen === 'archive') {
+          this.stopDriftingCloud();
+        }
+
+        this.currentScreen = screen;
+
+        if (screen === 'home') {
+          hideScreen(archiveScreen);
+          showScreen(homeScreen);
+          
+          // Header button becomes "Enter Archive" with arrow pointing right
+          navIcon.textContent = 'arrow_forward';
+          navText.textContent = 'Enter Archive';
+          
+          // Load details
+          this.loadMixToPlayer(this.activeMix, false);
+          this.updatePlayerUI();
+        } 
+        else if (screen === 'archive') {
+          hideScreen(homeScreen);
+          showScreen(archiveScreen);
+          
+          // Header button becomes "Back to Player" with arrow pointing left
+          navIcon.textContent = 'arrow_back';
+          navText.textContent = 'Back to Player';
+          
+          this.startDriftingCloud();
+          this.updateMiniPlayerUI();
+        }
+      }
+
+      // Physics animation when selecting a mix node card
+      handleMixNodeClick(mix) {
+        this.isTransitioningNode = true;
+        this.stopDriftingCloud();
+        
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const centerX = w / 2;
+        const centerY = h / 2;
+        
+        const clickedNode = this.archiveNodes.find(n => n.id === mix.id);
+        
+        this.archiveNodes.forEach((node) => {
+          if (node.id === mix.id) {
+            node.el.style.zIndex = 100;
+            const targetX = centerX - node.size / 2;
+            const targetY = centerY - node.size / 2;
+            
+            node.el.style.transform = `translate3d(${targetX}px, ${targetY}px, 0) scale(1.1)`;
+            node.el.style.opacity = 0;
+          } else {
+            const dx = node.x + node.size/2 - centerX;
+            const dy = node.y + node.size/2 - centerY;
+            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+            
+            const multiplier = Math.max(w, h);
+            const scatterX = node.x + (dx / dist) * multiplier;
+            const scatterY = node.y + (dy / dist) * multiplier;
+            
+            node.el.style.transform = `translate3d(${scatterX}px, ${scatterY}px, 0) scale(0.6)`;
+            node.el.style.opacity = 0;
+          }
+        });
+        
+        // Swap mix, start play, navigate to main player page
+        setTimeout(() => {
+          this.isTransitioningNode = false;
+          
+          this.loadMixToPlayer(mix, true);
+          this.navigate('home');
+          this.setupArchiveNodes();
+        }, 650);
+      }
+
+      showManifesto(show) {
+        const modal = document.getElementById('modal-manifesto');
+        if (show) {
+          modal.style.opacity = 1;
+          modal.style.pointerEvents = 'auto';
+        } else {
+          modal.style.opacity = 0;
+          modal.style.pointerEvents = 'none';
+        }
+      }
+
+      // -------------------------------------------------------------
+      // CONNECTED MUSIC CONTROLLER FUNCTIONS
+      // -------------------------------------------------------------
+      
+      loadMixToPlayer(mix, startImmediately = false) {
+        const mixChanged = (!this.activeMix || this.activeMix.id !== mix.id);
+        this.activeMix = mix;
+        
+        if (mixChanged) {
+          this.playbackTime = 0;
+          if (this.isPlaying) {
+            this.pausePlaybackEngine();
+            if (startImmediately) this.startPlaybackEngine();
+          }
+        }
+        
+        if (startImmediately && !this.isPlaying) {
+          this.startPlaybackEngine();
+        }
+        
+        // Sync Homepage Player Card Texts
+        document.getElementById('main-genre').textContent = mix.genre.toUpperCase();
+        document.getElementById('main-title').textContent = mix.title;
+        document.getElementById('main-host-date').textContent = `Hosted by ${mix.dj} • ${mix.date}`;
+        document.getElementById('main-cover-img').src = mix.artUrl;
+        
+        // Sync descriptions
+        document.getElementById('detail-mix-desc').innerHTML = mix.description;
+        document.getElementById('detail-artist-bio').innerHTML = mix.artistBio;
+        
+        // Reset scroll position of details panel
+        document.getElementById('main-details-scroll').scrollTop = 0;
+        
+        // Scrubber updates
+        const scrubber = document.getElementById('main-scrubber');
+        scrubber.value = 0;
+        scrubber.style.background = 'linear-gradient(to right, #D5FF00 0%, #8A8A9D 0%)';
+        
+        document.getElementById('main-time-current').textContent = '00:00';
+        document.getElementById('main-time-total').textContent = formatTime(mix.duration);
+        
+        this.updatePlayerUI();
+      }
+
+      togglePlayback() {
+        if (this.isPlaying) {
+          this.pausePlaybackEngine();
+        } else {
+          this.startPlaybackEngine();
+        }
+      }
+
+      startPlaybackEngine() {
+        this.isPlaying = true;
+        
+        this.audioEngine.setSynthStyle(this.activeMix.synthStyle);
+        this.audioEngine.start();
+        this.updateVolumeEngine();
+        
+        this.timerInterval = setInterval(() => {
+          this.playbackTime++;
+          
+          if (this.playbackTime >= this.activeMix.duration) {
+            this.handleMixFinished();
+          }
+          
+          this.onPlaybackTick();
+        }, 1000);
+        
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+      }
+
+      pausePlaybackEngine() {
+        this.isPlaying = false;
+        this.audioEngine.stop();
+        
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+        
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+      }
+
+      handleMixFinished() {
+        if (this.isRepeat) {
+          this.playbackTime = 0; // loop mix
+        } else if (this.isShuffled) {
+          // Play random index
+          let randIdx;
+          do {
+            randIdx = Math.floor(Math.random() * MIXES.length);
+          } while (MIXES.length > 1 && MIXES[randIdx].id === this.activeMix.id);
+          
+          this.loadMixToPlayer(MIXES[randIdx], true);
+        } else {
+          // Play next mix
+          this.navigateNextPrevMix(1);
+        }
+      }
+
+      onPlaybackTick() {
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+      }
+
+      scrubPlayback(percent) {
+        const seconds = Math.floor((percent / 100) * this.activeMix.duration);
+        this.playbackTime = seconds;
+        
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+      }
+
+      replaySeconds(seconds) {
+        this.playbackTime = Math.max(0, this.playbackTime - seconds);
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+      }
+
+      forwardSeconds(seconds) {
+        this.playbackTime = Math.min(this.activeMix.duration, this.playbackTime + seconds);
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+      }
+
+      toggleShuffle() {
+        this.isShuffled = !this.isShuffled;
+        
+        const shuffleBtn = document.getElementById('btn-main-shuffle');
+        if (this.isShuffled) {
+          shuffleBtn.classList.remove('text-muted');
+          shuffleBtn.classList.add('text-primary');
+          shuffleBtn.style.textShadow = '0 0 10px rgba(213, 255, 0, 0.4)';
+        } else {
+          shuffleBtn.classList.remove('text-primary');
+          shuffleBtn.classList.add('text-muted');
+          shuffleBtn.style.textShadow = 'none';
+        }
+      }
+
+      toggleRepeat() {
+        this.isRepeat = !this.isRepeat;
+        
+        const repeatBtn = document.getElementById('btn-main-repeat');
+        if (this.isRepeat) {
+          repeatBtn.classList.remove('text-muted');
+          repeatBtn.classList.add('text-primary');
+          repeatBtn.style.textShadow = '0 0 10px rgba(213, 255, 0, 0.4)';
+        } else {
+          repeatBtn.classList.remove('text-primary');
+          repeatBtn.classList.add('text-muted');
+          repeatBtn.style.textShadow = 'none';
+        }
+      }
+
+      // Volume settings
+      setVolume(val) {
+        this.volumeLevel = val;
+        this.isMuted = (val === 0);
+        
+        const volSlider = document.getElementById('main-volume-slider');
+        volSlider.value = val;
+        volSlider.style.background = `linear-gradient(to right, #D5FF00 ${val}%, #8A8A9D ${val}%)`;
+        
+        this.updateVolumeEngine();
+        this.updateVolumeUI();
+      }
+
+      toggleMute() {
+        if (this.isMuted) {
+          this.isMuted = false;
+          this.setVolume(this.preMuteVolume || 60);
+        } else {
+          this.preMuteVolume = this.volumeLevel;
+          this.isMuted = true;
+          this.setVolume(0);
+        }
+      }
+
+      updateVolumeEngine() {
+        this.audioEngine.init();
+        if (this.audioEngine.masterGain) {
+          const gainVal = this.isMuted ? 0 : (this.volumeLevel / 100.0) * 0.8;
+          this.audioEngine.masterGain.gain.setValueAtTime(gainVal, this.audioEngine.ctx.currentTime);
+        }
+      }
+
+      updateVolumeUI() {
+        const volIcon = document.getElementById('icon-volume-low');
+        if (this.isMuted) {
+          volIcon.textContent = 'volume_off';
+          volIcon.classList.add('text-accent');
+        } else {
+          volIcon.classList.remove('text-accent');
+          if (this.volumeLevel < 35) {
+            volIcon.textContent = 'volume_mute';
+          } else if (this.volumeLevel < 75) {
+            volIcon.textContent = 'volume_down';
+          } else {
+            volIcon.textContent = 'volume_up';
+          }
+        }
+      }
+
+      navigateNextPrevMix(direction) {
+        const currentIdx = MIXES.findIndex(m => m.id === this.activeMix.id);
+        let nextIdx = currentIdx + direction;
+        
+        if (nextIdx < 0) nextIdx = MIXES.length - 1;
+        if (nextIdx >= MIXES.length) nextIdx = 0;
+        
+        this.loadMixToPlayer(MIXES[nextIdx], this.isPlaying);
+      }
+
+      // -------------------------------------------------------------
+      // UI STATE SYNCS
+      // -------------------------------------------------------------
+      
+      updatePlayerUI() {
+        if (this.currentScreen !== 'home') return;
+        
+        const mainPlayBtn = document.getElementById('icon-main-play');
+        const mainArtPlayBtn = document.getElementById('icon-main-play-art');
+        const statusDot = document.getElementById('main-status-dot');
+        const statusText = document.getElementById('main-status-text');
+        
+        if (this.isPlaying) {
+          mainPlayBtn.textContent = 'pause';
+          mainArtPlayBtn.textContent = 'pause';
+          
+          statusDot.className = "w-2.5 h-2.5 rounded-full bg-accent animate-pulse-dot";
+          statusText.textContent = "TRANSMITTING";
+          statusText.className = "text-[9px] font-bold tracking-widest text-accent uppercase font-ui";
+        } else {
+          mainPlayBtn.textContent = 'play_arrow';
+          mainArtPlayBtn.textContent = 'play_arrow';
+          
+          statusDot.className = "w-2.5 h-2.5 rounded-full bg-muted";
+          statusText.textContent = "OFFLINE";
+          statusText.className = "text-[9px] font-bold tracking-widest text-muted uppercase font-ui";
+        }
+
+        // Time updates
+        document.getElementById('main-time-current').textContent = formatTime(this.playbackTime);
+        const percent = Math.floor((this.playbackTime / this.activeMix.duration) * 100) || 0;
+        
+        const scrubber = document.getElementById('main-scrubber');
+        scrubber.value = percent;
+        scrubber.style.background = `linear-gradient(to right, #D5FF00 ${percent}%, #8A8A9D ${percent}%)`;
+        
+        // Sync volume bar on homepage render
+        this.setVolume(this.volumeLevel);
+      }
+
+      updateMiniPlayerUI() {
+        const miniPlayer = document.getElementById('archive-mini-player');
+        
+        if (this.currentScreen !== 'archive') {
+          miniPlayer.className = "absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-xl z-40 transition-all duration-500 transform translate-y-2 opacity-0 pointer-events-none";
+          return;
+        }
+        
+        miniPlayer.className = "absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-xl z-40 transition-all duration-500 transform translate-y-0 opacity-100 pointer-events-auto";
+        
+        document.getElementById('mini-art-img').src = this.activeMix.artUrl;
+        document.getElementById('mini-title').textContent = this.activeMix.title;
+        
+        const tracks = this.activeMix.tracks;
+        let activeTrack = tracks[0];
+        for (let i = 0; i < tracks.length; i++) {
+          if (this.playbackTime >= tracks[i].time) {
+            activeTrack = tracks[i];
+          }
+        }
+        
+        const statusText = this.isPlaying ? `Now Playing: ${activeTrack.artist} - ${activeTrack.title}` : `Stream Paused`;
+        document.getElementById('mini-subtext').textContent = `${this.activeMix.dj} // ${statusText}`;
+        
+        const miniPlayIcon = document.getElementById('icon-mini-play');
+        const miniArt = document.getElementById('mini-art-img');
+        if (this.isPlaying) {
+          miniPlayIcon.textContent = 'pause';
+          miniArt.classList.add('animate-rotate');
+        } else {
+          miniPlayIcon.textContent = 'play_arrow';
+          miniArt.classList.remove('animate-rotate');
+        }
+        
+        const percent = Math.floor((this.playbackTime / this.activeMix.duration) * 100) || 0;
+        document.getElementById('mini-progress-fill').style.width = percent + '%';
+      }
+    }
+
+    // -------------------------------------------------------------
+    // ENGINE INITIALIZATION
+    // -------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+      const app = new LowkalApp();
+      app.init();
+      
+      const enableAudio = () => {
+        app.audioEngine.init();
+        document.removeEventListener('click', enableAudio);
+      };
+      document.addEventListener('click', enableAudio);
+    });
+  </script>
+</body>
+</html>

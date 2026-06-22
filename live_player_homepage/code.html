@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lowkal.fm - Live Player</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700&amp;family=JetBrains+Mono:wght@500;700&amp;family=Inter:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#c8f20d",
+          "background-light": "#f8f8f5",
+          "background-dark": "#1f2210",
+          "vanta": "#050505",
+          "obsidian": "#121214",
+          "charcoal": "#1c1c1f",
+          "industrial": "#e6e6e6",
+          "ash": "#5c5c61"
+        },
+        fontFamily: {
+          "display": ["Syne", "sans-serif"],
+          "mono": ["JetBrains Mono", "monospace"],
+          "body": ["Inter", "sans-serif"]
+        },
+        borderRadius: {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem",
+          "sm": "0.125rem" // Aligning with the request for slight softening
+        },
+        animation: {
+          'mesh': 'meshAnim 20s ease infinite alternate',
+          'mesh-fast': 'meshAnim 10s ease infinite alternate',
+          'marquee': 'marquee 15s linear infinite',
+        },
+        keyframes: {
+          meshAnim: {
+            '0%': { backgroundPosition: '0% 50%' },
+            '50%': { backgroundPosition: '100% 50%' },
+            '100%': { backgroundPosition: '0% 50%' },
+          },
+          marquee: {
+            '0%': { transform: 'translateX(100%)' },
+            '100%': { transform: 'translateX(-100%)' },
+          }
+        }
+      },
+    },
+  }
+</script>
+<style>
+  /* SVG Noise Overlay */
+  .noise-overlay::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  /* Shifting Gradient Mesh */
+  .bg-mesh {
+    background: radial-gradient(circle at 0% 50%, #1c1c1f 0%, #050505 50%, #1c1c1f 100%);
+    background-size: 200% 200%;
+  }
+
+  /* Brutalist Interactions */
+  .brutalist-hover {
+    transition: none !important;
+  }
+  .brutalist-hover:hover {
+    background-color: #c8f20d !important;
+    color: #050505 !important;
+  }
+</style>
+</head>
+<body class="bg-vanta text-industrial font-body m-0 p-0 overflow-hidden noise-overlay select-none h-screen w-screen flex flex-col justify-end relative">
+<!-- Atmospheric Background -->
+<div class="absolute inset-0 bg-mesh animate-mesh -z-10" id="mesh-bg"></div>
+<!-- Shared Component Exclusion Logic applied: No TopAppBar or BottomNavBar as this is a focused "Live Player" screen. -->
+<!-- Archive Widget -->
+<div class="absolute bottom-20 right-4 z-20">
+<button class="w-12 h-12 bg-obsidian border border-charcoal rounded-sm flex items-center justify-center brutalist-hover cursor-pointer group">
+<span class="font-mono text-xs font-bold tracking-[0.05em] text-ash group-hover:text-vanta brutalist-hover">ARC</span>
+</button>
+</div>
+<!-- Player Bar -->
+<div class="h-12 w-full bg-vanta border-t border-charcoal flex items-stretch z-20 relative">
+<!-- Play/Stop Toggle -->
+<button class="w-24 shrink-0 border-r border-charcoal bg-vanta rounded-sm flex items-center justify-center cursor-pointer brutalist-hover group text-industrial" id="play-toggle">
+<span class="font-mono text-xs font-bold tracking-[0.05em] group-hover:text-vanta brutalist-hover" id="play-text">[PLAY]</span>
+</button>
+<!-- Metadata Marquee -->
+<div class="flex-1 overflow-hidden relative flex items-center bg-obsidian rounded-sm">
+<div class="whitespace-nowrap animate-marquee flex items-center h-full">
+<span class="font-display text-2xl font-bold uppercase tracking-wide px-8">CURRENT DJ NAME — TRACK ID</span>
+<span class="font-display text-2xl font-bold uppercase tracking-wide px-8 text-ash">LIVE TRANSMISSION</span>
+<span class="font-display text-2xl font-bold uppercase tracking-wide px-8">CURRENT DJ NAME — TRACK ID</span>
+<span class="font-display text-2xl font-bold uppercase tracking-wide px-8 text-ash">LIVE TRANSMISSION</span>
+</div>
+</div>
+</div>
+<script>
+    const playToggle = document.getElementById('play-toggle');
+    const playText = document.getElementById('play-text');
+    const meshBg = document.getElementById('mesh-bg');
+    let isPlaying = false;
+
+    playToggle.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        playText.textContent = '[STOP]';
+        playText.classList.add('text-primary');
+        meshBg.classList.remove('animate-mesh');
+        meshBg.classList.add('animate-mesh-fast');
+      } else {
+        playText.textContent = '[PLAY]';
+        playText.classList.remove('text-primary');
+        meshBg.classList.remove('animate-mesh-fast');
+        meshBg.classList.add('animate-mesh');
+      }
+    });
+  </script>
+</body></html>

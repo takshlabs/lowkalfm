@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lowkal.fm - Archive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&amp;family=JetBrains+Mono:wght@500;700&amp;family=Syne:wght@700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#D0FF00",
+          "background-light": "#f8f8f5",
+          "background-dark": "#050505",
+          "surface": "#121214",
+          "mesh": "#1C1C1F",
+          "text": "#E6E6E6",
+          "muted": "#5C5C61",
+        },
+        fontFamily: {
+          "display": ["Syne", "sans-serif"],
+          "mono": ["JetBrains Mono", "monospace"],
+          "body": ["Inter", "sans-serif"],
+        },
+        borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "0px"},
+      },
+    },
+  }
+</script>
+<style>
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+    z-index: 50;
+  }
+  
+  /* Spatial Grid Layout */
+  .spatial-canvas {
+    width: 300vw;
+    height: 300vh;
+    position: relative;
+    background-color: #050505;
+  }
+
+  .mix-node {
+    width: 320px;
+    height: 320px;
+    position: absolute;
+    border: 1px solid var(--color-mesh, #1C1C1F);
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .mix-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%);
+  }
+
+  .mix-node:hover .mix-image {
+    filter: grayscale(100%) invert(100%);
+  }
+
+  .mix-meta {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #121214;
+    padding: 16px;
+    border-top: 1px solid #1C1C1F;
+    display: none;
+  }
+
+  .mix-node:hover .mix-meta {
+    display: block;
+  }
+
+  /* Custom Scrollbar for brutalist feel */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #050505;
+    border-left: 1px solid #1C1C1F;
+    border-top: 1px solid #1C1C1F;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #5C5C61;
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #D0FF00;
+  }
+  
+  /* Utility for text inversion on hover if needed */
+  .hover-invert-text:hover {
+    color: #050505;
+    background-color: #D0FF00;
+  }
+</style>
+</head>
+<body class="bg-background-dark text-text font-body m-0 p-0 overflow-auto">
+<!-- Fixed Return Anchor -->
+<div class="fixed top-0 left-0 p-4 z-40">
+<button class="font-mono font-bold text-xs tracking-widest px-4 py-2 border border-mesh bg-surface text-text hover:bg-primary hover:text-background-dark transition-none uppercase">
+      [X] LIVE
+    </button>
+</div>
+<!-- Spatial Canvas Container -->
+<div class="spatial-canvas">
+<!-- Empty State (Hidden by default, uncomment to show) -->
+<!--
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <p class="font-mono text-xs text-muted uppercase tracking-widest">NO ARCHIVES FOUND</p>
+    </div>
+    -->
+<!-- Mix Nodes - Arbitrarily positioned for spatial effect -->
+<!-- Node 1 -->
+<div class="mix-node" style="top: 15%; left: 10%;">
+<img class="mix-image" data-alt="A stark, high-contrast black and white close-up of a brutalist concrete architectural detail. Heavy shadows emphasize the sharp geometric angles. The lighting is harsh and directional, creating a moody, industrial atmosphere typical of underground techno culture. Shot on grainy film." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-hm77k9oZ7QOoC7Y1fsugovq4fNAlVhAIj7Iy-kqdZbjVnUkz_WYMIkPQ5LdTkuGcGsfHJCcXDLfUR7jMsevgCjqurxt95MFdS56jMifBEk5xJ76_5Uu7SAepPoGiyol5zaQvclFc0U9gGV9S2sKduLmnNdI_G-p0jKjiFEcTAS8tLGXe8gqWrWtc83TqsAn59stoDNo9fH118GvpEUYuZrHPBSwYlqoeiFRqqX3pVNXSeVXadqiQ14NS9Iy4ea_Td1BQ7YQIsm6c"/>
+<div class="mix-meta">
+<p class="font-mono text-xs text-muted mb-1 uppercase tracking-widest">24.10.23</p>
+<h3 class="font-display text-xl text-primary mb-2">DJ OBLIVION</h3>
+<p class="font-mono text-xs text-text uppercase tracking-widest">INDUSTRIAL / TECHNO</p>
+</div>
+</div>
+<!-- Node 2 -->
+<div class="mix-node" style="top: 30%; left: 35%;">
+<img class="mix-image" data-alt="A dark, grainy black and white photograph of an empty, cavernous warehouse interior. Light streams in from a high, narrow window, illuminating dust motes in the air. The mood is desolate yet expectant, capturing the essence of an illegal rave space before the crowd arrives." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBO0m5gkZuyyICqKYOuhzl5oNB4pl37ZJSeXv7YtvsP0jmzfmvasHfQ8lzucQ_iLFE8rwKoXPGo_KSoqlWLAwYvnE7cAHD9RIgnl4oeZGet1otiIF_MswMZmqit1a-ypd1saFcKVg252-W1eRZhAklQP4FvkP9jJ8F8v89xrt8QWOxzmUDwfBdECyt78awszQakgSWKp9XkwYcPy5G2RTfyLLL8gE3GLvH_nJZO49Gdr9tho3ea4bxquiiyKb0RaP1SWWAIqnnnngRV"/>
+<div class="mix-meta">
+<p class="font-mono text-xs text-muted mb-1 uppercase tracking-widest">12.09.23</p>
+<h3 class="font-display text-xl text-primary mb-2">SILENT SERVANT</h3>
+<p class="font-mono text-xs text-text uppercase tracking-widest">DARKWAVE / EBM</p>
+</div>
+</div>
+<!-- Node 3 -->
+<div class="mix-node" style="top: 10%; left: 60%;">
+<img class="mix-image" data-alt="A macro, monochromatic shot of intertwined audio cables and modular synthesizer patch cords. The image is densely textured and chaotic, emphasizing the analog nature of electronic music production. Deep shadows and high-contrast lighting give it a gritty, raw aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5N6AIYpvnM8_3v9t99OjTj7I9WKPhqgMAnrlfnCbTA80pLWS6r9ref7-kAbT8kppGK7_xYQZclqKtAFhZ_iLuj3Z7Mc2z6-AMFCG-cigQFBPrTvw-Zzs50gVGZknIDjX0B4tUTs49-m7Egl3c9R0a2viSJ_t7kUVjLEMJXhYFTDOPWiGnt2tTwUHkEeRONgAX5Yd7U2ZyQ0VVmZkUicb_iWr11JEZTcRM0QGnZdrYfJeCzPrfsZMW3J5Nz_HBzqeWNOUS6pckt4OG"/>
+<div class="mix-meta">
+<p class="font-mono text-xs text-muted mb-1 uppercase tracking-widest">05.11.23</p>
+<h3 class="font-display text-xl text-primary mb-2">SYSTEM FAULT</h3>
+<p class="font-mono text-xs text-text uppercase tracking-widest">NOISE / AMBIENT</p>
+</div>
+</div>
+<!-- Node 4 -->
+<div class="mix-node" style="top: 55%; left: 20%;">
+<img class="mix-image" data-alt="A distorted, heavily degraded black and white image of a spinning vinyl record on a turntable. The motion blur creates abstract concentric circles. The image is pushed to extremes of contrast, losing fine detail in favor of raw graphic impact, reflecting a lo-fi underground ethos." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0Y0n19YHApaS25j0Np-soIDY3Cf8zJIB6_nvKFZsY0JgoMjyPGvJ_2xZwxlWU1wdQh5W_lZJ-MCay8DSh3jma_KOCWDACrnXQgDFEeEYG6EmvzJ9OuM560CWzcuxCAX-0cMaJzMW5TJ8aVw8217v__uRoF4s31RcbTXph9AAbIKQ6qvYAE1QS_PSooSJfh8hmf4fCGlaLef9KGVzwmTz0QaiBMtvaN3njzlZj1osihHa3jK-HX3oFjAwMLh0q1-zIthIcN3JCM5zE"/>
+<div class="mix-meta">
+<p class="font-mono text-xs text-muted mb-1 uppercase tracking-widest">18.08.23</p>
+<h3 class="font-display text-xl text-primary mb-2">ACID TRAX</h3>
+<p class="font-mono text-xs text-text uppercase tracking-widest">CHICAGO HOUSE / ACID</p>
+</div>
+</div>
+<!-- Node 5 -->
+<div class="mix-node" style="top: 65%; left: 55%;">
+<img class="mix-image" data-alt="An abstract, high-contrast monochrome photograph of chainlink fence shadows cast against a rough, textured concrete wall. The geometric patterns intersect sharply, creating a harsh, urban visual language. The lighting is stark and unforgiving, characteristic of brutalist photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAitmiZHDVUlNi7BJTxn4Nz9yqar8IO7rRTQ7qvBquu04Peijc5QV332S6AuCPA8CsT3GmOPsn495UByrCQVPoKMCrYComiAcdLUt4CYmXUXccPIPACfOtcju-qROzqAHAt_AtRT2nlxYv45APpLGIzTnXMv7Iy-fd_9VGopbG7bf5HfY7EmDZOylGAm03owMbiOYjog6D_2jTFRz8Mh1vuc9xRIPugIZyzBqJrWtd6R6IFPbc-U2IszRjtaKDDFSz_KsDs9YUIUdNz"/>
+<div class="mix-meta">
+<p class="font-mono text-xs text-muted mb-1 uppercase tracking-widest">02.12.23</p>
+<h3 class="font-display text-xl text-primary mb-2">VOID DWELLER</h3>
+<p class="font-mono text-xs text-text uppercase tracking-widest">DRONE / EXPERIMENTAL</p>
+</div>
+</div>
+<!-- Node 6 -->
+<div class="mix-node" style="top: 45%; left: 80%;">
+<img class="mix-image" data-alt="A close-up, black and white portrait of a DJ's hands manipulating a rotary mixer in a dark club setting. The image is gritty, with pronounced film grain. Only the hands and the metallic knobs of the mixer are illuminated, emerging from absolute blackness, conveying intense focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJgd4NSP_ICuvu5JvsMtbAUSdoHGIb9Hwv7yY4WoSqbVw_7RxYOSm_ylpy1aGCzqtImFf2mKUicWgVhFgxLwCHHNDvcrkIR8aTL-KAE0OS2Ux4Jwj936cdGteUNDtQfThvhhigUBDffwS4Vy2tziMnsVkpn04kUQ-hGXsk8DHmgbwBX-7Z8clMyAzNv1h5f3ConmWTlZBEeErVaE5Yo_6HW9B2FI-uVSUiDsU--ZsVQXUDBxVcz_AtGw8ykTTXYrLmwDH9E8uNkKTj"/>
+<div class="mix-meta">
+<p class="font-mono text-xs text-muted mb-1 uppercase tracking-widest">29.07.23</p>
+<h3 class="font-display text-xl text-primary mb-2">ROTARY CLUB</h3>
+<p class="font-mono text-xs text-text uppercase tracking-widest">DEEP HOUSE / DUB</p>
+</div>
+</div>
+</div>
+<script>
+    // Initial scroll position to center somewhat in the large canvas
+    window.onload = () => {
+      window.scrollTo(
+        (document.documentElement.scrollWidth - window.innerWidth) / 4,
+        (document.documentElement.scrollHeight - window.innerHeight) / 4
+      );
+    };
+  </script>
+</body></html>
