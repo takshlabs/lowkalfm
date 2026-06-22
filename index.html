@@ -443,8 +443,12 @@
     </div>
   </div>
 
+  <!-- Hidden YouTube Player (1px — needed for IFrame API) -->
+  <div id="yt-player" style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"></div>
+
   <!-- Script Libraries -->
   <script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+  <script src="https://www.youtube.com/iframe_api"></script>
 
   <!-- Core JavaScript Code -->
   <script>
@@ -458,6 +462,7 @@
         dj: 'DJ Void',
         date: '24 Oct 2023',
         genre: 'Garage / Breakbeat',
+        youtubeId: 'fw2mtwgCeGo',
         artUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCCrG1DEKigJH48GRUlWYb1VYtxtuP6kq_koycGF3__RW4S0Br82tZ3Dz8NcXBRH-u3cfmQmADJP6RObkX90wPTwgrTvfaRBWbMyXRVhBYlX07VCrD40S_ZxfdfEcezgPYblYwxCSmcOrs6nTe1S6u41TFHLh0TS8VrD8Qf3aicEzhYoUOhmahjAjbnOGLwDLik4FSVmBcFx1uBjYpRDyTdd7LiGmZD-3ouRH2jQ915ghHBT73zlHhNIbBntGzLhSzvxSlo5c4Clda3',
         description: '<em>Kinetic Drift</em> is a deep exploration into the architecture of silence and the weight of sub-bass textures. Curated by <strong>DJ Void</strong>, this hour-long session serves as a sonic bridge between structural industrial design and organic fluid dynamics.<br/><br/>The emotional arc begins with a stark, cavernous opening that slowly fractures into complex glitch sequences. Each transition is meticulously hand-crafted, favoring slow-burn harmonic crossfades that blur the lines between tracks until the individual pieces become a singular, breathing unit.',
         artistBio: '<strong>DJ Void</strong> is a London-based sound designer and visual artist whose work focuses on the intersection of early UK breakbeat culture and modern software synthesis. He has been a resident at Lowkal.fm since its inception, running the weekly Sunday bass transmissions.',
@@ -474,6 +479,7 @@
       },
       {
         id: 'industrial_techno',
+        youtubeId: null,
         title: 'Kontrol Archive 001',
         dj: 'DJ Oblivion',
         date: '12 Sep 2023',
@@ -495,6 +501,7 @@
       },
       {
         id: 'glitch_experimental',
+        youtubeId: null,
         title: 'Signal Degradation',
         dj: 'System Fault',
         date: '05 Nov 2023',
@@ -515,6 +522,7 @@
       },
       {
         id: 'ambient_monolith',
+        youtubeId: null,
         title: 'Subterranean Drones',
         dj: 'Void Dweller',
         date: '02 Dec 2023',
@@ -876,6 +884,92 @@
     }
 
     // -------------------------------------------------------------
+    // YOUTUBE PLAYER ENGINE
+    // -------------------------------------------------------------
+    class YouTubePlayerEngine {
+      constructor(onEnded) {
+        this.player = null;
+        this.isReady = false;
+        this.pendingLoad = null;
+        this.onEnded = onEnded;
+      }
+
+      onAPIReady() {
+        this.player = new YT.Player('yt-player', {
+          height: '1',
+          width: '1',
+          playerVars: {
+            controls: 0,
+            disablekb: 1,
+            iv_load_policy: 3,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1
+          },
+          events: {
+            onReady: () => {
+              this.isReady = true;
+              if (this.pendingLoad) {
+                const { videoId, autoplay } = this.pendingLoad;
+                this.pendingLoad = null;
+                this._doLoad(videoId, autoplay);
+              }
+            },
+            onStateChange: (e) => {
+              if (e.data === YT.PlayerState.ENDED && this.onEnded) {
+                this.onEnded();
+              }
+            }
+          }
+        });
+      }
+
+      _doLoad(videoId, autoplay) {
+        if (autoplay) {
+          this.player.loadVideoById(videoId);
+        } else {
+          this.player.cueVideoById(videoId);
+        }
+      }
+
+      load(videoId, autoplay = false) {
+        if (!videoId) return;
+        if (!this.isReady) {
+          this.pendingLoad = { videoId, autoplay };
+          return;
+        }
+        this._doLoad(videoId, autoplay);
+      }
+
+      play() {
+        try { if (this.player && this.isReady) this.player.playVideo(); } catch(e) {}
+      }
+
+      pause() {
+        try { if (this.player && this.isReady) this.player.pauseVideo(); } catch(e) {}
+      }
+
+      seekTo(seconds) {
+        try { if (this.player && this.isReady) this.player.seekTo(seconds, true); } catch(e) {}
+      }
+
+      setVolume(val) {
+        try { if (this.player && this.isReady) this.player.setVolume(parseInt(val)); } catch(e) {}
+      }
+
+      getCurrentTime() {
+        try { return (this.player && this.isReady) ? (this.player.getCurrentTime() || 0) : 0; } catch(e) { return 0; }
+      }
+
+      getDuration() {
+        try {
+          const d = (this.player && this.isReady) ? this.player.getDuration() : 0;
+          return d > 0 ? d : 0;
+        } catch(e) { return 0; }
+      }
+    }
+
+    // -------------------------------------------------------------
     // THREE.JS ANIMATED REACTIVE VISUALIZER
     // -------------------------------------------------------------
     class LowkalVisualizer {
@@ -1035,6 +1129,7 @@
         
         // Core Engines
         this.audioEngine = new LowkalAudioEngine();
+        this.ytEngine = new YouTubePlayerEngine(() => this.handleMixFinished());
         this.visualizer = new LowkalVisualizer('visualizer-canvas', this.audioEngine);
         
         // Archive Nodes positioning & drifting physics array
@@ -1044,14 +1139,22 @@
         this.isTransitioningNode = false;
       }
 
+      getEffectiveDuration() {
+        if (this.activeMix && this.activeMix.youtubeId) {
+          const d = this.ytEngine.getDuration();
+          return d > 0 ? d : this.activeMix.duration;
+        }
+        return this.activeMix ? this.activeMix.duration : 0;
+      }
+
       init() {
         this.visualizer.init();
         this.setupCursor();
         this.bindEvents();
         this.setupArchiveNodes();
-        
-        // Load default mix Kinetic Drift into Player elements
         this.loadMixToPlayer(this.activeMix, false);
+        window._appInstance = this;
+        if (window._ytAPIReady) this.ytEngine.onAPIReady();
       }
 
       // Cursor tracking and hovers
@@ -1391,15 +1494,18 @@
       loadMixToPlayer(mix, startImmediately = false) {
         const mixChanged = (!this.activeMix || this.activeMix.id !== mix.id);
         this.activeMix = mix;
-        
+
         if (mixChanged) {
           this.playbackTime = 0;
           if (this.isPlaying) {
             this.pausePlaybackEngine();
+            if (mix.youtubeId) this.ytEngine.load(mix.youtubeId, false);
             if (startImmediately) this.startPlaybackEngine();
+          } else {
+            if (mix.youtubeId) this.ytEngine.load(mix.youtubeId, false);
           }
         }
-        
+
         if (startImmediately && !this.isPlaying) {
           this.startPlaybackEngine();
         }
@@ -1438,34 +1544,50 @@
 
       startPlaybackEngine() {
         this.isPlaying = true;
-        
-        this.audioEngine.setSynthStyle(this.activeMix.synthStyle);
-        this.audioEngine.start();
+
+        if (this.activeMix.youtubeId) {
+          this.ytEngine.play();
+        } else {
+          this.audioEngine.setSynthStyle(this.activeMix.synthStyle);
+          this.audioEngine.start();
+        }
+
         this.updateVolumeEngine();
-        
+
         this.timerInterval = setInterval(() => {
-          this.playbackTime++;
-          
-          if (this.playbackTime >= this.activeMix.duration) {
-            this.handleMixFinished();
+          if (this.activeMix.youtubeId) {
+            this.playbackTime = Math.floor(this.ytEngine.getCurrentTime());
+          } else {
+            this.playbackTime++;
           }
-          
+
+          const dur = this.getEffectiveDuration();
+          if (dur > 0 && this.playbackTime >= dur) {
+            this.handleMixFinished();
+            return;
+          }
+
           this.onPlaybackTick();
         }, 1000);
-        
+
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
 
       pausePlaybackEngine() {
         this.isPlaying = false;
-        this.audioEngine.stop();
-        
+
+        if (this.activeMix.youtubeId) {
+          this.ytEngine.pause();
+        } else {
+          this.audioEngine.stop();
+        }
+
         if (this.timerInterval) {
           clearInterval(this.timerInterval);
           this.timerInterval = null;
         }
-        
+
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
@@ -1493,21 +1615,27 @@
       }
 
       scrubPlayback(percent) {
-        const seconds = Math.floor((percent / 100) * this.activeMix.duration);
+        const dur = this.getEffectiveDuration();
+        const seconds = Math.floor((percent / 100) * dur);
         this.playbackTime = seconds;
-        
+        if (this.activeMix.youtubeId) this.ytEngine.seekTo(seconds);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
 
       replaySeconds(seconds) {
-        this.playbackTime = Math.max(0, this.playbackTime - seconds);
+        const newTime = Math.max(0, this.playbackTime - seconds);
+        this.playbackTime = newTime;
+        if (this.activeMix.youtubeId) this.ytEngine.seekTo(newTime);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
 
       forwardSeconds(seconds) {
-        this.playbackTime = Math.min(this.activeMix.duration, this.playbackTime + seconds);
+        const dur = this.getEffectiveDuration();
+        const newTime = Math.min(dur, this.playbackTime + seconds);
+        this.playbackTime = newTime;
+        if (this.activeMix.youtubeId) this.ytEngine.seekTo(newTime);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
@@ -1567,10 +1695,15 @@
       }
 
       updateVolumeEngine() {
-        this.audioEngine.init();
-        if (this.audioEngine.masterGain) {
-          const gainVal = this.isMuted ? 0 : (this.volumeLevel / 100.0) * 0.8;
-          this.audioEngine.masterGain.gain.setValueAtTime(gainVal, this.audioEngine.ctx.currentTime);
+        const vol = this.isMuted ? 0 : this.volumeLevel;
+        if (this.activeMix && this.activeMix.youtubeId) {
+          this.ytEngine.setVolume(vol);
+        } else {
+          this.audioEngine.init();
+          if (this.audioEngine.masterGain) {
+            const gainVal = (vol / 100.0) * 0.8;
+            this.audioEngine.masterGain.gain.setValueAtTime(gainVal, this.audioEngine.ctx.currentTime);
+          }
         }
       }
 
@@ -1631,7 +1764,9 @@
 
         // Time updates
         document.getElementById('main-time-current').textContent = formatTime(this.playbackTime);
-        const percent = Math.floor((this.playbackTime / this.activeMix.duration) * 100) || 0;
+        const dur = this.getEffectiveDuration();
+        document.getElementById('main-time-total').textContent = formatTime(dur);
+        const percent = dur > 0 ? Math.floor((this.playbackTime / dur) * 100) : 0;
         
         const scrubber = document.getElementById('main-scrubber');
         scrubber.value = percent;
@@ -1675,8 +1810,20 @@
           miniArt.classList.remove('animate-rotate');
         }
         
-        const percent = Math.floor((this.playbackTime / this.activeMix.duration) * 100) || 0;
+        const miniDur = this.getEffectiveDuration();
+        const percent = miniDur > 0 ? Math.floor((this.playbackTime / miniDur) * 100) : 0;
         document.getElementById('mini-progress-fill').style.width = percent + '%';
+      }
+    }
+
+    // -------------------------------------------------------------
+    // YOUTUBE API GLOBAL CALLBACK
+    // -------------------------------------------------------------
+    function onYouTubeIframeAPIReady() {
+      if (window._appInstance) {
+        window._appInstance.ytEngine.onAPIReady();
+      } else {
+        window._ytAPIReady = true;
       }
     }
 
@@ -1686,7 +1833,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const app = new LowkalApp();
       app.init();
-      
+
       const enableAudio = () => {
         app.audioEngine.init();
         document.removeEventListener('click', enableAudio);
