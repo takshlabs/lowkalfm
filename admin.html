@@ -197,14 +197,24 @@
 
             <div style="margin-top: 16px;">
               <label>Cover Art</label>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <input type="url" data-field="artUrl" data-idx="${i}" id="arturl-input-${i}" value="${esc(mix.artUrl)}" style="flex:1;" oninput="previewArt(${i}, this.value)"/>
-                <button class="btn-ghost" style="padding:8px 14px;white-space:nowrap;flex-shrink:0;" onclick="triggerImageUpload(${i});event.preventDefault();">
-                  Upload Image
-                </button>
-                <input type="file" id="img-file-${i}" accept="image/*" style="display:none;" onchange="handleImageUpload(${i}, this)"/>
+              <div style="display:flex;gap:12px;align-items:flex-start;">
+                <!-- Live art preview — updates instantly on upload or URL edit -->
+                <div style="flex-shrink:0;position:relative;">
+                  <img id="art-preview-${i}" src="${esc(mix.artUrl)}" alt="Art preview"
+                    style="width:88px;height:88px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.10);background:#1a1a1a;display:block;"
+                    onerror="this.style.opacity='0.3';" onload="this.style.opacity='1';"/>
+                  <span id="art-badge-${i}" class="mono" style="display:none;position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:9px;letter-spacing:0.04em;background:rgba(85,233,59,0.9);color:#000;padding:2px 0;border-radius:0 0 5px 5px;">NEW</span>
+                </div>
+                <!-- URL + upload controls -->
+                <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="url" data-field="artUrl" data-idx="${i}" id="arturl-input-${i}" value="${esc(mix.artUrl)}" style="flex:1;" oninput="onArtUrlEdit(${i}, this.value)"/>
+                    <button class="btn-ghost" style="padding:8px 14px;white-space:nowrap;flex-shrink:0;" onclick="triggerImageUpload(${i});event.preventDefault();">Upload Image</button>
+                    <input type="file" id="img-file-${i}" accept="image/*" style="display:none;" onchange="handleImageUpload(${i}, this)"/>
+                  </div>
+                  <p id="upload-status-${i}" class="mono text-xs" style="color:#87957e;">Currently saved artwork — upload a new image or paste a URL to change.</p>
+                </div>
               </div>
-              <p id="upload-status-${i}" class="mono text-xs mt-1" style="display:none;"></p>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
@@ -240,6 +250,19 @@
       } else {
         mixes[idx][field] = el.value;
       }
+    }
+
+    function onArtUrlEdit(i, url) {
+      // User manually edited the URL field — update preview, clear NEW badge
+      mixes[i].artUrl = url;
+      const preview = document.getElementById('art-preview-' + i);
+      if (preview) { preview.src = url; preview.style.opacity = '1'; }
+      const headerImg = document.getElementById('preview-img-' + i);
+      if (headerImg) headerImg.src = url;
+      const badge = document.getElementById('art-badge-' + i);
+      if (badge) badge.style.display = 'none';
+      const status = document.getElementById('upload-status-' + i);
+      if (status) { status.style.color = '#87957e'; status.textContent = 'Currently saved artwork — upload a new image or paste a URL to change.'; }
     }
 
     function previewArt(i, url) {
@@ -322,8 +345,13 @@
       statusEl.style.color = '#87957e';
       statusEl.textContent = 'Uploading...';
 
-      // Show local preview instantly — don't wait for GitHub Pages to deploy
+      // Show local blob preview instantly — updates both header thumb and the inline preview
       const blobUrl = URL.createObjectURL(file);
+      const artPreview = document.getElementById('art-preview-' + idx);
+      if (artPreview) { artPreview.src = blobUrl; artPreview.style.opacity = '1'; }
+      const badge = document.getElementById('art-badge-' + idx);
+      if (badge) badge.style.display = 'block';
+      const blobUrl2 = blobUrl; // keep reference for closure
       previewArt(idx, blobUrl);
 
       try {
@@ -352,10 +380,10 @@
 
         const urlInput = document.getElementById('arturl-input-' + idx);
         if (urlInput) urlInput.value = url;
-        previewArt(idx, url);
+        previewArt(idx, blobUrl2); // keep local blob in header thumb (GitHub Pages takes ~1min)
 
         statusEl.style.color = '#55e93b';
-        statusEl.textContent = 'Uploaded — hit Commit Changes to save.';
+        statusEl.textContent = 'New image ready. Hit Commit Changes to save — will appear on the live site in ~1 min after deploy.';
       } catch(e) {
         statusEl.style.color = '#ff8eb6';
         statusEl.textContent = 'Upload failed: ' + e.message;
