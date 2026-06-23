@@ -1153,6 +1153,10 @@
         this.bindEvents();
         this.setupArchiveNodes();
         this.loadMixToPlayer(this.activeMix, false);
+        // Pre-cue initial mix — loadMixToPlayer skips ytEngine.load when mix hasn't changed
+        if (this.activeMix.youtubeId) {
+          this.ytEngine.load(this.activeMix.youtubeId, false);
+        }
         window._appInstance = this;
         if (window._ytAPIReady) this.ytEngine.onAPIReady();
       }
