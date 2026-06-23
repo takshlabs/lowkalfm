@@ -462,67 +462,85 @@ void main(){
   </div>
 
   <!-- STATION MANIFESTO MODAL -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-8 bg-[#131313]/85 backdrop-blur-[24px] opacity-0 pointer-events-none transition-all duration-500 ease-out" id="modal-manifesto">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-6 md:p-12 opacity-0 pointer-events-none transition-all duration-500 ease-out" id="modal-manifesto"
+    style="backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); background: rgba(10,10,10,0.6);">
+
     <!-- Close Button -->
-    <button class="absolute top-8 right-8 w-12 h-12 rounded-full border border-white/20 hover:border-primary/45 bg-surface/30 flex items-center justify-center text-white hover:text-primary hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none" id="btn-manifesto-close">
-      <span class="material-symbols-outlined text-2xl">close</span>
+    <button class="absolute top-6 right-6 w-11 h-11 flex items-center justify-center text-white/50 hover:text-primary focus:outline-none transition-colors duration-200"
+      id="btn-manifesto-close"
+      style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; backdrop-filter: blur(12px);">
+      <span class="material-symbols-outlined text-xl">close</span>
     </button>
 
-    <!-- Content Container -->
-    <div class="w-full max-w-3xl glass-panel p-8 md:p-12 rounded-xl shadow-float border border-white/10 flex flex-col gap-8 max-h-[85vh] overflow-y-auto custom-scrollbar">
-      
-      <!-- Brand Logo Header Block -->
-      <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
-        <!-- Logo Image -->
-        <img src="logo.jpg" class="w-24 h-24 rounded-xl border border-white/10 shadow-float shrink-0" alt="Lowkal.fm Logo" />
-        <div class="flex-1 text-center md:text-left">
-          <span class="text-primary font-display font-bold text-xs tracking-widest uppercase">our ethos</span>
-          <h2 class="font-display font-extrabold text-4xl md:text-5xl text-white mt-2 leading-none uppercase">LOWKAL MANIFESTO</h2>
+    <!-- Outer liquid glass shell -->
+    <div class="w-full max-w-2xl flex flex-col max-h-[88vh]"
+      style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 32px 80px rgba(0,0,0,0.7);">
+
+      <!-- Header panel — slightly more opaque inner glass layer -->
+      <div class="shrink-0 flex items-center gap-5 p-6 md:p-8"
+        style="border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); border-radius: 16px 16px 0 0;">
+        <img src="logo.jpg" class="w-14 h-14 shrink-0" alt="Lowkal.fm"
+          style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 0 20px rgba(85,233,59,0.08);"/>
+        <div>
+          <div class="font-mono text-xs tracking-widest uppercase mb-1" style="color:#55e93b; font-family:'JetBrains Mono',monospace;">STATION BROADCAST</div>
+          <h2 class="font-display font-bold uppercase leading-none" style="font-size: clamp(1.6rem, 4vw, 2.5rem); letter-spacing: -0.01em;">LOWKAL MANIFESTO</h2>
         </div>
       </div>
 
-      <div class="font-ui text-md text-white/80 leading-relaxed space-y-4">
-        <p>
-          Lowkal.fm is an art-forward, distraction-free digital canvas dedicated to underground electronic music. We discard traditional cluttered interfaces, social media integrations, and analytics tracking in favor of deep visual atmosphere and focused sonic discovery.
-        </p>
-        <p>
-          We operate as an independent station. Every stream is synthesized or curated in real time to generate deep, atmospheric, and kinetic sonic moods. This is radio for deep listening, programming, and spatial exploration.
-        </p>
-      </div>
+      <!-- Scrollable body -->
+      <div class="overflow-y-auto custom-scrollbar flex-1 p-6 md:p-8 flex flex-col gap-7">
 
-      <!-- Weekly Schedule Grid -->
-      <div class="border-t border-white/10 pt-8">
-        <h3 class="font-display font-bold text-lg text-primary mb-6 uppercase tracking-wider">Weekly Broadcast Schedule</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-ui text-sm">
-          <div class="flex justify-between items-center py-2 border-b border-white/5">
-            <span class="font-medium text-white/90">Monday // 20:00 - 22:00</span>
-            <span class="text-muted text-right">DJ Oblivion (Industrial Techno)</span>
+        <!-- Manifesto text in a recessed glass panel -->
+        <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 20px 24px;">
+          <p class="font-ui text-sm leading-7" style="color: rgba(229,226,225,0.75);">
+            Lowkal.fm is an art-forward, distraction-free digital canvas dedicated to underground electronic music. We discard traditional cluttered interfaces, social media integrations, and analytics tracking in favor of deep visual atmosphere and focused sonic discovery.
+          </p>
+          <p class="font-ui text-sm leading-7 mt-4" style="color: rgba(229,226,225,0.75);">
+            We operate as an independent station. Every stream is synthesized or curated in real time to generate deep, atmospheric, and kinetic sonic moods. This is radio for deep listening, programming, and spatial exploration.
+          </p>
+        </div>
+
+        <!-- Schedule -->
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <span class="font-mono text-xs tracking-widest uppercase" style="color:#55e93b; font-family:'JetBrains Mono',monospace;">Weekly Broadcast Schedule</span>
+            <div class="flex-1" style="height:1px; background: linear-gradient(to right, rgba(85,233,59,0.3), transparent);"></div>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-white/5">
-            <span class="font-medium text-white/90">Tuesday // 21:00 - 23:00</span>
-            <span class="text-muted text-right">Silent Servant (Darkwave & EBM)</span>
-          </div>
-          <div class="flex justify-between items-center py-2 border-b border-white/5">
-            <span class="font-medium text-white/90">Wednesday // 22:00 - 00:00</span>
-            <span class="text-muted text-right">System Fault (Noise & Ambient)</span>
-          </div>
-          <div class="flex justify-between items-center py-2 border-b border-white/5">
-            <span class="font-medium text-white/90">Thursday // 20:00 - 22:00</span>
-            <span class="text-muted text-right">Acid Trax (Chicago House & Acid)</span>
-          </div>
-          <div class="flex justify-between items-center py-2 border-b border-white/5">
-            <span class="font-medium text-white/90">Friday // 22:00 - 00:00</span>
-            <span class="text-muted text-right">Void Dweller (Drone & Experimental)</span>
-          </div>
-          <div class="flex justify-between items-center py-2 border-b border-white/5">
-            <span class="font-medium text-white/90">Saturday // 20:00 - 23:00</span>
-            <span class="text-muted text-right">Rotary Club (Deep House & Dub)</span>
-          </div>
-          <div class="flex justify-between items-center py-2 border-b border-white/5 md:col-span-2">
-            <span class="font-medium text-primary">Sunday // 18:00 - 20:00 (Resident)</span>
-            <span class="text-primary font-bold">DJ Void // Kinetic Garage & Breaks</span>
+
+          <div class="flex flex-col gap-1">
+            <!-- Schedule rows — alternating glass tiers -->
+            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">MON 20:00–22:00</span>
+              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">DJ Oblivion — Industrial Techno</span>
+            </div>
+            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
+              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">TUE 21:00–23:00</span>
+              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Silent Servant — Darkwave & EBM</span>
+            </div>
+            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">WED 22:00–00:00</span>
+              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">System Fault — Noise & Ambient</span>
+            </div>
+            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
+              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">THU 20:00–22:00</span>
+              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Acid Trax — Chicago House & Acid</span>
+            </div>
+            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">FRI 22:00–00:00</span>
+              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Void Dweller — Drone & Experimental</span>
+            </div>
+            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
+              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">SAT 20:00–23:00</span>
+              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Rotary Club — Deep House & Dub</span>
+            </div>
+            <!-- Resident row — acid green highlight -->
+            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(85,233,59,0.04); border: 1px solid rgba(85,233,59,0.18); box-shadow: 0 0 16px rgba(85,233,59,0.05) inset;">
+              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:#55e93b;">SUN 18:00–20:00 · RESIDENT</span>
+              <span class="font-ui text-sm font-semibold" style="color:#55e93b;">Takezo — Drum & Bass</span>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
