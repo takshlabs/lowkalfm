@@ -27,7 +27,7 @@
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Geist:wght@300;400;500;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   
   <script id="tailwind-config">
@@ -36,21 +36,24 @@
       theme: {
         extend: {
           colors: {
-            "primary": "#D5FF00", // Electric Lime
-            "background-base": "#050511", // Ink Blue
-            "surface": "rgba(20, 20, 43, 0.4)", // Deep Violet Translucent
-            "text-main": "#FFFFFF",
-            "muted": "#8A8A9D", // Ash Blue
-            "accent": "#FF0055", // Neon Magenta
+            "primary": "#55e93b",        // Acid Green
+            "background-base": "#131313", // Deep Obsidian
+            "surface": "rgba(255, 255, 255, 0.03)", // Glass
+            "text-main": "#e5e2e1",
+            "muted": "#87957e",           // Outline / muted
+            "secondary": "#b9c3ff",       // Cobalt Blue
+            "accent": "#ff8eb6",          // Tertiary Pink
           },
           fontFamily: {
-            "display": ["Syne", "sans-serif"],
-            "ui": ["Outfit", "sans-serif"],
+            "display": ["Archivo Narrow", "sans-serif"],
+            "ui": ["Geist", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"],
           },
           borderRadius: {
-            "DEFAULT": "0.5rem",
-            "lg": "12px",
-            "xl": "20px", // matching reference image rounded card
+            "DEFAULT": "0.25rem",
+            "sm": "0.125rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
             "full": "9999px"
           },
           boxShadow: {
@@ -67,14 +70,14 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #050511;
-      color: #FFFFFF;
-      font-family: 'Outfit', sans-serif;
+      background-color: #131313;
+      color: #e5e2e1;
+      font-family: 'Geist', sans-serif;
       cursor: none !important;
     }
-    
+
     h1, h2, h3, .font-display {
-      font-family: 'Syne', sans-serif;
+      font-family: 'Archivo Narrow', sans-serif;
     }
 
     /* Force cursor none for interactive elements */
@@ -89,7 +92,7 @@
       left: 0;
       width: 16px;
       height: 16px;
-      background-color: #D5FF00;
+      background-color: #55e93b;
       border-radius: 50%;
       pointer-events: none;
       z-index: 9999;
@@ -100,15 +103,15 @@
     .custom-cursor.hover {
       width: 36px;
       height: 36px;
-      background-color: #FF0055;
+      background-color: #b9c3ff;
     }
 
-    /* Glassmorphism styling */
+    /* Glassmorphism styling — Obsidian Flux spec */
     .glass-panel {
-      background: rgba(18, 18, 38, 0.45);
+      background: rgba(255, 255, 255, 0.03);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.10);
     }
 
     /* Scrollbar customization */
@@ -119,14 +122,14 @@
       background: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(138, 138, 157, 0.4);
+      background: rgba(135, 149, 126, 0.4);
       border-radius: 99px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #D5FF00;
+      background: #55e93b;
     }
 
-    /* Custom range input styling */
+    /* Custom range input — industrial seeker style */
     input[type=range] {
       -webkit-appearance: none;
       width: 100%;
@@ -135,36 +138,24 @@
     }
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      height: 12px;
-      width: 12px;
-      border-radius: 50%;
-      background: #D5FF00;
+      height: 14px;
+      width: 3px;
+      border-radius: 1px;
+      background: #55e93b;
+      box-shadow: 0 0 6px rgba(85, 233, 59, 0.7);
       cursor: pointer;
-      margin-top: -4px;
-      transition: transform 0.1s;
+      margin-top: -5px;
+      transition: box-shadow 0.1s;
     }
     input[type=range]::-webkit-slider-thumb:hover {
-      transform: scale(1.25);
+      box-shadow: 0 0 10px rgba(85, 233, 59, 1);
     }
     input[type=range]::-webkit-slider-runnable-track {
       width: 100%;
-      height: 4px;
+      height: 2px;
       cursor: pointer;
-      background: #8A8A9D;
-      border-radius: 2px;
-    }
-
-    /* Ambient animated mesh background underneath WebGL */
-    .ambient-bg {
-      background: radial-gradient(circle at 30% 30%, rgba(255, 0, 85, 0.15) 0%, rgba(5, 5, 17, 1) 70%),
-                  radial-gradient(circle at 70% 80%, rgba(213, 255, 0, 0.1) 0%, rgba(5, 5, 17, 0) 50%);
-      background-size: 200% 200%;
-      animation: pulseBg 25s infinite alternate ease-in-out;
-    }
-    @keyframes pulseBg {
-      0% { background-position: 0% 0%; }
-      50% { background-position: 100% 100%; }
-      100% { background-position: 0% 0%; }
+      background: #3d4a37;
+      border-radius: 1px;
     }
 
     /* Rotate animation for vinyl thumbnail in mini player */
@@ -192,8 +183,101 @@
   <!-- Custom Cursor -->
   <div class="custom-cursor" id="custom-cursor"></div>
 
-  <!-- Ambient Animated Color Layer -->
-  <div class="absolute inset-0 z-0 ambient-bg pointer-events-none"></div>
+  <!-- WebGL Liquid Shader Background -->
+  <div class="absolute inset-0 z-0 pointer-events-none" style="display:block;">
+    <canvas id="shader-canvas-ANIMATION_5" style="display:block;width:100%;height:100%"></canvas>
+    <script>
+    (function() {
+      const canvas = document.getElementById('shader-canvas-ANIMATION_5');
+      function syncSize() {
+        const w = canvas.clientWidth || 1280;
+        const h = canvas.clientHeight || 720;
+        if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      }
+      if (typeof ResizeObserver !== 'undefined') { new ResizeObserver(syncSize).observe(canvas); }
+      syncSize();
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) return;
+      const vs = `attribute vec2 a_position;varying vec2 v_texCoord;void main(){v_texCoord=a_position*0.5+0.5;gl_Position=vec4(a_position,0.0,1.0);}`;
+      const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+vec3 permute(vec3 x){return mod(((x*34.0)+1.0)*x,289.0);}
+float snoise(vec2 v){
+  const vec4 C=vec4(0.211324865405187,0.366025403784439,-0.577350269189626,0.024390243902439);
+  vec2 i=floor(v+dot(v,C.yy));
+  vec2 x0=v-i+dot(i,C.xx);
+  vec2 i1;
+  i1=(x0.x>x0.y)?vec2(1.0,0.0):vec2(0.0,1.0);
+  vec4 x12=x0.xyxy+C.xxzz;
+  x12.xy-=i1;
+  i=mod(i,289.0);
+  vec3 p=permute(permute(i.y+vec3(0.0,i1.y,1.0))+i.x+vec3(0.0,i1.x,1.0));
+  vec3 m=max(0.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.0);
+  m=m*m;m=m*m;
+  vec3 x=2.0*fract(p*C.www)-1.0;
+  vec3 h=abs(x)-0.5;
+  vec3 ox=floor(x+0.5);
+  vec3 a0=x-ox;
+  m*=1.79284291400159-0.85373472095314*(a0*a0+h*h);
+  vec3 g;
+  g.x=a0.x*x0.x+h.x*x0.y;
+  g.yz=a0.yz*x12.xz+h.yz*x12.yw;
+  return 130.0*dot(m,g);
+}
+void main(){
+  vec2 uv=v_texCoord;
+  vec2 mouse=u_mouse/u_resolution;
+  float noise1=snoise(uv*2.0+u_time*0.1);
+  float noise2=snoise(uv*4.0-u_time*0.2+noise1);
+  float dist=distance(uv,mouse);
+  float mouseEffect=smoothstep(0.5,0.0,dist)*0.5;
+  float pulse=sin(u_time*0.5)*0.5+0.5;
+  float signal=noise2+mouseEffect+(pulse*0.1);
+  vec3 baseColor=vec3(0.0,0.0,0.0);
+  vec3 accentColor=vec3(0.5,0.1,1.0);
+  vec3 color=mix(baseColor,accentColor,signal*0.6);
+  float grain=fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453);
+  color+=(grain-0.5)*0.05;
+  gl_FragColor=vec4(color,1.0);
+}`;
+      function cs(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+      const prog=gl.createProgram();
+      gl.attachShader(prog,cs(gl.VERTEX_SHADER,vs));
+      gl.attachShader(prog,cs(gl.FRAGMENT_SHADER,fs));
+      gl.linkProgram(prog);gl.useProgram(prog);
+      const buf=gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+      const pos=gl.getAttribLocation(prog,'a_position');
+      gl.enableVertexAttribArray(pos);
+      gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+      const uTime=gl.getUniformLocation(prog,'u_time');
+      const uRes=gl.getUniformLocation(prog,'u_resolution');
+      const uMouse=gl.getUniformLocation(prog,'u_mouse');
+      let mouse={x:canvas.width/2,y:canvas.height/2};
+      window.addEventListener('mousemove',(e)=>{
+        const r=canvas.getBoundingClientRect();
+        if(r.width&&r.height){
+          mouse.x=((e.clientX-r.left)/r.width)*canvas.width;
+          mouse.y=(1.0-(e.clientY-r.top)/r.height)*canvas.height;
+        }
+      });
+      function render(t){
+        if(typeof ResizeObserver==='undefined')syncSize();
+        gl.viewport(0,0,canvas.width,canvas.height);
+        if(uTime)gl.uniform1f(uTime,t*0.001);
+        if(uRes)gl.uniform2f(uRes,canvas.width,canvas.height);
+        if(uMouse)gl.uniform2f(uMouse,mouse.x,mouse.y);
+        gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+        requestAnimationFrame(render);
+      }
+      render(0);
+    })();
+    </script>
+  </div>
 
   <!-- Three.js Canvas Layer -->
   <canvas class="absolute inset-0 z-10 w-full h-full pointer-events-none opacity-50" id="visualizer-canvas"></canvas>
@@ -378,7 +462,7 @@
   </div>
 
   <!-- STATION MANIFESTO MODAL -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-8 bg-[#050511]/85 backdrop-blur-[24px] opacity-0 pointer-events-none transition-all duration-500 ease-out" id="modal-manifesto">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-8 bg-[#131313]/85 backdrop-blur-[24px] opacity-0 pointer-events-none transition-all duration-500 ease-out" id="modal-manifesto">
     <!-- Close Button -->
     <button class="absolute top-8 right-8 w-12 h-12 rounded-full border border-white/20 hover:border-primary/45 bg-surface/30 flex items-center justify-center text-white hover:text-primary hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none" id="btn-manifesto-close">
       <span class="material-symbols-outlined text-2xl">close</span>
@@ -986,8 +1070,8 @@
         this.animationId = null;
         this.dataArray = new Uint8Array(32);
         
-        this.limeColor = 0xd5ff00;
-        this.magentaColor = 0xff0055;
+        this.limeColor = 0x55e93b;
+        this.magentaColor = 0xb9c3ff;
       }
 
       init() {
@@ -1213,7 +1297,7 @@
           const playBtn = document.createElement('div');
           const btnSize = mix.cloud.size > 200 ? (mix.cloud.size > 300 ? 'w-20 h-20' : 'w-16 h-16') : 'w-12 h-12';
           const iconSize = mix.cloud.size > 200 ? (mix.cloud.size > 300 ? 'text-4xl' : 'text-3xl') : 'text-2xl';
-          playBtn.className = `${btnSize} rounded-full bg-primary flex items-center justify-center shadow-[0_0_25px_rgba(213,255,0,0.45)] transform group-hover:scale-105 transition-transform duration-300`;
+          playBtn.className = `${btnSize} rounded-full bg-primary flex items-center justify-center shadow-[0_0_25px_rgba(85,233,59,0.45)] transform group-hover:scale-105 transition-transform duration-300`;
           
           const icon = document.createElement('span');
           icon.className = 'material-symbols-outlined text-background-base font-bold ' + iconSize;
@@ -1368,7 +1452,7 @@
         const scrubber = document.getElementById('main-scrubber');
         scrubber.addEventListener('input', (e) => {
           const val = e.target.value;
-          scrubber.style.background = `linear-gradient(to right, #D5FF00 ${val}%, #8A8A9D ${val}%)`;
+          scrubber.style.background = `linear-gradient(to right, #55e93b ${val}%, #87957e ${val}%)`;
         });
         scrubber.addEventListener('change', (e) => {
           this.scrubPlayback(e.target.value);
@@ -1530,7 +1614,7 @@
         // Scrubber updates
         const scrubber = document.getElementById('main-scrubber');
         scrubber.value = 0;
-        scrubber.style.background = 'linear-gradient(to right, #D5FF00 0%, #8A8A9D 0%)';
+        scrubber.style.background = 'linear-gradient(to right, #55e93b 0%, #87957e 0%)';
         
         document.getElementById('main-time-current').textContent = '00:00';
         document.getElementById('main-time-total').textContent = formatTime(mix.duration);
@@ -1653,7 +1737,7 @@
         if (this.isShuffled) {
           shuffleBtn.classList.remove('text-muted');
           shuffleBtn.classList.add('text-primary');
-          shuffleBtn.style.textShadow = '0 0 10px rgba(213, 255, 0, 0.4)';
+          shuffleBtn.style.textShadow = '0 0 10px rgba(85, 233, 59, 0.4)';
         } else {
           shuffleBtn.classList.remove('text-primary');
           shuffleBtn.classList.add('text-muted');
@@ -1668,7 +1752,7 @@
         if (this.isRepeat) {
           repeatBtn.classList.remove('text-muted');
           repeatBtn.classList.add('text-primary');
-          repeatBtn.style.textShadow = '0 0 10px rgba(213, 255, 0, 0.4)';
+          repeatBtn.style.textShadow = '0 0 10px rgba(85, 233, 59, 0.4)';
         } else {
           repeatBtn.classList.remove('text-primary');
           repeatBtn.classList.add('text-muted');
@@ -1683,7 +1767,7 @@
         
         const volSlider = document.getElementById('main-volume-slider');
         volSlider.value = val;
-        volSlider.style.background = `linear-gradient(to right, #D5FF00 ${val}%, #8A8A9D ${val}%)`;
+        volSlider.style.background = `linear-gradient(to right, #55e93b ${val}%, #87957e ${val}%)`;
         
         this.updateVolumeEngine();
         this.updateVolumeUI();
@@ -1774,7 +1858,7 @@
         
         const scrubber = document.getElementById('main-scrubber');
         scrubber.value = percent;
-        scrubber.style.background = `linear-gradient(to right, #D5FF00 ${percent}%, #8A8A9D ${percent}%)`;
+        scrubber.style.background = `linear-gradient(to right, #55e93b ${percent}%, #87957e ${percent}%)`;
         
         // Sync volume bar on homepage render
         this.setVolume(this.volumeLevel);
