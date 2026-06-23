@@ -537,9 +537,9 @@ void main(){
   <!-- Core JavaScript Code -->
   <script>
     // -------------------------------------------------------------
-    // DATABASE: Mixes & Broadcasts
+    // DATABASE: Mixes & Broadcasts (inline fallback — live data from mixes.json)
     // -------------------------------------------------------------
-    const MIXES = [
+    let MIXES = [
       {
         id: 'kinetic_drift',
         title: 'Kinetic Drift',
@@ -1917,8 +1917,19 @@ void main(){
 
     // -------------------------------------------------------------
     // ENGINE INITIALIZATION
+    // Fetches mixes.json (live data); falls back to inline MIXES on failure.
+    // Requires HTTP — does not work on file://.
     // -------------------------------------------------------------
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const res = await fetch('mixes.json');
+        if (res.ok) {
+          MIXES = await res.json();
+        }
+      } catch(e) {
+        // Silently use inline fallback
+      }
+
       const app = new LowkalApp();
       app.init();
 

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Lowkal.fm — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;600;700&family=Geist:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { background: #0e0e0e; color: #e5e2e1; font-family: 'Geist', sans-serif; min-height: 100vh; }
+    h1, h2, h3, .font-display { font-family: 'Archivo Narrow', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.10); backdrop-filter: blur(24px); }
+    input, textarea {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 4px;
+      color: #e5e2e1;
+      padding: 8px 12px;
+      width: 100%;
+      font-family: 'Geist', sans-serif;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { outline: none; border-color: #55e93b; }
+    textarea { resize: vertical; min-height: 80px; }
+    label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: #87957e; display: block; margin-bottom: 4px; }
+    .btn-primary {
+      background: #55e93b; color: #0a0a0a;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 10px 20px; border-radius: 4px; border: none; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent; color: #87957e;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 8px 16px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.10); cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-ghost:hover { border-color: #55e93b; color: #55e93b; }
+    .status-ok { color: #55e93b; }
+    .status-err { color: #ff8eb6; }
+    details > summary { cursor: pointer; list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header style="border-bottom: 1px solid rgba(255,255,255,0.08); padding: 20px 32px;" class="flex items-center justify-between sticky top-0 z-50" style="background:#0e0e0e;">
+    <div class="flex items-center gap-4">
+      <img src="logo.jpg" class="w-8 h-8 rounded" alt="Logo" onerror="this.style.display='none'"/>
+      <div>
+        <h1 class="font-display font-bold text-xl tracking-wider uppercase" style="line-height:1;">LOWKAL.FM</h1>
+        <span class="mono text-xs" style="color:#87957e;">ADMIN PANEL</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="status-msg" class="mono text-xs"></span>
+      <button id="btn-commit" class="btn-primary" disabled>Commit Changes</button>
+    </div>
+  </header>
+
+  <!-- Auth Section -->
+  <div id="auth-section" style="padding: 32px; max-width: 640px; margin: 0 auto;">
+    <div class="glass" style="border-radius: 8px; padding: 24px;">
+      <h2 class="font-display font-bold text-lg uppercase mb-1">GitHub Authentication</h2>
+      <p class="text-sm mb-4" style="color:#87957e;">Token is stored for this browser session only and discarded when you close the tab.</p>
+      <div style="margin-bottom: 16px;">
+        <label>Personal Access Token (repo scope)</label>
+        <input type="password" id="pat-input" placeholder="ghp_..." autocomplete="off"/>
+      </div>
+      <button class="btn-primary" onclick="loadWithPAT()">Connect &amp; Load Mixes</button>
+      <p class="mono text-xs mt-3" style="color:#87957e;">Repo: takshlabs/lowkalfm — Branch: main</p>
+    </div>
+  </div>
+
+  <!-- Mixes Editor -->
+  <div id="editor-section" style="display:none; padding: 24px 32px; max-width: 960px; margin: 0 auto;">
+    <div id="mixes-container" style="display: flex; flex-direction: column; gap: 16px;"></div>
+    <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08);">
+      <button class="btn-ghost" onclick="addNewMix()">+ Add New Mix</button>
+    </div>
+  </div>
+
+  <script>
+    const REPO = 'takshlabs/lowkalfm';
+    const FILE = 'mixes.json';
+    const BRANCH = 'main';
+    let PAT = '';
+    let currentSha = '';
+    let mixes = [];
+
+    async function loadWithPAT() {
+      const input = document.getElementById('pat-input').value.trim();
+      if (!input) return setStatus('Enter a PAT first.', true);
+
+      PAT = input;
+      sessionStorage.setItem('lowkal_pat', PAT);
+      setStatus('Loading...', false);
+
+      try {
+        const res = await ghGet(`/repos/${REPO}/contents/${FILE}?ref=${BRANCH}`);
+        currentSha = res.sha;
+        mixes = JSON.parse(atob(res.content.replace(/\n/g, '')));
+        showEditor();
+      } catch(e) {
+        setStatus('Failed to load: ' + e.message, true);
+      }
+    }
+
+    function showEditor() {
+      document.getElementById('auth-section').style.display = 'none';
+      document.getElementById('editor-section').style.display = 'block';
+      document.getElementById('btn-commit').disabled = false;
+      renderMixes();
+      setStatus('Loaded ' + mixes.length + ' mixes.', false);
+    }
+
+    function renderMixes() {
+      const container = document.getElementById('mixes-container');
+      container.innerHTML = '';
+      mixes.forEach((mix, i) => {
+        container.appendChild(buildMixCard(mix, i));
+      });
+    }
+
+    function buildMixCard(mix, i) {
+      const card = document.createElement('div');
+      card.className = 'glass';
+      card.style.cssText = 'border-radius: 8px; overflow: hidden;';
+
+      card.innerHTML = `
+        <details open>
+          <summary style="padding: 16px 20px; display: flex; align-items: center; gap: 16px;">
+            <img id="preview-img-${i}" src="${esc(mix.artUrl)}" style="width:56px;height:56px;object-fit:cover;border-radius:4px;border:1px solid rgba(255,255,255,0.1);flex-shrink:0;" onerror="this.src='logo.jpg'"/>
+            <div style="flex:1; min-width:0;">
+              <div class="font-display font-bold text-base uppercase">${esc(mix.title)}</div>
+              <div class="mono text-xs" style="color:#87957e;">${esc(mix.dj)} · ${esc(mix.genre)} · ${mix.youtubeId ? '<span style="color:#55e93b;">YT: ' + esc(mix.youtubeId) + '</span>' : '<span style="color:#87957e;">No YouTube</span>'}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              ${i > 0 ? `<button class="btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="moveMix(${i},-1);event.preventDefault();">↑</button>` : ''}
+              ${i < mixes.length - 1 ? `<button class="btn-ghost" style="padding:4px 10px;font-size:10px;" onclick="moveMix(${i},1);event.preventDefault();">↓</button>` : ''}
+              <button class="btn-ghost" style="padding:4px 10px;font-size:10px;border-color:rgba(255,140,182,0.3);color:#ff8eb6;" onclick="removeMix(${i});event.preventDefault();">Remove</button>
+            </div>
+          </summary>
+
+          <div style="padding: 0 20px 20px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+              <div>
+                <label>Title</label>
+                <input type="text" data-field="title" data-idx="${i}" value="${esc(mix.title)}"/>
+              </div>
+              <div>
+                <label>DJ / Artist</label>
+                <input type="text" data-field="dj" data-idx="${i}" value="${esc(mix.dj)}"/>
+              </div>
+              <div>
+                <label>Genre</label>
+                <input type="text" data-field="genre" data-idx="${i}" value="${esc(mix.genre)}"/>
+              </div>
+              <div>
+                <label>Date</label>
+                <input type="text" data-field="date" data-idx="${i}" value="${esc(mix.date)}" placeholder="24 Oct 2023"/>
+              </div>
+              <div>
+                <label>YouTube Video ID</label>
+                <input type="text" data-field="youtubeId" data-idx="${i}" value="${mix.youtubeId || ''}" placeholder="dQw4w9WgXcQ (leave blank if none)" class="mono"/>
+              </div>
+              <div>
+                <label>Duration (minutes)</label>
+                <input type="number" data-field="duration_mins" data-idx="${i}" value="${Math.round(mix.duration / 60)}" min="1"/>
+              </div>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <label>Cover Art URL</label>
+              <div style="display:flex;gap:8px;align-items:flex-start;">
+                <input type="url" data-field="artUrl" data-idx="${i}" value="${esc(mix.artUrl)}" style="flex:1;" oninput="previewArt(${i}, this.value)"/>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+              <div>
+                <label>Mix Description (HTML allowed)</label>
+                <textarea data-field="description" data-idx="${i}" rows="5">${esc(mix.description)}</textarea>
+              </div>
+              <div>
+                <label>Artist Bio (HTML allowed)</label>
+                <textarea data-field="artistBio" data-idx="${i}" rows="5">${esc(mix.artistBio)}</textarea>
+              </div>
+            </div>
+          </div>
+        </details>
+      `;
+
+      // Bind all inputs
+      card.querySelectorAll('[data-field]').forEach(el => {
+        el.addEventListener('input', () => syncField(el));
+        el.addEventListener('change', () => syncField(el));
+      });
+
+      return card;
+    }
+
+    function syncField(el) {
+      const idx = parseInt(el.dataset.idx);
+      const field = el.dataset.field;
+      if (field === 'duration_mins') {
+        mixes[idx].duration = (parseInt(el.value) || 0) * 60;
+      } else if (field === 'youtubeId') {
+        mixes[idx].youtubeId = el.value.trim() || null;
+      } else {
+        mixes[idx][field] = el.value;
+      }
+    }
+
+    function previewArt(i, url) {
+      const img = document.getElementById('preview-img-' + i);
+      if (img) img.src = url;
+    }
+
+    function moveMix(i, dir) {
+      const j = i + dir;
+      if (j < 0 || j >= mixes.length) return;
+      [mixes[i], mixes[j]] = [mixes[j], mixes[i]];
+      renderMixes();
+    }
+
+    function removeMix(i) {
+      if (!confirm('Remove "' + mixes[i].title + '"?')) return;
+      mixes.splice(i, 1);
+      renderMixes();
+    }
+
+    function addNewMix() {
+      mixes.push({
+        id: 'mix_' + Date.now(),
+        title: 'New Mix',
+        dj: '',
+        date: '',
+        genre: '',
+        youtubeId: null,
+        artUrl: '',
+        description: '',
+        artistBio: '',
+        duration: 3600,
+        synthStyle: 'ambient',
+        tracks: [{ time: 0, title: 'Opening', artist: 'Unknown' }],
+        cloud: { size: 250, speedClass: 'med', zIndex: 20, basePos: { top: 50, left: 50 }, vx: 0.15, vy: 0.1 }
+      });
+      renderMixes();
+      setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 50);
+    }
+
+    document.getElementById('btn-commit').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-commit');
+      btn.disabled = true;
+      setStatus('Committing...', false);
+
+      try {
+        const content = JSON.stringify(mixes, null, 2);
+        const encoded = btoa(unescape(encodeURIComponent(content)));
+
+        await ghPut(`/repos/${REPO}/contents/${FILE}`, {
+          message: 'content: update mixes via admin panel',
+          content: encoded,
+          sha: currentSha,
+          branch: BRANCH
+        });
+
+        // Refresh SHA for next commit
+        const updated = await ghGet(`/repos/${REPO}/contents/${FILE}?ref=${BRANCH}`);
+        currentSha = updated.sha;
+
+        setStatus('Committed successfully!', false);
+      } catch(e) {
+        setStatus('Commit failed: ' + e.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    async function ghGet(path) {
+      const res = await fetch('https://api.github.com' + path, {
+        headers: { 'Authorization': 'Bearer ' + PAT, 'Accept': 'application/vnd.github+json' }
+      });
+      if (!res.ok) throw new Error('GitHub ' + res.status + ': ' + await res.text());
+      return res.json();
+    }
+
+    async function ghPut(path, body) {
+      const res = await fetch('https://api.github.com' + path, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + PAT,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error('GitHub ' + res.status + ': ' + await res.text());
+      return res.json();
+    }
+
+    function setStatus(msg, isErr) {
+      const el = document.getElementById('status-msg');
+      el.textContent = msg;
+      el.className = 'mono text-xs ' + (isErr ? 'status-err' : 'status-ok');
+    }
+
+    function esc(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // Auto-restore session PAT
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = sessionStorage.getItem('lowkal_pat');
+      if (saved) {
+        document.getElementById('pat-input').value = saved;
+      }
+    });
+  </script>
+</body>
+</html>
