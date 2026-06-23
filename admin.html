@@ -325,7 +325,10 @@
       try {
         const mixId = mixes[idx].id;
         const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
-        const path = `images/${mixId}.${ext}`;
+        // Timestamp suffix ensures unique filename → bypasses GitHub Pages + browser cache
+        const ts = String(Date.now()).slice(-8);
+        const filename = `${mixId}_${ts}.${ext}`;
+        const path = `images/${filename}`;
 
         // Read file as base64
         const base64 = await new Promise((resolve, reject) => {
@@ -335,19 +338,12 @@
           reader.readAsDataURL(file);
         });
 
-        // Check if file already exists (need SHA to overwrite)
-        let sha = null;
-        try {
-          const existing = await ghGet(`/repos/${REPO}/contents/${path}?ref=${BRANCH}`);
-          sha = existing.sha;
-        } catch(e) { /* new file, no SHA needed */ }
-
+        // New file every time — no SHA lookup needed
         const body = { message: `content: upload image for ${mixId}`, content: base64, branch: BRANCH };
-        if (sha) body.sha = sha;
         await ghPut(`/repos/${REPO}/contents/${path}`, body);
 
-        // GitHub Pages URL
-        const url = `https://takshlabs.github.io/lowkalfm/images/${mixId}.${ext}`;
+        // GitHub Pages URL — unique per upload, no caching issues
+        const url = `https://takshlabs.github.io/lowkalfm/images/${filename}`;
         mixes[idx].artUrl = url;
 
         const urlInput = document.getElementById('arturl-input-' + idx);
