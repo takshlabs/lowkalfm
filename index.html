@@ -237,7 +237,13 @@ void main(){
   float pulse=sin(u_time*0.5)*0.5+0.5;
   float signal=noise2+mouseEffect+(pulse*0.1);
   vec3 baseColor=vec3(0.0,0.0,0.0);
-  vec3 accentColor=vec3(0.5,0.1,1.0);
+  // Slow atmospheric hue cycle — full rotation ~210s
+  float hc = u_time * 0.03;
+  vec3 accentColor = vec3(
+    0.5 + 0.45 * cos(hc),
+    0.08 + 0.32 * cos(hc + 2.094),
+    0.6 + 0.4 * cos(hc + 4.189)
+  );
   vec3 color=mix(baseColor,accentColor,signal*0.6);
   float grain=fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453);
   color+=(grain-0.5)*0.05;
