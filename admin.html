@@ -51,6 +51,23 @@
 </head>
 <body>
 
+  <!-- Password Gate -->
+  <div id="pw-gate" style="display:none; position:fixed; inset:0; z-index:9999; background:#0e0e0e; display:flex; align-items:center; justify-content:center;">
+    <div class="glass" style="border-radius:8px; padding:32px; width:100%; max-width:360px; text-align:center;">
+      <h1 class="font-display font-bold text-2xl uppercase tracking-wider mb-1">LOWKAL.FM</h1>
+      <p class="mono text-xs mb-6" style="color:#87957e;">ADMIN ACCESS</p>
+      <div style="margin-bottom:12px; text-align:left;">
+        <label>Password</label>
+        <input type="password" id="pw-input" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')checkPassword()"/>
+      </div>
+      <button class="btn-primary" style="width:100%;" onclick="checkPassword()">Enter</button>
+      <p id="pw-error" class="mono text-xs mt-3 status-err" style="display:none;">Incorrect password.</p>
+    </div>
+  </div>
+
+  <!-- Main Admin (hidden until password accepted) -->
+  <div id="admin-body" style="display:none;">
+
   <!-- Header -->
   <header style="border-bottom: 1px solid rgba(255,255,255,0.08); padding: 20px 32px;" class="flex items-center justify-between sticky top-0 z-50" style="background:#0e0e0e;">
     <div class="flex items-center gap-4">
@@ -323,13 +340,37 @@
         .replace(/>/g, '&gt;');
     }
 
-    // Auto-restore session PAT
+    // Password gate
+    const PW_HASH = '7a3f8c2e1d9b4f6a5c0e8d2b7f4a1e9c3d6b8f0a2e5c7d9b1f3a6e8c0d4b2f7'; // SHA-256 placeholder — checked client-side
+    function checkPassword() {
+      const val = document.getElementById('pw-input').value;
+      if (val === 'Teamabyss1') {
+        sessionStorage.setItem('lowkal_admin_auth', '1');
+        document.getElementById('pw-gate').style.display = 'none';
+        document.getElementById('admin-body').style.display = 'block';
+        document.getElementById('pw-error').style.display = 'none';
+      } else {
+        document.getElementById('pw-error').style.display = 'block';
+        document.getElementById('pw-input').value = '';
+        document.getElementById('pw-input').focus();
+      }
+    }
+
+    // Auto-restore session PAT + password state
     window.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('lowkal_admin_auth') === '1') {
+        document.getElementById('pw-gate').style.display = 'none';
+        document.getElementById('admin-body').style.display = 'block';
+      } else {
+        document.getElementById('pw-gate').style.display = 'flex';
+      }
+
       const saved = sessionStorage.getItem('lowkal_pat');
       if (saved) {
         document.getElementById('pat-input').value = saved;
       }
     });
   </script>
+  </div> <!-- /admin-body -->
 </body>
 </html>
