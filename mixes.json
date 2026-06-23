@@ -1,24 +1,54 @@
 [
   {
     "id": "kinetic_drift",
-    "title": "Kinetic Drift",
-    "dj": "DJ Void",
-    "date": "24 Oct 2023",
-    "genre": "Garage / Breakbeat",
+    "title": "Redline 006",
+    "dj": "Takezo",
+    "date": "13 Apr 2026",
+    "genre": "Drum+Bass",
     "youtubeId": "fw2mtwgCeGo",
     "artUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuCCrG1DEKigJH48GRUlWYb1VYtxtuP6kq_koycGF3__RW4S0Br82tZ3Dz8NcXBRH-u3cfmQmADJP6RObkX90wPTwgrTvfaRBWbMyXRVhBYlX07VCrD40S_ZxfdfEcezgPYblYwxCSmcOrs6nTe1S6u41TFHLh0TS8VrD8Qf3aicEzhYoUOhmahjAjbnOGLwDLik4FSVmBcFx1uBjYpRDyTdd7LiGmZD-3ouRH2jQ915ghHBT73zlHhNIbBntGzLhSzvxSlo5c4Clda3",
-    "description": "<em>Kinetic Drift</em> is a deep exploration into the architecture of silence and the weight of sub-bass textures. Curated by <strong>DJ Void</strong>, this hour-long session serves as a sonic bridge between structural industrial design and organic fluid dynamics.<br/><br/>The emotional arc begins with a stark, cavernous opening that slowly fractures into complex glitch sequences. Each transition is meticulously hand-crafted, favoring slow-burn harmonic crossfades that blur the lines between tracks until the individual pieces become a singular, breathing unit.",
-    "artistBio": "<strong>DJ Void</strong> is a London-based sound designer and visual artist whose work focuses on the intersection of early UK breakbeat culture and modern software synthesis. He has been a resident at Lowkal.fm since its inception, running the weekly Sunday bass transmissions.",
-    "duration": 3600,
+    "description": "<em>Redline 006</em> is a minimal to powerful drum+bass mix platformed by a changing pace of drum rhythms. Curated by <strong>Takezo</strong>, this hour-long session serves as a sonic bridge between the myriad of dnb stylistics that keeps a ravefloor on their feet.<br/><br/>",
+    "artistBio": "A relentless drive to move the dancefloor through eclectic sonic journeys defines Saswat Biswas, better known as Takezo, within the Indian underground.\nDrawing from deep crate-dug selections and forward-thinking sounds across the bass music spectrum, his sets weave through breaks, garage, footwork, and full-spectrum drum & bass with equal conviction. A genre archivist at heart, TKZ takes inspiration from every corner of electronic music history, balancing technical versatility with an unwavering focus on emotional intensity.\nBeyond the decks, Takezo is the founder and curator of LOKWAL.fm, a grassroots collective focused on low-end frequencies and community-driven sounds.\n",
+    "duration": 3120,
     "synthStyle": "garage",
     "tracks": [
-      { "time": 0, "title": "Intro (Atmosphere)", "artist": "Unknown" },
-      { "time": 255, "title": "Sub-bass Frequency", "artist": "Autechre" },
-      { "time": 750, "title": "Glitch Sequence 01", "artist": "Aphex Twin" },
-      { "time": 2712, "title": "Neon Drift", "artist": "Overmono" },
-      { "time": 3160, "title": "Outro (Static)", "artist": "Burial" }
+      {
+        "time": 0,
+        "title": "Intro (Atmosphere)",
+        "artist": "Unknown"
+      },
+      {
+        "time": 255,
+        "title": "Sub-bass Frequency",
+        "artist": "Autechre"
+      },
+      {
+        "time": 750,
+        "title": "Glitch Sequence 01",
+        "artist": "Aphex Twin"
+      },
+      {
+        "time": 2712,
+        "title": "Neon Drift",
+        "artist": "Overmono"
+      },
+      {
+        "time": 3160,
+        "title": "Outro (Static)",
+        "artist": "Burial"
+      }
     ],
-    "cloud": { "size": 350, "speedClass": "fast", "zIndex": 30, "basePos": { "top": 20, "left": 15 }, "vx": 0.25, "vy": -0.15 }
+    "cloud": {
+      "size": 350,
+      "speedClass": "fast",
+      "zIndex": 30,
+      "basePos": {
+        "top": 20,
+        "left": 15
+      },
+      "vx": 0.25,
+      "vy": -0.15
+    }
   },
   {
     "id": "industrial_techno",
@@ -33,14 +63,48 @@
     "duration": 2400,
     "synthStyle": "techno",
     "tracks": [
-      { "time": 0, "title": "La Real", "artist": "Surgeon" },
-      { "time": 270, "title": "Why They Hide Their Bodies Under My Garage", "artist": "Blawan" },
-      { "time": 555, "title": "Pace Yourself", "artist": "Karenn" },
-      { "time": 945, "title": "Penny & Pound", "artist": "Ansome" },
-      { "time": 1280, "title": "Look What Your Love Has Done To Me", "artist": "Perc" },
-      { "time": 1685, "title": "Fist", "artist": "British Murder Boys" }
+      {
+        "time": 0,
+        "title": "La Real",
+        "artist": "Surgeon"
+      },
+      {
+        "time": 270,
+        "title": "Why They Hide Their Bodies Under My Garage",
+        "artist": "Blawan"
+      },
+      {
+        "time": 555,
+        "title": "Pace Yourself",
+        "artist": "Karenn"
+      },
+      {
+        "time": 945,
+        "title": "Penny & Pound",
+        "artist": "Ansome"
+      },
+      {
+        "time": 1280,
+        "title": "Look What Your Love Has Done To Me",
+        "artist": "Perc"
+      },
+      {
+        "time": 1685,
+        "title": "Fist",
+        "artist": "British Murder Boys"
+      }
     ],
-    "cloud": { "size": 250, "speedClass": "med", "zIndex": 20, "basePos": { "top": 50, "left": 60 }, "vx": -0.18, "vy": 0.12 }
+    "cloud": {
+      "size": 250,
+      "speedClass": "med",
+      "zIndex": 20,
+      "basePos": {
+        "top": 50,
+        "left": 60
+      },
+      "vx": -0.18,
+      "vy": 0.12
+    }
   },
   {
     "id": "glitch_experimental",
@@ -55,13 +119,43 @@
     "duration": 1800,
     "synthStyle": "glitch",
     "tracks": [
-      { "time": 0, "title": "Gantz Graf", "artist": "Autechre" },
-      { "time": 322, "title": "Vordhosbn", "artist": "Aphex Twin" },
-      { "time": 645, "title": "Rubber Johnny", "artist": "Aphex Twin" },
-      { "time": 970, "title": "Glitch 03", "artist": "Alva Noto" },
-      { "time": 1350, "title": "Untitled", "artist": "Ryoji Ikeda" }
+      {
+        "time": 0,
+        "title": "Gantz Graf",
+        "artist": "Autechre"
+      },
+      {
+        "time": 322,
+        "title": "Vordhosbn",
+        "artist": "Aphex Twin"
+      },
+      {
+        "time": 645,
+        "title": "Rubber Johnny",
+        "artist": "Aphex Twin"
+      },
+      {
+        "time": 970,
+        "title": "Glitch 03",
+        "artist": "Alva Noto"
+      },
+      {
+        "time": 1350,
+        "title": "Untitled",
+        "artist": "Ryoji Ikeda"
+      }
     ],
-    "cloud": { "size": 250, "speedClass": "med", "zIndex": 20, "basePos": { "top": 10, "left": 80 }, "vx": 0.15, "vy": 0.18 }
+    "cloud": {
+      "size": 250,
+      "speedClass": "med",
+      "zIndex": 20,
+      "basePos": {
+        "top": 10,
+        "left": 80
+      },
+      "vx": 0.15,
+      "vy": 0.18
+    }
   },
   {
     "id": "ambient_monolith",
@@ -76,11 +170,37 @@
     "duration": 2400,
     "synthStyle": "ambient",
     "tracks": [
-      { "time": 0, "title": "Drone Pad I", "artist": "Brian Eno" },
-      { "time": 360, "title": "Ambient Waves", "artist": "Stars of the Lid" },
-      { "time": 840, "title": "Monolithic Deep", "artist": "Tim Hecker" },
-      { "time": 1500, "title": "Space Drone", "artist": "William Basinski" }
+      {
+        "time": 0,
+        "title": "Drone Pad I",
+        "artist": "Brian Eno"
+      },
+      {
+        "time": 360,
+        "title": "Ambient Waves",
+        "artist": "Stars of the Lid"
+      },
+      {
+        "time": 840,
+        "title": "Monolithic Deep",
+        "artist": "Tim Hecker"
+      },
+      {
+        "time": 1500,
+        "title": "Space Drone",
+        "artist": "William Basinski"
+      }
     ],
-    "cloud": { "size": 150, "speedClass": "slow", "zIndex": 10, "basePos": { "top": 75, "left": 35 }, "vx": -0.08, "vy": -0.06 }
+    "cloud": {
+      "size": 150,
+      "speedClass": "slow",
+      "zIndex": 10,
+      "basePos": {
+        "top": 75,
+        "left": 35
+      },
+      "vx": -0.08,
+      "vy": -0.06
+    }
   }
 ]
