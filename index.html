@@ -1877,16 +1877,8 @@ void main(){
         document.getElementById('mini-art-img').src = this.activeMix.artUrl;
         document.getElementById('mini-title').textContent = this.activeMix.title;
         
-        const tracks = this.activeMix.tracks;
-        let activeTrack = tracks[0];
-        for (let i = 0; i < tracks.length; i++) {
-          if (this.playbackTime >= tracks[i].time) {
-            activeTrack = tracks[i];
-          }
-        }
-        
-        const statusText = this.isPlaying ? `Now Playing: ${activeTrack.artist} - ${activeTrack.title}` : `Stream Paused`;
-        document.getElementById('mini-subtext').textContent = `${this.activeMix.dj} // ${statusText}`;
+        const statusText = this.isPlaying ? 'Now Transmitting' : 'Stream Paused';
+        document.getElementById('mini-subtext').textContent = `${this.activeMix.dj} // ${this.activeMix.genre} // ${statusText}`;
         
         const miniPlayIcon = document.getElementById('icon-mini-play');
         const miniArt = document.getElementById('mini-art-img');
