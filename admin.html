@@ -322,6 +322,10 @@
       statusEl.style.color = '#87957e';
       statusEl.textContent = 'Uploading...';
 
+      // Show local preview instantly — don't wait for GitHub Pages to deploy
+      const blobUrl = URL.createObjectURL(file);
+      previewArt(idx, blobUrl);
+
       try {
         const mixId = mixes[idx].id;
         const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
