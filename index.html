@@ -1549,6 +1549,10 @@
       startPlaybackEngine() {
         this.isPlaying = true;
 
+        // Always stop both engines first to prevent bleed-over
+        this.ytEngine.pause();
+        this.audioEngine.stop();
+
         if (this.activeMix.youtubeId) {
           this.ytEngine.play();
         } else {
@@ -1581,11 +1585,9 @@
       pausePlaybackEngine() {
         this.isPlaying = false;
 
-        if (this.activeMix.youtubeId) {
-          this.ytEngine.pause();
-        } else {
-          this.audioEngine.stop();
-        }
+        // Always stop both engines — activeMix may have already been updated
+        this.ytEngine.pause();
+        this.audioEngine.stop();
 
         if (this.timerInterval) {
           clearInterval(this.timerInterval);
@@ -1700,14 +1702,12 @@
 
       updateVolumeEngine() {
         const vol = this.isMuted ? 0 : this.volumeLevel;
-        if (this.activeMix && this.activeMix.youtubeId) {
-          this.ytEngine.setVolume(vol);
-        } else {
-          this.audioEngine.init();
-          if (this.audioEngine.masterGain) {
-            const gainVal = (vol / 100.0) * 0.8;
-            this.audioEngine.masterGain.gain.setValueAtTime(gainVal, this.audioEngine.ctx.currentTime);
-          }
+        // Always update both engines — only the active one will be audible
+        this.ytEngine.setVolume(vol);
+        this.audioEngine.init();
+        if (this.audioEngine.masterGain) {
+          const gainVal = this.activeMix && this.activeMix.youtubeId ? 0 : (vol / 100.0) * 0.8;
+          this.audioEngine.masterGain.gain.setValueAtTime(gainVal, this.audioEngine.ctx.currentTime);
         }
       }
 
