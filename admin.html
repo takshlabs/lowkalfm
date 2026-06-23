@@ -196,10 +196,15 @@
             </div>
 
             <div style="margin-top: 16px;">
-              <label>Cover Art URL</label>
-              <div style="display:flex;gap:8px;align-items:flex-start;">
-                <input type="url" data-field="artUrl" data-idx="${i}" value="${esc(mix.artUrl)}" style="flex:1;" oninput="previewArt(${i}, this.value)"/>
+              <label>Cover Art</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="url" data-field="artUrl" data-idx="${i}" id="arturl-input-${i}" value="${esc(mix.artUrl)}" style="flex:1;" oninput="previewArt(${i}, this.value)"/>
+                <button class="btn-ghost" style="padding:8px 14px;white-space:nowrap;flex-shrink:0;" onclick="triggerImageUpload(${i});event.preventDefault();">
+                  Upload Image
+                </button>
+                <input type="file" id="img-file-${i}" accept="image/*" style="display:none;" onchange="handleImageUpload(${i}, this)"/>
               </div>
+              <p id="upload-status-${i}" class="mono text-xs mt-1" style="display:none;"></p>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
@@ -302,6 +307,62 @@
         btn.disabled = false;
       }
     });
+
+    function triggerImageUpload(idx) {
+      if (!PAT) { setStatus('Connect with a PAT first.', true); return; }
+      document.getElementById('img-file-' + idx).click();
+    }
+
+    async function handleImageUpload(idx, input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const statusEl = document.getElementById('upload-status-' + idx);
+      statusEl.style.display = 'block';
+      statusEl.style.color = '#87957e';
+      statusEl.textContent = 'Uploading...';
+
+      try {
+        const mixId = mixes[idx].id;
+        const ext = file.name.split('.').pop().toLowerCase() || 'jpg';
+        const path = `images/${mixId}.${ext}`;
+
+        // Read file as base64
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        // Check if file already exists (need SHA to overwrite)
+        let sha = null;
+        try {
+          const existing = await ghGet(`/repos/${REPO}/contents/${path}?ref=${BRANCH}`);
+          sha = existing.sha;
+        } catch(e) { /* new file, no SHA needed */ }
+
+        const body = { message: `content: upload image for ${mixId}`, content: base64, branch: BRANCH };
+        if (sha) body.sha = sha;
+        await ghPut(`/repos/${REPO}/contents/${path}`, body);
+
+        // GitHub Pages URL
+        const url = `https://takshlabs.github.io/lowkalfm/images/${mixId}.${ext}`;
+        mixes[idx].artUrl = url;
+
+        const urlInput = document.getElementById('arturl-input-' + idx);
+        if (urlInput) urlInput.value = url;
+        previewArt(idx, url);
+
+        statusEl.style.color = '#55e93b';
+        statusEl.textContent = 'Uploaded — hit Commit Changes to save.';
+      } catch(e) {
+        statusEl.style.color = '#ff8eb6';
+        statusEl.textContent = 'Upload failed: ' + e.message;
+      }
+
+      input.value = ''; // reset file input
+    }
 
     async function ghGet(path) {
       const res = await fetch('https://api.github.com' + path, {
