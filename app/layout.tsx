@@ -1,28 +1,38 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo_Narrow, IBM_Plex_Mono, Newsreader } from "next/font/google";
+import { Lancelot, Marcellus, Notable, Philosopher } from "next/font/google";
 import { AudioProvider } from "@/components/AudioProvider";
 import { PersistentPlayer } from "@/components/PersistentPlayer";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
-const display = Archivo_Narrow({
+const display = Lancelot({
   variable: "--font-lowkal-display",
   subsets: ["latin"],
-  weight: ["400", "500"]
+  weight: "400",
+  display: "swap"
 });
 
-const editorial = Newsreader({
+const editorial = Marcellus({
   variable: "--font-lowkal-editorial",
   subsets: ["latin"],
-  weight: ["400", "500"],
-  style: ["normal", "italic"]
+  weight: "400",
+  display: "swap"
 });
 
-const mono = IBM_Plex_Mono({
-  variable: "--font-lowkal-mono",
+const body = Philosopher({
+  variable: "--font-lowkal-body",
   subsets: ["latin"],
-  weight: ["400", "500"]
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  display: "swap"
+});
+
+const accent = Notable({
+  variable: "--font-lowkal-accent",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap"
 });
 
 export const metadata: Metadata = {
@@ -60,7 +70,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${display.variable} ${editorial.variable} ${mono.variable}`}>
+      <body className={`${display.variable} ${editorial.variable} ${body.variable} ${accent.variable}`}>
         <AudioProvider>
           <SiteHeader />
           {children}
