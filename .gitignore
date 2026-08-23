@@ -1,5 +1,6 @@
 node_modules/
 .next/
+.vercel/
 .vinext/
 dist/
 .wrangler/
@@ -8,3 +9,4 @@ dist/
 !.env.example
 .DS_Store
 npm-debug.log*
+.vercel
