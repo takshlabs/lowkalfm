@@ -1,19 +1,31 @@
 "use client";
 
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import { Pause, Play, Star } from "lucide-react";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState, useSyncExternalStore } from "react";
 import { formatTime, soundRecords, SoundRecord } from "@/lib/content";
 import { useAudio } from "./AudioProvider";
 
-const SoundroomScene = dynamic(
-  () => import("./SoundroomScene").then((module) => module.SoundroomScene),
-  {
-    ssr: false,
-    loading: () => <div className="soundroom-canvas soundroom-canvas-fallback">Preparing the spatial record library…</div>
-  }
+const SoundroomScene = lazy(
+  () => import("./SoundroomScene").then((module) => ({ default: module.SoundroomScene })),
 );
+
+const subscribeToClient = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+function ClientSoundroomScene({ records, selectedSlug, onSelect }: { records: SoundRecord[]; selectedSlug: string; onSelect: (slug: string) => void }) {
+  const isClient = useSyncExternalStore(subscribeToClient, getClientSnapshot, getServerSnapshot);
+  const fallback = <div className="soundroom-canvas soundroom-canvas-fallback">Preparing the spatial record library…</div>;
+
+  if (!isClient) return fallback;
+
+  return (
+    <Suspense fallback={fallback}>
+      <SoundroomScene records={records} selectedSlug={selectedSlug} onSelect={onSelect} />
+    </Suspense>
+  );
+}
 
 type Filter = "all" | "weekly" | "live" | "featured";
 
@@ -64,7 +76,7 @@ export function SoundroomCatalog() {
         </div>
       </div>
 
-      <SoundroomScene records={records} selectedSlug={selected.slug} onSelect={setSelectedSlug} />
+      <ClientSoundroomScene records={records} selectedSlug={selected.slug} onSelect={setSelectedSlug} />
 
       <div className="selected-record" aria-live="polite">
         <Image src={selected.artwork} alt={`${selected.series} artwork`} width={180} height={180} />
