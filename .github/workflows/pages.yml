@@ -36,6 +36,11 @@ jobs:
           GITHUB_PAGES: "true"
           NEXT_PUBLIC_BASE_PATH: /lowkalfm
 
+      - name: Normalize project assets
+        run: |
+          cp -R dist/client/lowkalfm/. dist/client/
+          rm -rf dist/client/lowkalfm
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
