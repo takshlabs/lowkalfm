@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SiteLink } from "@/components/SiteLink";
 import { sitePath } from "@/lib/site-path";
 
 export function SiteFooter() {
@@ -9,9 +9,9 @@ export function SiteFooter() {
         <p>Independent community radio, stories and city culture from Bengaluru.</p>
       </div>
       <nav aria-label="Footer navigation">
-        <Link href={sitePath("/listen")}>Soundroom</Link>
-        <Link href={sitePath("/read")}>Journal</Link>
-        <Link href={sitePath("/go-out")}>City guide</Link>
+        <SiteLink href={sitePath("/listen")}>Soundroom</SiteLink>
+        <SiteLink href={sitePath("/read")}>Journal</SiteLink>
+        <SiteLink href={sitePath("/go-out")}>City guide</SiteLink>
         <a href="mailto:hello@lowkal.fm">Contact</a>
       </nav>
     </footer>

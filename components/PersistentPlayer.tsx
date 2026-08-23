@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { SiteLink } from "@/components/SiteLink";
 import { sitePath } from "@/lib/site-path";
 import { Pause, Play, Volume2 } from "lucide-react";
 import { formatTime } from "@/lib/content";
@@ -24,7 +24,7 @@ export function PersistentPlayer() {
         {isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
       </button>
       <div className="player-copy">
-        <Link href={sitePath("/listen")}>{activeRecord.series}</Link>
+        <SiteLink href={sitePath("/listen")}>{activeRecord.series}</SiteLink>
         <span>{activeRecord.artist} · {activeRecord.title}</span>
       </div>
       <label className="player-progress">
@@ -44,7 +44,7 @@ export function PersistentPlayer() {
         <span className="sr-only">Volume</span>
         <input type="range" min={0} max={100} value={volume} onChange={(event) => setVolume(Number(event.target.value))} />
       </label>
-      <Link className="player-room-link" href={sitePath("/listen")}>Open Soundroom ↗</Link>
+      <SiteLink className="player-room-link" href={sitePath("/listen")}>Open Soundroom ↗</SiteLink>
     </aside>
   );
 }
