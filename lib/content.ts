@@ -1,3 +1,5 @@
+import { sitePath } from "@/lib/site-path";
+
 export type SoundFormat = "weekly" | "live-set";
 
 export type Track = {
@@ -46,7 +48,7 @@ export const soundRecords: SoundRecord[] = [
     dateISO: "2026-04-13",
     duration: 3120,
     youtubeId: "fw2mtwgCeGo",
-    artwork: "/kinetic-drift.png",
+    artwork: sitePath("/kinetic-drift.png"),
     genres: ["Drum + bass", "Breaks", "Footwork"],
     description: "A low-to-high pressure mix built around shifting drums, deep bass and the many forms that keep a floor moving.",
     tracks: [
@@ -66,7 +68,7 @@ export const soundRecords: SoundRecord[] = [
     dateISO: "2026-03-19",
     duration: 4200,
     youtubeId: "60O126HehGA",
-    artwork: "/meeting-point.png",
+    artwork: sitePath("/meeting-point.png"),
     genres: ["Footwork", "Polyrhythmic", "Bass"],
     description: "A fast-moving meeting point between polyrhythm, bass pressure and wide electronic space.",
     tracks: [
@@ -86,7 +88,7 @@ export const soundRecords: SoundRecord[] = [
     dateISO: "2026-04-13",
     duration: 3120,
     youtubeId: "fw2mtwgCeGo",
-    artwork: "/kinetic-drift.png",
+    artwork: sitePath("/kinetic-drift.png"),
     genres: ["Drum + bass", "Breaks"],
     description: "The featured set from Lowkal 001, selected from the full multi-artist live transmission.",
     featured: true,
@@ -108,7 +110,7 @@ export const soundRecords: SoundRecord[] = [
     dateISO: "2026-04-13",
     duration: 4200,
     youtubeId: "60O126HehGA",
-    artwork: "/meeting-point.png",
+    artwork: sitePath("/meeting-point.png"),
     genres: ["Footwork", "Polyrhythmic"],
     description: "A set from Lowkal 001, held inside the complete live-program record.",
     programSlug: "lowkal-001-redline",

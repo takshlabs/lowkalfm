@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { journalStories } from "@/lib/content";
 
+export const dynamic = "force-static";
+
 export const metadata: Metadata = {
   title: "Read",
   description: "Artist conversations, field notes, photo essays and reported stories from Lowkal."

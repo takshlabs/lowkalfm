@@ -4,7 +4,10 @@ import { AudioProvider } from "@/components/AudioProvider";
 import { PersistentPlayer } from "@/components/PersistentPlayer";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { sitePath } from "@/lib/site-path";
 import "./globals.css";
+
+export const dynamic = "force-static";
 
 const display = Lancelot({
   variable: "--font-lowkal-display",
@@ -56,8 +59,8 @@ export const metadata: Metadata = {
     images: ["/og.png"]
   },
   icons: {
-    icon: "/lowkal-logo.jpg",
-    shortcut: "/lowkal-logo.jpg"
+    icon: sitePath("/lowkal-logo.jpg"),
+    shortcut: sitePath("/lowkal-logo.jpg")
   }
 };
 

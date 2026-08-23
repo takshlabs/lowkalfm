@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { SoundroomCatalog } from "@/components/SoundroomCatalog";
 import { livePrograms, soundRecords } from "@/lib/content";
 
+export const dynamic = "force-static";
+
 export const metadata: Metadata = {
   title: "Lowkal Soundroom",
   description: "Weekly Lowkal.fm volumes, live programs, featured sets and the Lowkal record library."

@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { HomeListenModule } from "@/components/HomeListenModule";
 import { cityEvents, journalStories } from "@/lib/content";
+import { sitePath } from "@/lib/site-path";
+
+export const dynamic = "force-static";
 
 const portals = [
   { number: "01", name: "Listen", href: "/listen", note: "Enter Lowkal Soundroom", copy: "Weekly Lowkal.fm volumes, live programs, featured sets and the full record library." },
@@ -22,7 +25,7 @@ export default function Home() {
         </div>
         <div className="portal-grid" aria-label="Explore Lowkal">
           {portals.map((portal) => (
-            <Link className={`portal portal-${portal.number}`} href={portal.href} key={portal.name}>
+            <Link className={`portal portal-${portal.number}`} href={sitePath(portal.href)} key={portal.name}>
               <span className="portal-number">{portal.number}</span>
               <span className="portal-name">{portal.name}</span>
               <span className="portal-copy">{portal.copy}</span>
@@ -38,7 +41,7 @@ export default function Home() {
         <div className="home-section-intro">
           <span className="section-kicker">Read · From the journal</span>
           <h2 id="home-read-title">Stories behind the signal.</h2>
-          <Link href="/read">Read all stories ↗</Link>
+          <Link href={sitePath("/read")}>Read all stories ↗</Link>
         </div>
         <div className="home-story-grid">
           {journalStories.slice(0, 3).map((story, index) => (
@@ -57,7 +60,7 @@ export default function Home() {
         <div className="home-section-intro">
           <span className="section-kicker">Go out · Lowkal city guide</span>
           <h2 id="home-events-title">This week in the city.</h2>
-          <Link href="/go-out">Open the guide ↗</Link>
+          <Link href={sitePath("/go-out")}>Open the guide ↗</Link>
         </div>
         <div className="home-event-list">
           {cityEvents.slice(0, 3).map((event) => (

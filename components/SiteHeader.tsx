@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { sitePath } from "@/lib/site-path";
 import { usePathname } from "next/navigation";
 
 const links = [
@@ -15,15 +16,16 @@ export function SiteHeader() {
 
   return (
     <header className="site-header">
-      <Link className="brand-lockup" href="/" aria-label="Lowkal FM home">
-        <Image src="/lowkal-logo.jpg" alt="" width={52} height={52} priority />
+      <Link className="brand-lockup" href={sitePath("/")} aria-label="Lowkal FM home">
+        <Image src={sitePath("/lowkal-logo.jpg")} alt="" width={52} height={52} priority />
         <span className="brand-name">LOWKAL.FM</span>
       </Link>
       <span className="brand-scripts" aria-hidden="true">लोकल · ಲೋಕಲ್ · লোকাল</span>
       <nav className="header-nav" aria-label="Primary navigation">
         {links.map((link) => {
-          const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
-          return <Link href={link.href} aria-current={active ? "page" : undefined} key={link.href}>{link.label}</Link>;
+          const href = sitePath(link.href);
+          const active = pathname === href || pathname.startsWith(`${href}/`);
+          return <Link href={href} aria-current={active ? "page" : undefined} key={link.href}>{link.label}</Link>;
         })}
       </nav>
     </header>

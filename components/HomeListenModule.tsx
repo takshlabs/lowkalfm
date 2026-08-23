@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { sitePath } from "@/lib/site-path";
 import { Pause, Play } from "lucide-react";
 import { soundRecords } from "@/lib/content";
 import { useAudio } from "./AudioProvider";
@@ -31,7 +32,7 @@ export function HomeListenModule() {
           <button type="button" className="round-play" onClick={handlePlay} aria-label={`${isPlaying && isLatestActive ? "Pause" : "Play"} ${latest.series}`}>
             {isPlaying && isLatestActive ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
           </button>
-          <Link href="/listen">Enter Soundroom ↗</Link>
+          <Link href={sitePath("/listen")}>Enter Soundroom ↗</Link>
         </div>
       </div>
     </section>
