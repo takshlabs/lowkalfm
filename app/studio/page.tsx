@@ -18,6 +18,20 @@ const initialPost = {
   status: "draft",
 };
 
+async function readResponse(response: Response) {
+  const body = await response.text();
+  try {
+    return JSON.parse(body) as { error?: string; [key: string]: unknown };
+  } catch {
+    return {};
+  }
+}
+
+function requestError(response: Response, data: { error?: string }) {
+  if (response.status === 404) return "This Studio deployment has no publishing service. Deploy the Worker and database before you sign in.";
+  return data.error ?? "The Studio request could not be completed.";
+}
+
 export default function StudioPage() {
   const [password, setPassword] = useState("");
   const [ready, setReady] = useState(false);
@@ -38,16 +52,16 @@ export default function StudioPage() {
   const signIn = async (event: FormEvent) => {
     event.preventDefault();
     setMessage("Checking…");
-    const response = await fetch("/api/editor/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password }) });
-    const data = await response.json();
-    if (!response.ok) return setMessage(data.error ?? "Could not sign in.");
-    setPassword("");
     try {
+      const response = await fetch("/api/editor/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password }) });
+      const data = await readResponse(response);
+      if (!response.ok) return setMessage(requestError(response, data));
+      setPassword("");
       await loadDesk();
       setReady(true);
       setMessage("You’re in. Nothing goes public until you publish it.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not open the desk.");
+      setMessage(error instanceof Error ? `Could not open the desk: ${error.message}` : "Could not open the desk.");
     }
   };
 
