@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render(pathname) {
@@ -42,14 +43,16 @@ for (const [pathname, expectedText] of routes) {
   });
 }
 
-test("publishes the correct program architecture", async () => {
+test("publishes the original Soundroom as an isolated experience", async () => {
   const response = await render("/listen");
   const html = await response.text();
+  const soundroom = await readFile(new URL("../public/soundroom/index.html", import.meta.url), "utf8");
+  const mixes = JSON.parse(await readFile(new URL("../public/soundroom/mixes.json", import.meta.url), "utf8"));
 
-  assert.match(html, /Lowkal\.fm Vol\. 01/i);
-  assert.match(html, /Lowkal 001 \| Redline/i);
-  assert.match(html, /Weekly/i);
-  assert.match(html, /Every two months/i);
-  assert.doesNotMatch(html, /monthly transmission/i);
-  assert.doesNotMatch(html, /Signal Room/i);
+  assert.match(html, /<iframe[^>]+soundroom\/index\.html/i);
+  assert.match(soundroom, /Enter Archive/i);
+  assert.match(soundroom, /id="screen-home"/i);
+  assert.match(soundroom, /id="screen-archive"/i);
+  assert.equal(mixes[0].title, "Redline 006");
+  assert.equal(mixes[0].dj, "Takezo");
 });
