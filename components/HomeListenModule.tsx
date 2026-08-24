@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
 import { sitePath } from "@/lib/site-path";
 import { Pause, Play } from "lucide-react";
@@ -20,8 +20,16 @@ export function HomeListenModule() {
   return (
     <section className="home-listen-module" aria-labelledby="home-listen-title">
       <div className="listen-art-wrap">
-        <Image src={latest.artwork} alt={`${latest.series} artwork`} fill sizes="(max-width: 800px) 100vw, 44vw" />
-        <span className="listen-broadcast-mark">Weekly transmission · New</span>
+        <MediaFrame
+          variant="hero"
+          frameClassName="listen-art-frame"
+          src={latest.artwork}
+          alt={`${latest.series} artwork`}
+          fill
+          sizes="(max-width: 800px) 100vw, 44vw"
+          priority
+        />
+        <span className="listen-broadcast-mark">Latest mix · just added</span>
       </div>
       <div className="listen-module-copy">
         <span className="section-kicker">Listen · Lowkal Soundroom</span>

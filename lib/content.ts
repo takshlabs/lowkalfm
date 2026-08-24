@@ -135,83 +135,29 @@ export const livePrograms: LiveProgram[] = [
   }
 ];
 
-export const journalStories = [
-  {
-    type: "Conversation",
-    title: "Who keeps the dancefloor alive?",
-    deck: "A conversation with the sound engineers, door crews and night workers who hold an independent scene together.",
-    byline: "Lowkal editorial",
-    readTime: "7 min",
-    tone: "red",
-    excerpt: "The people at the edge of the booth shape a night as much as the person inside it. We speak with a sound engineer, a door host and a closing-shift worker about care, pressure and the unseen work of keeping a room open."
-  },
-  {
-    type: "Field note",
-    title: "Under the flyover, rain becomes percussion",
-    deck: "A short recording and notebook from a wet evening under the city’s concrete lines.",
-    byline: "Lowkal field unit",
-    readTime: "4 min + audio",
-    tone: "signal",
-    excerpt: "Rain strikes the metal dividers in uneven sixes. Buses add a low pulse, and water running from the flyover makes a second, softer rhythm. This note follows one recording from first drop to sudden quiet."
-  },
-  {
-    type: "Photo essay",
-    title: "Neon, tarpaulin and the last bus home",
-    deck: "Fourteen frames from the long walk out after the music stops.",
-    byline: "Guest photographer",
-    readTime: "14 frames",
-    tone: "ink",
-    excerpt: "After the last track, the city changes scale. Plastic roofs hold small pools of red light, empty buses pass without stopping and each remaining food cart becomes its own bright room."
-  },
-  {
-    type: "Artist focus",
-    title: "sa:rang on rhythm as a meeting place",
-    deck: "A selector’s notes on groove, space and making very different records speak to one another.",
-    byline: "Lowkal editorial",
-    readTime: "9 min",
-    tone: "paper",
-    excerpt: "For sa:rang, selection is a form of conversation. The thread is not genre or year. It is the moment when two very different records reveal that they share the same centre of gravity."
-  }
-];
+export type JournalStory = {
+  type: string;
+  title: string;
+  deck: string;
+  byline: string;
+  readTime: string;
+  tone: "paper" | "red" | "signal" | "ink";
+  excerpt: string;
+};
 
-export const cityEvents = [
-  {
-    date: "Thu 27 Aug",
-    time: "19:30",
-    title: "Lowkal Listening Room: Polyrhythms",
-    venue: "Domlur",
-    access: "Step-free · Free with RSVP",
-    type: "Listening session",
-    reason: "A focused hour for hearing polyrhythm at room scale, followed by an open discussion with the selectors."
-  },
-  {
-    date: "Fri 28 Aug",
-    time: "21:00",
-    title: "Selectors: sa:rang + guests",
-    venue: "Indiranagar",
-    access: "₹400 · Limited capacity",
-    type: "Club night",
-    reason: "A small-room bill with patient opening sets and enough time for each guest to build a full arc."
-  },
-  {
-    date: "Sun 30 Aug",
-    time: "16:00",
-    title: "Field recording walk: lake edges",
-    venue: "Bellandur",
-    access: "Outdoors · 12 places",
-    type: "Workshop",
-    reason: "A practical walk about listening to the city without treating the city as background noise."
-  },
-  {
-    date: "Wed 02 Sep",
-    time: "18:30",
-    title: "Open decks and listening hour",
-    venue: "Shivajinagar",
-    access: "Free · Bring one record",
-    type: "Community",
-    reason: "A low-pressure place to share one record, meet another listener and try the decks for the first time."
-  }
-];
+export type CityEvent = {
+  date: string;
+  time: string;
+  title: string;
+  venue: string;
+  access: string;
+  type: string;
+  reason: string;
+};
+
+export const journalStories: JournalStory[] = [];
+
+export const cityEvents: CityEvent[] = [];
 
 export function getSoundRecord(slug: string) {
   return soundRecords.find((record) => record.slug === slug);

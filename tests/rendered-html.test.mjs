@@ -43,13 +43,10 @@ for (const [pathname, expectedText] of routes) {
   });
 }
 
-test("publishes the original Soundroom as an isolated experience", async () => {
-  const response = await render("/listen");
-  const html = await response.text();
+test("keeps the original Soundroom as a standalone archive asset", async () => {
   const soundroom = await readFile(new URL("../public/soundroom/index.html", import.meta.url), "utf8");
   const mixes = JSON.parse(await readFile(new URL("../public/soundroom/mixes.json", import.meta.url), "utf8"));
 
-  assert.match(html, /<iframe[^>]+soundroom\/index\.html/i);
   assert.match(soundroom, /Enter Archive/i);
   assert.match(soundroom, /id="screen-home"/i);
   assert.match(soundroom, /id="screen-archive"/i);

@@ -176,6 +176,34 @@
     .screen-fade {
       transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
     }
+
+    .soundroom-return-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.3rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(19,19,19,0.68);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .soundroom-return-nav a {
+      padding: 0.44rem 0.58rem;
+      color: rgba(229,226,225,0.84);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      text-transform: uppercase;
+      cursor: pointer !important;
+    }
+    .soundroom-return-nav a:first-child { color: #131313; background: #55e93b; }
+    .soundroom-return-nav a:hover, .soundroom-return-nav a:focus-visible { color: #55e93b; outline: 1px solid #55e93b; outline-offset: -1px; }
+    .soundroom-return-nav a:first-child:hover, .soundroom-return-nav a:first-child:focus-visible { color: #131313; }
+    @media (max-width: 760px) {
+      .soundroom-return-nav { position: fixed; top: auto; bottom: 0.8rem; left: 50%; transform: translateX(-50%); z-index: 80; width: max-content; max-width: calc(100vw - 1.5rem); overflow-x: auto; }
+      .soundroom-return-nav a { white-space: nowrap; }
+    }
   </style>
 </head>
 <body class="bg-background-dark text-white select-none relative w-full h-screen overflow-hidden antialiased">
@@ -297,6 +325,12 @@ void main(){
         <span id="header-nav-text">Enter Archive</span>
       </button>
     </div>
+
+    <nav class="soundroom-return-nav" aria-label="Return to Lowkal">
+      <a href="../" target="_top">Back to home</a>
+      <a href="../read" target="_top">Read</a>
+      <a href="../go-out" target="_top">Go out</a>
+    </nav>
 
     <!-- Right elements: Station tag & manifesto button -->
     <div class="flex items-center gap-6">

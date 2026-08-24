@@ -11,5 +11,5 @@ export function SiteLink({ children, href, ...props }: SiteLinkProps) {
     return <a href={href} {...props}>{children}</a>;
   }
 
-  return <Link href={href} {...props}>{children}</Link>;
+  return <Link href={href} prefetch={false} {...props}>{children}</Link>;
 }

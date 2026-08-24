@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
 import { sitePath } from "@/lib/site-path";
 import { usePathname } from "next/navigation";
@@ -14,10 +14,12 @@ const links = [
 export function SiteHeader() {
   const pathname = usePathname();
 
+  if (pathname.startsWith(sitePath("/studio"))) return null;
+
   return (
     <header className="site-header">
       <SiteLink className="brand-lockup" href={sitePath("/")} aria-label="Lowkal FM home">
-        <Image src={sitePath("/lowkal-logo.jpg")} alt="" width={52} height={52} priority />
+        <MediaFrame variant="mark" src={sitePath("/lowkal-logo.jpg")} alt="" width={52} height={52} priority />
         <span className="brand-name">LOWKAL.FM</span>
       </SiteLink>
       <span className="brand-scripts" aria-hidden="true">लोकल · ಲೋಕಲ್ · লোকাল</span>

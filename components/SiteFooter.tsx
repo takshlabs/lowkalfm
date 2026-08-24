@@ -1,7 +1,14 @@
+"use client";
+
 import { SiteLink } from "@/components/SiteLink";
 import { sitePath } from "@/lib/site-path";
+import { usePathname } from "next/navigation";
 
 export function SiteFooter() {
+  const pathname = usePathname();
+
+  if (pathname.startsWith(sitePath("/studio"))) return null;
+
   return (
     <footer className="site-footer">
       <div>
