@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
+import { editorialApi } from "@/lib/editorial-api";
 
 type Story = {
   slug: string;
@@ -51,7 +52,7 @@ export function ReadFeed({ fallback }: { fallback: Story[] }) {
   useEffect(() => {
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void fetch("/api/content/read", { signal: controller.signal })
+      void fetch(editorialApi("/api/content/read"), { signal: controller.signal })
         .then(async (response) => response.ok ? response.json() : null)
         .then((data: { posts?: RemotePost[] } | null) => {
           if (data?.posts?.length) setStories(data.posts.map(toStory));

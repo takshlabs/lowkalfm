@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { editorialApi } from "@/lib/editorial-api";
 
 type Post = { id: string; title: string; slug: string; status: "draft" | "published"; updated_at: string };
 type CopyItem = { content_key: string; value: string; updated_at: string };
@@ -41,9 +42,15 @@ export default function StudioPage() {
   const [copy, setCopy] = useState<CopyItem[]>([]);
   const [copyKey, setCopyKey] = useState("home.hero.eyebrow");
   const [copyValue, setCopyValue] = useState("");
+  const [session, setSession] = useState("");
 
-  const loadDesk = async () => {
-    const [postsResponse, copyResponse] = await Promise.all([fetch("/api/editor/posts"), fetch("/api/editor/site-copy")]);
+  const editorRequest = (path: string, init: RequestInit = {}, token = session) => fetch(editorialApi(path), {
+    ...init,
+    headers: { ...(init.headers ?? {}), ...(token ? { "x-lowkal-editor-session": token } : {}) },
+  });
+
+  const loadDesk = async (token = session) => {
+    const [postsResponse, copyResponse] = await Promise.all([editorRequest("/api/editor/posts", {}, token), editorRequest("/api/editor/site-copy", {}, token)]);
     if (!postsResponse.ok || !copyResponse.ok) throw new Error("Your editor session has ended.");
     setPosts((await postsResponse.json()).posts ?? []);
     setCopy((await copyResponse.json()).items ?? []);
@@ -53,11 +60,14 @@ export default function StudioPage() {
     event.preventDefault();
     setMessage("Checking…");
     try {
-      const response = await fetch("/api/editor/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password }) });
+      const response = await fetch(editorialApi("/api/editor/session"), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password }) });
       const data = await readResponse(response);
       if (!response.ok) return setMessage(requestError(response, data));
+      const token = typeof data.token === "string" ? data.token : "";
+      if (!token) return setMessage("The publishing service did not return an editor session.");
       setPassword("");
-      await loadDesk();
+      await loadDesk(token);
+      setSession(token);
       setReady(true);
       setMessage("You’re in. Nothing goes public until you publish it.");
     } catch (error) {
@@ -67,7 +77,7 @@ export default function StudioPage() {
 
   const savePost = async (status: "draft" | "published") => {
     setMessage(status === "published" ? "Publishing…" : "Saving draft…");
-    const response = await fetch("/api/editor/posts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...post, status }) });
+    const response = await editorRequest("/api/editor/posts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...post, status }) });
     const data = await response.json();
     if (!response.ok) return setMessage(data.error ?? "Could not save that piece.");
     setPost(initialPost);
@@ -77,7 +87,7 @@ export default function StudioPage() {
 
   const saveCopy = async (event: FormEvent) => {
     event.preventDefault();
-    const response = await fetch("/api/editor/site-copy", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ key: copyKey, value: copyValue }) });
+    const response = await editorRequest("/api/editor/site-copy", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ key: copyKey, value: copyValue }) });
     const data = await response.json();
     if (!response.ok) return setMessage(data.error ?? "Could not save that copy.");
     setCopyValue("");

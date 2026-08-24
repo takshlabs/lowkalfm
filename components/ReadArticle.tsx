@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
+import { editorialApi } from "@/lib/editorial-api";
 
 type Post = {
   slug: string;
@@ -30,7 +31,7 @@ export function ReadArticle() {
   useEffect(() => {
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void fetch("/api/content/read", { signal: controller.signal })
+      void fetch(editorialApi("/api/content/read"), { signal: controller.signal })
         .then(async (response) => response.ok ? response.json() : null)
         .then((data: { posts?: Post[] } | null) => {
           const found = data?.posts?.find((item) => item.slug === slug) ?? null;
