@@ -320,10 +320,10 @@ void main(){
   <header class="absolute top-8 left-8 right-8 z-40 flex justify-between items-center mix-blend-difference">
     <!-- Left Navigation Arrow (Symmetric page swap) -->
     <div class="flex items-center gap-6">
-      <button class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-all duration-300 focus:outline-none" id="header-nav-btn">
+      <a class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-all duration-300 focus:outline-none" id="header-nav-btn" href="../listen/archive" target="_top">
         <span class="material-symbols-outlined text-xl" id="header-nav-icon">arrow_forward</span>
         <span id="header-nav-text">Enter Archive</span>
-      </button>
+      </a>
     </div>
 
     <nav class="soundroom-return-nav" aria-label="Return to Lowkal">
@@ -1469,15 +1469,6 @@ void main(){
         document.getElementById('btn-manifesto-close').addEventListener('click', () => this.showManifesto(false));
         document.getElementById('modal-manifesto').addEventListener('click', (e) => {
           if (e.target.id === 'modal-manifesto') this.showManifesto(false);
-        });
-
-        // Top Left Nav Button (Symmetric page swap)
-        document.getElementById('header-nav-btn').addEventListener('click', () => {
-          if (this.currentScreen === 'home') {
-            this.navigate('archive');
-          } else {
-            this.navigate('home');
-          }
         });
 
         // Homepage detailed player controls

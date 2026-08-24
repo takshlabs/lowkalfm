@@ -40,13 +40,17 @@ test("semantic React images use Lowkal's shared media frame", async () => {
   }
 });
 
-test("the active Soundroom route uses the native Three.js archive room", async () => {
+test("the original Soundroom opens the native Three.js archive room", async () => {
   const page = await source("app/listen/page.tsx");
+  const archivePage = await source("app/listen/archive/page.tsx");
+  const soundroom = await source("public/soundroom/index.html");
   const catalog = await source("components/SoundroomCatalog.tsx");
   const scene = await source("components/SoundroomScene.tsx");
 
-  assert.match(page, /SoundroomCatalog/);
-  assert.doesNotMatch(page, /<iframe/);
+  assert.match(page, /<iframe/);
+  assert.match(page, /soundroom\/index\.html/);
+  assert.match(soundroom, /href="\.\.\/listen\/archive"[^>]*target="_top"/i);
+  assert.match(archivePage, /SoundroomCatalog/);
   assert.match(catalog, /Lowkal scene broadcast/i);
   assert.match(catalog, /Lowkal FM volumes/i);
   assert.match(catalog, /Residents/i);
