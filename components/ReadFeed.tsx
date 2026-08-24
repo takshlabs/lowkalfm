@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
-import { editorialApi } from "@/lib/editorial-api";
+import { sanityClient, storiesQuery } from "@/lib/sanity";
 
 type Story = {
   slug: string;
@@ -17,21 +17,21 @@ type Story = {
   publishedAt?: string | null;
 };
 
-type RemotePost = {
+type SanityStory = {
   slug: string;
   type: string;
   title: string;
   deck: string;
   byline: string;
-  body_markdown: string;
-  tone: string;
-  image_url: string | null;
-  image_alt: string | null;
-  published_at: string | null;
+  body?: Array<{ children?: Array<{ text?: string }> }>;
+  accent?: string | null;
+  imageUrl?: string | null;
+  imageAlt?: string | null;
+  publishedAt?: string | null;
 };
 
-function toStory(post: RemotePost): Story {
-  const words = post.body_markdown.trim().split(/\s+/).filter(Boolean).length;
+function toStory(post: SanityStory): Story {
+  const words = (post.body ?? []).flatMap((block) => block.children ?? []).map((child) => child.text ?? "").join(" ").trim().split(/\s+/).filter(Boolean).length;
   return {
     slug: post.slug,
     type: post.type,
@@ -39,10 +39,10 @@ function toStory(post: RemotePost): Story {
     deck: post.deck,
     byline: post.byline,
     readTime: `${Math.max(1, Math.ceil(words / 220))} min`,
-    tone: post.tone,
-    imageUrl: post.image_url,
-    imageAlt: post.image_alt,
-    publishedAt: post.published_at,
+    tone: ["paper", "red", "signal", "ink"].includes(post.accent ?? "") ? post.accent as Story["tone"] : "paper",
+    imageUrl: post.imageUrl,
+    imageAlt: post.imageAlt,
+    publishedAt: post.publishedAt,
   };
 }
 
@@ -52,11 +52,8 @@ export function ReadFeed({ fallback }: { fallback: Story[] }) {
   useEffect(() => {
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void fetch(editorialApi("/api/content/read"), { signal: controller.signal })
-        .then(async (response) => response.ok ? response.json() : null)
-        .then((data: { posts?: RemotePost[] } | null) => {
-          if (data?.posts?.length) setStories(data.posts.map(toStory));
-        })
+      void sanityClient.fetch<SanityStory[]>(storiesQuery, {}, { signal: controller.signal })
+        .then((posts) => setStories(posts.map(toStory)))
         .catch(() => undefined);
     }, 0);
     return () => { controller.abort(); window.clearTimeout(timer); };

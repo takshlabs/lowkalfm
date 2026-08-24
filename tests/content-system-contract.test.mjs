@@ -7,26 +7,28 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("the worker exposes a D1-backed editorial and site-copy API behind an editor session", async () => {
-  const worker = await source("worker/index.ts");
+test("Read uses Sanity as the public editorial source", async () => {
+  const client = await source("lib/sanity.ts");
+  const feed = await source("components/ReadFeed.tsx");
+  const article = await source("components/ReadArticle.tsx");
 
-  for (const route of ["/api/content/read", "/api/content/site-copy", "/api/editor/session", "/api/editor/posts", "/api/editor/site-copy"]) {
-    assert.match(worker, new RegExp(route.replaceAll("/", "\\/")));
-  }
-
-  assert.match(worker, /LOWKAL_EDITOR_SECRET/);
-  assert.match(worker, /HttpOnly/);
-  assert.match(worker, /SameSite=Strict/);
-  assert.match(worker, /INSERT INTO editorial_posts/);
-  assert.match(worker, /INSERT INTO site_copy/);
-  assert.match(worker, /status = 'published'/);
+  assert.match(client, /createClient/);
+  assert.match(client, /NEXT_PUBLIC_SANITY_PROJECT_ID/);
+  assert.match(client, /editorialStory/);
+  assert.match(feed, /sanityClient\.fetch/);
+  assert.match(article, /PortableText/);
+  assert.doesNotMatch(feed, /editorial-api/);
+  assert.doesNotMatch(article, /editorial-api/);
 });
 
-test("Studio offers editorial and site-copy controls without entering public navigation", async () => {
-  const studio = await source("app/studio/page.tsx");
+test("Studio embeds Sanity and supports flexible editorial fields", async () => {
+  const studio = await source("components/SanityStudio.tsx");
+  const schema = await source("sanity/schemaTypes/editorialStoryType.ts");
   const header = await source("components/SiteHeader.tsx");
 
-  assert.match(studio, /Editorials/);
-  assert.match(studio, /Site copy/);
+  assert.match(studio, /Studio/);
+  assert.match(schema, /Flexible details/);
+  assert.match(schema, /audioEmbed/);
+  assert.match(schema, /pullQuote/);
   assert.doesNotMatch(header, /Studio/);
 });
