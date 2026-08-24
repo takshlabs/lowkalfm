@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
+import { SiteLink } from "@/components/SiteLink";
 
 type Post = {
   slug: string;
@@ -47,7 +47,7 @@ export function ReadArticle() {
   return (
     <main className="reader-page">
       <article className="reader-article">
-        <Link className="reader-back" href="/read">← Back to Read</Link>
+        <SiteLink className="reader-back" href="/read">← Back to Read</SiteLink>
         <span className="section-kicker">{post.type}</span>
         <h1>{post.title}</h1>
         <p className="reader-deck">{post.deck}</p>
