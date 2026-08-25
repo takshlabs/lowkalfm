@@ -20,6 +20,10 @@ export function HomeListenModule() {
   return (
     <section className="home-listen-module" aria-labelledby="home-listen-title">
       <div className="listen-art-wrap">
+        <div className="listen-frame-rail" aria-hidden="true">
+          <span>Lowkal image record</span>
+          <span>BLR · 001</span>
+        </div>
         <MediaFrame
           variant="hero"
           frameClassName="listen-art-frame"
@@ -27,9 +31,13 @@ export function HomeListenModule() {
           alt={`${latest.series} artwork`}
           fill
           sizes="(max-width: 800px) 100vw, 44vw"
+          style={{ objectFit: "contain" }}
           priority
         />
         <span className="listen-broadcast-mark">Latest mix · just added</span>
+        <span className="listen-frame-note" aria-hidden="true">
+          16:9 · Archive still · {latest.date}
+        </span>
       </div>
       <div className="listen-module-copy">
         <span className="section-kicker">Listen · Lowkal Soundroom</span>
