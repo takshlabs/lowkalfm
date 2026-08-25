@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatTime, soundRecords, SoundRecord } from "@/lib/content";
+import { ArchiveAtmosphere } from "./ArchiveAtmosphere";
 import { useAudio } from "./AudioProvider";
 
 type ArchiveGroup = {
@@ -115,6 +116,7 @@ export function SoundroomCatalog() {
       </header>
 
       <div className="archive-stage">
+        <ArchiveAtmosphere />
         <div className="archive-track" aria-label="Lowkal records">
           {soundRecords.map((record, index) => {
             const isSelected = record.slug === selected.slug;
