@@ -594,6 +594,9 @@ void main(){
 
   <!-- Core JavaScript Code -->
   <script>
+    const AUDIO_SYNC_CHANNEL = 'lowkal.audio.v1';
+    const IS_EMBEDDED = window.parent !== window;
+
     // -------------------------------------------------------------
     // DATABASE: Mixes & Broadcasts (inline fallback — live data from mixes.json)
     // -------------------------------------------------------------
@@ -1268,6 +1271,8 @@ void main(){
         this.volumeLevel = 60; // 0 to 100
         this.isMuted = false;
         this.preMuteVolume = 60;
+        this.externalDuration = 0;
+        this.applyingExternalState = false;
         
         // Core Engines
         this.audioEngine = new LowkalAudioEngine();
@@ -1282,6 +1287,7 @@ void main(){
       }
 
       getEffectiveDuration() {
+        if (IS_EMBEDDED && this.externalDuration > 0) return this.externalDuration;
         if (this.activeMix && this.activeMix.youtubeId) {
           const d = this.ytEngine.getDuration();
           return d > 0 ? d : this.activeMix.duration;
@@ -1293,14 +1299,62 @@ void main(){
         this.visualizer.init();
         this.setupCursor();
         this.bindEvents();
+        this.bindAudioSync();
         this.setupArchiveNodes();
         this.loadMixToPlayer(this.activeMix, false);
         // Pre-cue initial mix — loadMixToPlayer skips ytEngine.load when mix hasn't changed
-        if (this.activeMix.youtubeId) {
+        if (!IS_EMBEDDED && this.activeMix.youtubeId) {
           this.ytEngine.load(this.activeMix.youtubeId, false);
         }
         window._appInstance = this;
-        if (window._ytAPIReady) this.ytEngine.onAPIReady();
+        if (!IS_EMBEDDED && window._ytAPIReady) this.ytEngine.onAPIReady();
+        this.sendAudioCommand('request-state');
+      }
+
+      sendAudioCommand(action, details = {}) {
+        if (!IS_EMBEDDED) return;
+        window.parent.postMessage({
+          channel: AUDIO_SYNC_CHANNEL,
+          type: 'command',
+          command: { action, ...details }
+        }, window.location.origin);
+      }
+
+      bindAudioSync() {
+        if (!IS_EMBEDDED) return;
+        window.addEventListener('message', (event) => {
+          if (event.source !== window.parent || event.origin !== window.location.origin) return;
+          const message = event.data;
+          if (!message || message.channel !== AUDIO_SYNC_CHANNEL || message.type !== 'state') return;
+          this.applyExternalAudioState(message.state);
+        });
+      }
+
+      applyExternalAudioState(state) {
+        if (!state) return;
+        this.applyingExternalState = true;
+
+        const matchingMix = MIXES.find((mix) => mix.youtubeId && mix.youtubeId === state.youtubeId);
+        if (matchingMix && matchingMix.id !== this.activeMix.id) {
+          this.activeMix = matchingMix;
+          this.syncMixDetails(matchingMix, false);
+        }
+
+        this.playbackTime = Number.isFinite(state.currentTime) ? Math.max(0, state.currentTime) : 0;
+        this.externalDuration = Number.isFinite(state.duration) ? Math.max(0, state.duration) : 0;
+        this.isPlaying = Boolean(state.isPlaying);
+        this.isShuffled = Boolean(state.isShuffled);
+        this.isRepeat = Boolean(state.isRepeat);
+        this.volumeLevel = Number.isFinite(state.volume) ? Math.min(100, Math.max(0, state.volume)) : this.volumeLevel;
+        this.isMuted = this.volumeLevel === 0;
+
+        // An embedded Soundroom is a control surface. Only the parent can make sound.
+        this.ytEngine.pause();
+        this.audioEngine.stop();
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+        this.renderPlaybackModes();
+        this.applyingExternalState = false;
       }
 
       // Cursor tracking and hovers
@@ -1627,10 +1681,42 @@ void main(){
       // -------------------------------------------------------------
       // CONNECTED MUSIC CONTROLLER FUNCTIONS
       // -------------------------------------------------------------
+
+      syncMixDetails(mix, resetTime) {
+        document.getElementById('main-genre').textContent = mix.genre.toUpperCase();
+        document.getElementById('main-title').textContent = mix.title;
+        document.getElementById('main-host-date').textContent = `Hosted by ${mix.dj} • ${mix.date}`;
+        document.getElementById('main-cover-img').src = mix.artUrl;
+        document.getElementById('detail-mix-desc').innerHTML = mix.description;
+        document.getElementById('detail-artist-bio').innerHTML = mix.artistBio;
+        document.getElementById('main-details-scroll').scrollTop = 0;
+
+        if (resetTime) {
+          const scrubber = document.getElementById('main-scrubber');
+          scrubber.value = 0;
+          scrubber.style.background = 'linear-gradient(to right, #55e93b 0%, #87957e 0%)';
+          document.getElementById('main-time-current').textContent = '00:00';
+        }
+        document.getElementById('main-time-total').textContent = formatTime(mix.duration);
+      }
       
       loadMixToPlayer(mix, startImmediately = false) {
         const mixChanged = (!this.activeMix || this.activeMix.id !== mix.id);
         this.activeMix = mix;
+
+        if (IS_EMBEDDED) {
+          if (mixChanged) {
+            this.playbackTime = 0;
+            this.externalDuration = mix.duration;
+          }
+          this.syncMixDetails(mix, mixChanged);
+          this.updatePlayerUI();
+          this.updateMiniPlayerUI();
+          if (mixChanged && mix.youtubeId && !this.applyingExternalState) {
+            this.sendAudioCommand('select', { youtubeId: mix.youtubeId, autoplay: startImmediately });
+          }
+          return;
+        }
 
         if (mixChanged) {
           this.playbackTime = 0;
@@ -1647,31 +1733,16 @@ void main(){
           this.startPlaybackEngine();
         }
         
-        // Sync Homepage Player Card Texts
-        document.getElementById('main-genre').textContent = mix.genre.toUpperCase();
-        document.getElementById('main-title').textContent = mix.title;
-        document.getElementById('main-host-date').textContent = `Hosted by ${mix.dj} • ${mix.date}`;
-        document.getElementById('main-cover-img').src = mix.artUrl;
-        
-        // Sync descriptions
-        document.getElementById('detail-mix-desc').innerHTML = mix.description;
-        document.getElementById('detail-artist-bio').innerHTML = mix.artistBio;
-        
-        // Reset scroll position of details panel
-        document.getElementById('main-details-scroll').scrollTop = 0;
-        
-        // Scrubber updates
-        const scrubber = document.getElementById('main-scrubber');
-        scrubber.value = 0;
-        scrubber.style.background = 'linear-gradient(to right, #55e93b 0%, #87957e 0%)';
-        
-        document.getElementById('main-time-current').textContent = '00:00';
-        document.getElementById('main-time-total').textContent = formatTime(mix.duration);
+        this.syncMixDetails(mix, mixChanged);
         
         this.updatePlayerUI();
       }
 
       togglePlayback() {
+        if (IS_EMBEDDED) {
+          this.sendAudioCommand('toggle');
+          return;
+        }
         if (this.isPlaying) {
           this.pausePlaybackEngine();
         } else {
@@ -1680,6 +1751,10 @@ void main(){
       }
 
       startPlaybackEngine() {
+        if (IS_EMBEDDED) {
+          this.sendAudioCommand('play');
+          return;
+        }
         this.isPlaying = true;
 
         // Always stop both engines first to prevent bleed-over
@@ -1716,6 +1791,10 @@ void main(){
       }
 
       pausePlaybackEngine() {
+        if (IS_EMBEDDED) {
+          this.sendAudioCommand('pause');
+          return;
+        }
         this.isPlaying = false;
 
         // Always stop both engines — activeMix may have already been updated
@@ -1756,6 +1835,13 @@ void main(){
       scrubPlayback(percent) {
         const dur = this.getEffectiveDuration();
         const seconds = Math.floor((percent / 100) * dur);
+        if (IS_EMBEDDED) {
+          this.playbackTime = seconds;
+          this.sendAudioCommand('seek', { seconds });
+          this.updatePlayerUI();
+          this.updateMiniPlayerUI();
+          return;
+        }
         this.playbackTime = seconds;
         if (this.activeMix.youtubeId) this.ytEngine.seekTo(seconds);
         this.updatePlayerUI();
@@ -1764,6 +1850,13 @@ void main(){
 
       replaySeconds(seconds) {
         const newTime = Math.max(0, this.playbackTime - seconds);
+        if (IS_EMBEDDED) {
+          this.playbackTime = newTime;
+          this.sendAudioCommand('seek', { seconds: newTime });
+          this.updatePlayerUI();
+          this.updateMiniPlayerUI();
+          return;
+        }
         this.playbackTime = newTime;
         if (this.activeMix.youtubeId) this.ytEngine.seekTo(newTime);
         this.updatePlayerUI();
@@ -1773,6 +1866,13 @@ void main(){
       forwardSeconds(seconds) {
         const dur = this.getEffectiveDuration();
         const newTime = Math.min(dur, this.playbackTime + seconds);
+        if (IS_EMBEDDED) {
+          this.playbackTime = newTime;
+          this.sendAudioCommand('seek', { seconds: newTime });
+          this.updatePlayerUI();
+          this.updateMiniPlayerUI();
+          return;
+        }
         this.playbackTime = newTime;
         if (this.activeMix.youtubeId) this.ytEngine.seekTo(newTime);
         this.updatePlayerUI();
@@ -1780,8 +1880,24 @@ void main(){
       }
 
       toggleShuffle() {
+        if (IS_EMBEDDED) {
+          this.sendAudioCommand('shuffle');
+          return;
+        }
         this.isShuffled = !this.isShuffled;
-        
+        this.renderPlaybackModes();
+      }
+
+      toggleRepeat() {
+        if (IS_EMBEDDED) {
+          this.sendAudioCommand('repeat');
+          return;
+        }
+        this.isRepeat = !this.isRepeat;
+        this.renderPlaybackModes();
+      }
+
+      renderPlaybackModes() {
         const shuffleBtn = document.getElementById('btn-main-shuffle');
         if (this.isShuffled) {
           shuffleBtn.classList.remove('text-muted');
@@ -1792,10 +1908,6 @@ void main(){
           shuffleBtn.classList.add('text-muted');
           shuffleBtn.style.textShadow = 'none';
         }
-      }
-
-      toggleRepeat() {
-        this.isRepeat = !this.isRepeat;
         
         const repeatBtn = document.getElementById('btn-main-repeat');
         if (this.isRepeat) {
@@ -1811,14 +1923,19 @@ void main(){
 
       // Volume settings
       setVolume(val) {
-        this.volumeLevel = val;
-        this.isMuted = (val === 0);
+        const numericVolume = Math.min(100, Math.max(0, Number(val)));
+        this.volumeLevel = numericVolume;
+        this.isMuted = (numericVolume === 0);
         
         const volSlider = document.getElementById('main-volume-slider');
-        volSlider.value = val;
-        volSlider.style.background = `linear-gradient(to right, #55e93b ${val}%, #87957e ${val}%)`;
+        volSlider.value = numericVolume;
+        volSlider.style.background = `linear-gradient(to right, #55e93b ${numericVolume}%, #87957e ${numericVolume}%)`;
         
-        this.updateVolumeEngine();
+        if (IS_EMBEDDED) {
+          if (!this.applyingExternalState) this.sendAudioCommand('volume', { volume: numericVolume });
+        } else {
+          this.updateVolumeEngine();
+        }
         this.updateVolumeUI();
       }
 
@@ -1909,8 +2026,11 @@ void main(){
         scrubber.value = percent;
         scrubber.style.background = `linear-gradient(to right, #55e93b ${percent}%, #87957e ${percent}%)`;
         
-        // Sync volume bar on homepage render
-        this.setVolume(this.volumeLevel);
+        // Sync the volume controls without sending a command back to the parent.
+        const volumeSlider = document.getElementById('main-volume-slider');
+        volumeSlider.value = this.volumeLevel;
+        volumeSlider.style.background = `linear-gradient(to right, #55e93b ${this.volumeLevel}%, #87957e ${this.volumeLevel}%)`;
+        this.updateVolumeUI();
       }
 
       updateMiniPlayerUI() {
@@ -1949,6 +2069,7 @@ void main(){
     // YOUTUBE API GLOBAL CALLBACK
     // -------------------------------------------------------------
     function onYouTubeIframeAPIReady() {
+      if (IS_EMBEDDED) return;
       if (window._appInstance) {
         window._appInstance.ytEngine.onAPIReady();
       } else {
@@ -1971,14 +2092,20 @@ void main(){
         // Silently use inline fallback
       }
 
+      // The parent player can control only published recordings. Do not show
+      // local synthesizer demos when the Soundroom is part of the main site.
+      if (IS_EMBEDDED) MIXES = MIXES.filter((mix) => Boolean(mix.youtubeId));
+
       const app = new LowkalApp();
       app.init();
 
-      const enableAudio = () => {
-        app.audioEngine.init();
-        document.removeEventListener('click', enableAudio);
-      };
-      document.addEventListener('click', enableAudio);
+      if (!IS_EMBEDDED) {
+        const enableAudio = () => {
+          app.audioEngine.init();
+          document.removeEventListener('click', enableAudio);
+        };
+        document.addEventListener('click', enableAudio);
+      }
     });
   </script>
 </body>

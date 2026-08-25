@@ -29,7 +29,6 @@ test("the isolated Soundroom provides routes back to Lowkal, Read, and Go Out", 
 test("semantic React images use Lowkal's shared media frame", async () => {
   const files = [
     "components/HomeListenModule.tsx",
-    "components/SoundroomCatalog.tsx",
     "components/PersistentPlayer.tsx",
   ];
 
@@ -38,24 +37,48 @@ test("semantic React images use Lowkal's shared media frame", async () => {
     assert.match(content, /MediaFrame/);
     assert.doesNotMatch(content, /from "next\/image"/);
   }
+
+  const archive = await source("components/SoundroomCatalog.tsx");
+  assert.match(archive, /archive-vinyl-label/);
+  assert.match(archive, /<Image/);
 });
 
-test("the original Soundroom opens the native Three.js archive room", async () => {
+test("the original Soundroom opens the vinyl-and-shader archive room", async () => {
   const page = await source("app/listen/page.tsx");
   const archivePage = await source("app/listen/archive/page.tsx");
   const soundroom = await source("public/soundroom/index.html");
   const catalog = await source("components/SoundroomCatalog.tsx");
-  const scene = await source("components/SoundroomScene.tsx");
+  const atmosphere = await source("components/ArchiveAtmosphere.tsx");
 
   assert.match(page, /<iframe/);
   assert.match(page, /soundroom\/index\.html/);
   assert.match(soundroom, /href="\.\.\/listen\/archive"[^>]*target="_top"/i);
   assert.match(archivePage, /SoundroomCatalog/);
   assert.match(catalog, /Lowkal scene broadcast/i);
-  assert.match(catalog, /Lowkal FM volumes/i);
+  assert.match(catalog, /Lowkal FM resident volumes/i);
+  assert.match(catalog, /Lowkal FM guest volumes/i);
   assert.match(catalog, /Residents/i);
   assert.match(catalog, /Guests/i);
-  assert.match(scene, /ArchiveRoom/);
-  assert.match(scene, /RecordShelf/);
-  assert.match(scene, /CameraRig/);
+  assert.match(catalog, /ArchiveAtmosphere/);
+  assert.match(atmosphere, /fragmentShaderSource/);
+  assert.match(atmosphere, /prefers-reduced-motion/);
+});
+
+test("the floating player and embedded Soundroom use one audio authority", async () => {
+  const provider = await source("components/AudioProvider.tsx");
+  const soundroom = await source("public/soundroom/index.html");
+
+  assert.match(provider, /lowkal\.audio\.v1/);
+  assert.match(provider, /request-state/);
+  assert.match(provider, /event\.origin !== window\.location\.origin/);
+  assert.match(provider, /getCurrentTime/);
+  assert.match(provider, /action === "select"/);
+
+  assert.match(soundroom, /lowkal\.audio\.v1/);
+  assert.match(soundroom, /IS_EMBEDDED = window\.parent !== window/);
+  assert.match(soundroom, /sendAudioCommand\('seek'/);
+  assert.match(soundroom, /sendAudioCommand\('volume'/);
+  assert.match(soundroom, /applyExternalAudioState/);
+  assert.match(soundroom, /Only the parent can make sound/);
+  assert.match(soundroom, /if \(IS_EMBEDDED\) return;\s*if \(window\._appInstance\)/);
 });
