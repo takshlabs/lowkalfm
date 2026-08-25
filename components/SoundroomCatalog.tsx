@@ -79,10 +79,6 @@ export function SoundroomCatalog() {
       className="archive-room"
       id="archive"
       aria-labelledby="archive-title"
-      onKeyDown={(event) => {
-        if (event.key === "ArrowLeft") move(-1);
-        if (event.key === "ArrowRight") move(1);
-      }}
     >
       <header className="archive-room-heading">
         <div className="archive-room-title">
@@ -132,6 +128,10 @@ export function SoundroomCatalog() {
                   else recordRefs.current.delete(record.slug);
                 }}
                 onClick={() => setSelectedSlug(record.slug)}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowLeft") move(-1);
+                  if (event.key === "ArrowRight") move(1);
+                }}
               >
                 <span className="archive-record-number">[{String(index + 1).padStart(2, "0")}]</span>
                 <span className="archive-record-frame">
