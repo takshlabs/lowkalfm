@@ -29,8 +29,17 @@ export function PersistentPlayer() {
       </div>
 
       <div className="lowkal-player-art">
-        <MediaFrame variant="record" src={activeRecord.artwork} alt="" width={82} height={82} />
-        <span className="lowkal-player-art-index" aria-hidden="true">REC</span>
+        <div className="lowkal-player-vinyl" aria-hidden="true">
+          <MediaFrame
+            variant="record"
+            frameClassName="lowkal-player-vinyl-label"
+            src={activeRecord.artwork}
+            alt=""
+            width={36}
+            height={36}
+          />
+        </div>
+        <span className="lowkal-player-art-index" aria-hidden="true">33⅓</span>
         <div className="lowkal-player-meter" aria-hidden="true">
           <span /><span /><span /><span /><span />
         </div>
