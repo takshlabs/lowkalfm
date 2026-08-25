@@ -1,84 +1,79 @@
 import { SiteLink } from "@/components/SiteLink";
+import { HomeFrequencyHero } from "@/components/HomeFrequencyHero";
 import { HomeListenModule } from "@/components/HomeListenModule";
 import { cityEvents, journalStories } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 
 export const dynamic = "force-static";
 
-const portals = [
-  { number: "01", name: "Listen", href: "/listen", note: "Enter Lowkal Soundroom", copy: "Weekly Lowkal.fm volumes, live programs, featured sets and the full record library." },
-  { number: "02", name: "Read", href: "/read", note: "Open the journal", copy: "Artist conversations, field notes, photo essays and stories from the people behind the sound." },
-  { number: "03", name: "Go out", href: "/go-out", note: "See the city guide", copy: "A small, considered guide to nights, listening sessions, workshops and independent spaces." }
-];
-
 export default function Home() {
+  const featuredStory = journalStories[0];
+  const featuredEvent = cityEvents[0];
+
   return (
     <main className="home-shell">
-      <section className="home-hero">
-        <div className="home-statement">
-          <div className="eyebrow">Bengaluru community radio · Independent culture</div>
-          <h1>The city has a <em>frequency.</em><br />We tune in.</h1>
-          <div className="statement-footer">
-            <p>Music, field notes, people and nights from the city—broadcast live and kept with care.</p>
-            <span>Weekly mixes · Bi-monthly live programs · Always listening</span>
-          </div>
+      <HomeFrequencyHero />
+
+      <div className="home-broadcast-marquee" aria-hidden="true">
+        <div>
+          <span>Now transmitting from Bengaluru</span>
+          <i>◆</i>
+          <span>Listen deeper</span>
+          <i>◆</i>
+          <span>Read the city</span>
+          <i>◆</i>
+          <span>Meet outside</span>
+          <i>◆</i>
+          <span>Now transmitting from Bengaluru</span>
+          <i>◆</i>
+          <span>Listen deeper</span>
+          <i>◆</i>
+          <span>Read the city</span>
+          <i>◆</i>
+          <span>Meet outside</span>
         </div>
-        <div className="portal-grid" aria-label="Explore Lowkal">
-          {portals.map((portal) => (
-            <SiteLink className={`portal portal-${portal.number}`} href={sitePath(portal.href)} key={portal.name}>
-              <span className="portal-number">{portal.number}</span>
-              <span className="portal-name">{portal.name}</span>
-              <span className="portal-copy">{portal.copy}</span>
-              <span className="portal-note">{portal.note} ↗</span>
-            </SiteLink>
-          ))}
-        </div>
-      </section>
+      </div>
 
       <HomeListenModule />
 
-      <section className="home-read" aria-labelledby="home-read-title">
-        <div className="home-section-intro">
-          <span className="section-kicker">Read · From the journal</span>
-          <h2 id="home-read-title">Stories behind the signal.</h2>
-          <SiteLink href={sitePath("/read")}>Read all stories ↗</SiteLink>
+      <section className="home-channels" aria-labelledby="home-channels-title">
+        <div className="home-channels-intro">
+          <span className="section-kicker">Two more ways into Lowkal</span>
+          <h2 id="home-channels-title">The signal does not end at sound.</h2>
+          <p>We follow it into stories, rooms, streets and the people who keep the city moving.</p>
         </div>
-        <div className="home-story-grid">
-          {journalStories.slice(0, 3).map((story, index) => (
-            <article className={`home-story story-${story.tone}`} key={story.title}>
-              <span className="story-index">0{index + 1}</span>
-              <span className="story-type">{story.type}</span>
-              <h3>{story.title}</h3>
-              <p>{story.deck}</p>
-              <span>{story.readTime}</span>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="home-events" aria-labelledby="home-events-title">
-        <div className="home-section-intro">
-          <span className="section-kicker">Go out · Lowkal city guide</span>
-          <h2 id="home-events-title">This week in the city.</h2>
-          <SiteLink href={sitePath("/go-out")}>Open the guide ↗</SiteLink>
-        </div>
-        <div className="home-event-list">
-          {cityEvents.slice(0, 3).map((event) => (
-            <article key={event.title}>
-              <time>{event.date}<br />{event.time}</time>
-              <div><span>{event.type}</span><h3>{event.title}</h3></div>
-              <p>{event.venue}</p>
-              <p>{event.access}</p>
-            </article>
-          ))}
+        <div className="home-channel-grid">
+          <SiteLink className="home-channel-card home-channel-read" href={sitePath("/read")} aria-label="Open the Lowkal journal">
+            <div className="home-channel-rail"><span>02 · Journal</span><span>Words after the speakers go quiet</span></div>
+            <span className="home-channel-script" aria-hidden="true">পড়ুন · ಓದಿ</span>
+            <h3>Read</h3>
+            <p>{featuredStory?.title ?? "Stories behind the signal."}</p>
+            <span>{featuredStory?.deck ?? "Artist conversations, field notes and photo essays from the people behind the sound."}</span>
+            <strong>{featuredStory ? "Read the story" : "Open the journal"} ↗</strong>
+          </SiteLink>
+          <SiteLink className="home-channel-card home-channel-out" href={sitePath("/go-out")} aria-label="Open the Lowkal city guide">
+            <div className="home-channel-rail"><span>03 · City guide</span><span>Useful before exhaustive</span></div>
+            <span className="home-channel-script" aria-hidden="true">ಹೊರಗೆ · বাইরে</span>
+            <h3>Go out</h3>
+            <p>{featuredEvent?.title ?? "Bengaluru is better off-screen."}</p>
+            <span>{featuredEvent ? `${featuredEvent.date} · ${featuredEvent.venue}` : "A small guide to nights, listening sessions, workshops and independent spaces."}</span>
+            <strong>{featuredEvent ? "See the event" : "Open the guide"} ↗</strong>
+          </SiteLink>
         </div>
       </section>
 
       <section className="open-frequency">
-        <span className="section-kicker">Take part · Open frequency</span>
-        <h2>Bring us a sound the city should remember.</h2>
-        <p>Propose a mix, pitch a story, share a field recording or help with a listening session.</p>
-        <a href="mailto:hello@lowkal.fm?subject=Open%20frequency">Write to Lowkal ↗</a>
+        <div className="open-frequency-rail">
+          <span>Take part · Open frequency</span>
+          <span>Submissions open · Bengaluru and beyond</span>
+        </div>
+        <div className="open-frequency-copy">
+          <span className="section-kicker">Your turn on the dial</span>
+          <h2>Bring us a sound the city should remember.</h2>
+          <p>Propose a mix, pitch a story, share a field recording or help with a listening session.</p>
+          <a href="mailto:hello@lowkal.fm?subject=Open%20frequency">Write to Lowkal <span aria-hidden="true">↗</span></a>
+        </div>
+        <div className="open-frequency-orbit" aria-hidden="true"><span>LOWKAL · OPEN CHANNEL · BLR ·</span></div>
       </section>
     </main>
   );
