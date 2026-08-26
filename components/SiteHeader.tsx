@@ -6,7 +6,8 @@ import { sitePath } from "@/lib/site-path";
 import { usePathname } from "next/navigation";
 
 const links = [
-  { href: "/listen", label: "Listen" },
+  { href: "/listen", label: "Soundroom" },
+  { href: "/listen/archive", label: "Archive" },
   { href: "/read", label: "Read" },
   { href: "/go-out", label: "Go out" }
 ];
@@ -22,11 +23,13 @@ export function SiteHeader() {
         <MediaFrame variant="mark" src={sitePath("/lowkal-logo.jpg")} alt="" width={52} height={52} priority />
         <span className="brand-name">LOWKAL.FM</span>
       </SiteLink>
-      <span className="brand-scripts" aria-hidden="true">लोकल · ಲೋಕಲ್ · লোকাল</span>
+      <span className="brand-scripts" aria-hidden="true">लोकल / ಲೋಕಲ್ / লোকাল</span>
       <nav className="header-nav" aria-label="Primary navigation">
         {links.map((link) => {
           const href = sitePath(link.href);
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+          const active = link.href === "/listen"
+            ? pathname === href
+            : pathname === href || pathname.startsWith(`${href}/`);
           return <SiteLink href={href} aria-current={active ? "page" : undefined} key={link.href}>{link.label}</SiteLink>;
         })}
       </nav>

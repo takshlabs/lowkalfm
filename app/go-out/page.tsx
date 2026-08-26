@@ -22,6 +22,14 @@ export default function GoOutPage() {
           <h2 id="city-guide-title">Selected by Lowkal.</h2>
         </div>
         <div className="city-event-list">
+          {cityEvents.length === 0 ? (
+            <div className="city-empty">
+              <span>Next listing</span>
+              <h3>The next Lowkal gathering will appear here.</h3>
+              <p>Follow Lowkal for the date, place, artists, cost, and access information.</p>
+              <a href="https://www.instagram.com/lowkal.fm/" target="_blank" rel="noreferrer">Open Instagram ↗</a>
+            </div>
+          ) : null}
           {cityEvents.map((event, index) => (
             <article key={event.title}>
               <span className="city-event-index">0{index + 1}</span>

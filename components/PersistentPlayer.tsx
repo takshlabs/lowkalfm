@@ -21,28 +21,9 @@ export function PersistentPlayer() {
   if (pathname.startsWith(sitePath("/studio"))) return null;
 
   return (
-    <aside className={`lowkal-player${isPlaying ? " is-playing" : ""}`} aria-label="Lowkal audio player">
-      <div className="lowkal-player-rail" aria-hidden="true">
-        <span>LOWKAL.FM</span>
-        <i />
-        <small>BLR · RX 01</small>
-      </div>
-
+    <aside className={`lowkal-player lowkal-player--compact${isPlaying ? " is-playing" : ""}`} aria-label="Lowkal audio player">
       <div className="lowkal-player-art">
-        <div className="lowkal-player-vinyl" aria-hidden="true">
-          <MediaFrame
-            variant="record"
-            frameClassName="lowkal-player-vinyl-label"
-            src={activeRecord.artwork}
-            alt=""
-            width={36}
-            height={36}
-          />
-        </div>
-        <span className="lowkal-player-art-index" aria-hidden="true">33⅓</span>
-        <div className="lowkal-player-meter" aria-hidden="true">
-          <span /><span /><span /><span /><span />
-        </div>
+        <MediaFrame variant="record" src={activeRecord.artwork} alt="" fill sizes="56px" />
       </div>
 
       <button
@@ -55,19 +36,15 @@ export function PersistentPlayer() {
         <span className="lowkal-player-transport-icon">
           {isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
         </span>
-        <span className="lowkal-player-transport-copy" aria-hidden="true">
-          <small>Transport</small>
-          <strong>{isPlaying ? "Pause" : "Play"}</strong>
-        </span>
       </button>
 
       <div className="lowkal-player-program" aria-live="polite">
         <div className="lowkal-player-status">
-          <span><i aria-hidden="true" /> {isPlaying ? "Broadcasting" : "Player ready"}</span>
-          <span>{activeRecord.format === "weekly" ? "Weekly volume" : "Program set"}</span>
+          <span><i aria-hidden="true" /> {isPlaying ? "Playing" : "Ready"}</span>
+          <span>{activeRecord.format === "weekly" ? "Weekly volume" : "Programme set"}</span>
         </div>
         <SiteLink className="lowkal-player-title" href={sitePath("/listen")}>{activeRecord.artist}</SiteLink>
-        <span className="lowkal-player-record">{activeRecord.series} <i>{"///"}</i> {activeRecord.title}</span>
+        <span className="lowkal-player-record">{activeRecord.series} <i>/</i> {activeRecord.title}</span>
       </div>
 
       <label className="lowkal-player-timeline">
@@ -91,28 +68,22 @@ export function PersistentPlayer() {
         </span>
       </label>
 
-      <div className="lowkal-player-utility">
-        <label className="lowkal-player-volume">
-          <span className="lowkal-player-volume-head">
-            <Volume2 aria-hidden="true" />
-            <span>Level</span>
-            <output>{volumeLabel}</output>
-          </span>
-          <span className="sr-only">Volume</span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={volume}
-            style={volumeStyle}
-            onChange={(event) => setVolume(Number(event.target.value))}
-          />
-        </label>
-        <SiteLink className="lowkal-player-room" href={sitePath("/listen")}>
-          <span><small>Full archive</small><strong>Soundroom</strong></span>
-          <ArrowUpRight aria-hidden="true" />
-        </SiteLink>
-      </div>
+      <label className="lowkal-player-volume">
+        <Volume2 aria-hidden="true" />
+        <span className="sr-only">Volume</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={volume}
+          style={volumeStyle}
+          onChange={(event) => setVolume(Number(event.target.value))}
+        />
+        <output className="sr-only">Volume {volumeLabel}</output>
+      </label>
+      <SiteLink className="lowkal-player-room" href={sitePath("/listen")} aria-label="Open Soundroom">
+        <ArrowUpRight aria-hidden="true" />
+      </SiteLink>
     </aside>
   );
 }

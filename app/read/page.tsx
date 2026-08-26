@@ -14,8 +14,8 @@ export default function ReadPage() {
     <main className="journal-page">
       <section className="section-page-hero read-hero">
         <span className="section-kicker">02 · Read</span>
-        <h1>Stories behind<br />the <em>signal.</em></h1>
-        <p>Artist conversations, field notes, photo essays, oral histories and reported work from the people who make the city sound like itself.</p>
+        <h1>Stories from<br />the <em>room.</em></h1>
+        <p>Artist conversations, field notes, photographs, and programme records from the people who make Lowkal.</p>
       </section>
       <ReadFeed fallback={journalStories.map((story, index) => ({
         ...story,

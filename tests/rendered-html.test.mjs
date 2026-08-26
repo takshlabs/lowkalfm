@@ -24,9 +24,9 @@ async function render(pathname) {
 }
 
 const routes = [
-  ["/", /The city has a/i],
+  ["/", /Garden City Gallivanting/i],
   ["/listen", /Lowkal Soundroom/i],
-  ["/read", /Stories behind/i],
+  ["/read", /Stories from/i],
   ["/go-out", /Selected by Lowkal/i],
 ];
 

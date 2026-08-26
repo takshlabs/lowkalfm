@@ -18,10 +18,10 @@ type ArchiveGroup = {
 
 const archiveGroups: ArchiveGroup[] = [
   {
-    id: "scene-broadcast",
+    id: "scene-programmes",
     number: "01",
-    label: "Lowkal scene broadcasts",
-    shortLabel: "Broadcasts",
+    label: "Lowkal scene programmes",
+    shortLabel: "Programmes",
     description: "Complete programme recordings and sets kept together from each Lowkal gathering.",
     includes: (record) => record.format === "live-set"
   },
@@ -38,7 +38,7 @@ const archiveGroups: ArchiveGroup[] = [
     number: "03",
     label: "Lowkal FM guest volumes",
     shortLabel: "Guests",
-    description: "One-off contributions from artists who pass through the room and leave a signal behind.",
+    description: "One-off contributions from artists who pass through the room and leave a record behind.",
     includes: (record) => record.format === "weekly" && record.artist.toLowerCase() !== "takezo"
   }
 ];
@@ -102,7 +102,7 @@ export function SoundroomCatalog() {
                   if (firstRecord) setSelectedSlug(firstRecord.slug);
                 }}
               >
-                <span className="archive-nav-signal" aria-hidden="true" />
+                <span className="archive-nav-mark" aria-hidden="true" />
                 <span>{item.shortLabel}</span>
                 <small>[{count}]</small>
               </button>
@@ -167,7 +167,7 @@ export function SoundroomCatalog() {
         <div className="archive-selection">
           <div className="archive-selection-index">
             <span>[{String(selectedIndex + 1).padStart(2, "0")}]</span>
-            <span>{selected.format === "weekly" ? "FM volume" : "Scene broadcast"}</span>
+            <span>{selected.format === "weekly" ? "FM volume" : "Scene programme"}</span>
           </div>
           <div className="archive-selection-title">
             <h2>{selected.artist}</h2>

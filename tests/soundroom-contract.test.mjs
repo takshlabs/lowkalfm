@@ -28,7 +28,8 @@ test("the isolated Soundroom provides routes back to Lowkal, Read, and Go Out", 
 
 test("semantic React images use Lowkal's shared media frame", async () => {
   const files = [
-    "components/HomeListenModule.tsx",
+    "components/HomeStage.tsx",
+    "components/HomeSessionShelf.tsx",
     "components/PersistentPlayer.tsx",
   ];
 
@@ -54,7 +55,7 @@ test("the original Soundroom opens the vinyl-and-shader archive room", async () 
   assert.match(page, /soundroom\/index\.html/);
   assert.match(soundroom, /href="\.\.\/listen\/archive"[^>]*target="_top"/i);
   assert.match(archivePage, /SoundroomCatalog/);
-  assert.match(catalog, /Lowkal scene broadcast/i);
+  assert.match(catalog, /Lowkal scene programme/i);
   assert.match(catalog, /Lowkal FM resident volumes/i);
   assert.match(catalog, /Lowkal FM guest volumes/i);
   assert.match(catalog, /Residents/i);

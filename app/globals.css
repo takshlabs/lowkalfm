@@ -5,7 +5,7 @@
   --muted: #6a675f;
   --rule: rgba(21, 21, 17, 0.22);
   --red: #b62f28;
-  --signal: #c8ff24;
+  --signal: var(--red);
   --night: #11110f;
   --night-ink: #f2eee5;
 }
@@ -916,7 +916,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .read-story-copy h2 a:hover { color: var(--red); }
 .read-story-copy p { max-width: 580px; margin: 0; font-family: var(--font-lowkal-editorial), serif; font-size: 1.13rem; line-height: 1.36; }
 .read-story--red .media-frame-mount { border-color: var(--red); }
-.read-story--signal .media-frame-mount { border-color: var(--signal); }
+.read-story--accent .media-frame-mount { border-color: var(--red); }
 .read-story--ink .media-frame-mount { border-color: var(--ink); }
 .reader-page { min-height: 100svh; padding: 44px 42px 120px; color: var(--ink); background: var(--paper); }
 .reader-article { max-width: 900px; margin: 0 auto; }
@@ -1092,8 +1092,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .archive-group-index { align-self: start; display: grid; grid-template-columns: repeat(3, minmax(120px, 1fr)); gap: clamp(20px, 8vw, 130px); padding-top: 4px; }
 .archive-group-index button { display: grid; grid-template-columns: 7px 1fr auto; align-items: center; gap: 6px; padding: 0; border: 0; background: transparent; font-size: 0.64rem; letter-spacing: 0.035em; text-align: left; text-transform: uppercase; cursor: pointer; }
 .archive-group-index small { font-size: inherit; }
-.archive-nav-signal { width: 6px; height: 6px; background: var(--ink); transition: background-color 160ms ease, transform 160ms ease; }
-.archive-group-index button[aria-pressed="true"] .archive-nav-signal { background: var(--red); transform: rotate(45deg); }
+.archive-nav-mark { width: 6px; height: 6px; background: var(--ink); transition: background-color 160ms ease, transform 160ms ease; }
+.archive-group-index button[aria-pressed="true"] .archive-nav-mark { background: var(--red); transform: rotate(45deg); }
 .archive-group-index button:hover, .archive-group-index button:focus-visible { color: var(--red); outline: none; }
 .archive-stage { position: relative; display: grid; align-content: center; min-height: 560px; padding: 38px 0 26px; border-top: 1px solid rgba(21,21,17,0.08); border-bottom: 1px solid var(--rule); }
 .archive-atmosphere { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.92; }

@@ -39,7 +39,7 @@ function toStory(post: SanityStory): Story {
     deck: post.deck,
     byline: post.byline,
     readTime: `${Math.max(1, Math.ceil(words / 220))} min`,
-    tone: ["paper", "red", "signal", "ink"].includes(post.accent ?? "") ? post.accent as Story["tone"] : "paper",
+    tone: ["paper", "red", "accent", "ink"].includes(post.accent ?? "") ? post.accent as Story["tone"] : "paper",
     imageUrl: post.imageUrl,
     imageAlt: post.imageAlt,
     publishedAt: post.publishedAt,
@@ -61,6 +61,14 @@ export function ReadFeed({ fallback }: { fallback: Story[] }) {
 
   return (
     <section className="read-stream" aria-label="Latest stories">
+      {stories.length === 0 ? (
+        <div className="read-empty">
+          <span>Field notes</span>
+          <h2>The first stories are being prepared.</h2>
+          <p>For programme photographs and new session notices, follow Lowkal on Instagram.</p>
+          <a href="https://www.instagram.com/lowkal.fm/" target="_blank" rel="noreferrer">Open Instagram ↗</a>
+        </div>
+      ) : null}
       {stories.map((story, index) => (
         <article className={`read-story read-story--${story.tone}`} key={story.slug}>
           <div className="read-story-index">{String(index + 1).padStart(2, "0")}</div>

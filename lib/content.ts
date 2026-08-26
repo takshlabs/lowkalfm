@@ -39,6 +39,23 @@ export type LiveProgram = {
 
 export const soundRecords: SoundRecord[] = [
   {
+    slug: "lowkal-002-garden-city-gallivanting",
+    format: "live-set",
+    series: "Lowkal 002 | Garden City Gallivanting",
+    title: "Full session",
+    artist: "Samgod · Sinhatra · Takezo",
+    date: "05 Jul 2026",
+    dateISO: "2026-07-05",
+    duration: 9366,
+    youtubeId: "NZETtyc9MFo",
+    artwork: sitePath("/lowkal-002.jpg"),
+    genres: ["Multi-genre", "Low end", "B2B2B"],
+    description: "Samgod, Sinhatra and Takezo share one long Lowkal session from Bengaluru.",
+    featured: true,
+    programSlug: "lowkal-002-garden-city-gallivanting",
+    tracks: []
+  },
+  {
     slug: "lowkal-fm-vol-01",
     format: "weekly",
     series: "Lowkal.fm Vol. 01",
@@ -90,7 +107,7 @@ export const soundRecords: SoundRecord[] = [
     youtubeId: "fw2mtwgCeGo",
     artwork: sitePath("/kinetic-drift.png"),
     genres: ["Drum + bass", "Breaks"],
-    description: "The featured set from Lowkal 001, selected from the full multi-artist live transmission.",
+    description: "The featured set from Lowkal 001, selected from the full multi-artist programme.",
     featured: true,
     programSlug: "lowkal-001-redline",
     tracks: [
@@ -124,6 +141,16 @@ export const soundRecords: SoundRecord[] = [
 
 export const livePrograms: LiveProgram[] = [
   {
+    slug: "lowkal-002-garden-city-gallivanting",
+    number: "002",
+    name: "Garden City Gallivanting",
+    label: "Lowkal 002 | Garden City Gallivanting",
+    date: "05 Jul 2026",
+    featuredSetSlug: "lowkal-002-garden-city-gallivanting",
+    setSlugs: ["lowkal-002-garden-city-gallivanting"],
+    description: "A shared multi-genre session with Samgod, Sinhatra and Takezo."
+  },
+  {
     slug: "lowkal-001-redline",
     number: "001",
     name: "Redline",
@@ -131,7 +158,7 @@ export const livePrograms: LiveProgram[] = [
     date: "13 Apr 2026",
     featuredSetSlug: "lowkal-001-takezo",
     setSlugs: ["lowkal-001-takezo", "lowkal-001-sarang"],
-    description: "A multi-artist live transmission. Each Lowkal program keeps every set together and marks one set as the featured recording."
+    description: "A multi-artist live programme. Each Lowkal programme keeps every set together and marks one set as the featured recording."
   }
 ];
 
@@ -141,7 +168,7 @@ export type JournalStory = {
   deck: string;
   byline: string;
   readTime: string;
-  tone: "paper" | "red" | "signal" | "ink";
+  tone: "paper" | "red" | "accent" | "ink";
   excerpt: string;
 };
 

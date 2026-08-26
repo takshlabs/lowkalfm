@@ -59,9 +59,9 @@ const fragmentShaderSource = `
 
     vec3 night = vec3(0.063, 0.043, 0.086);
     vec3 red = vec3(0.714, 0.184, 0.157);
-    vec3 signal = vec3(0.784, 1.0, 0.141);
+    vec3 accent = vec3(0.941, 0.267, 0.216);
     vec3 color = mix(night, red, smoothstep(0.40, 0.76, field));
-    color = mix(color, signal, smoothstep(0.72, 0.98, ribbon + halo * 0.18) * 0.28);
+    color = mix(color, accent, smoothstep(0.72, 0.98, ribbon + halo * 0.18) * 0.28);
 
     float edgeFade = smoothstep(0.92, 0.22, length(p * vec2(0.76, 1.0)));
     float alpha = (0.025 + field * 0.07 + ribbon * 0.055 + halo * 0.025) * edgeFade;
