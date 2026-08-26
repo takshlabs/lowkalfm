@@ -1657,11 +1657,11 @@ void main(){
           }
         });
         
-        // Swap mix, start play, navigate to main player page
+        // Load the selected mix in a paused state before the player page opens.
         setTimeout(() => {
           this.isTransitioningNode = false;
           
-          this.loadMixToPlayer(mix, true);
+          this.loadMixToPlayer(mix, false);
           this.navigate('home');
           this.setupArchiveNodes();
         }, 650);

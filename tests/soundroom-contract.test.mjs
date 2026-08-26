@@ -11,9 +11,11 @@ async function source(path) {
 test("the floating player is quiet by default and does not advertise a live signal", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const player = await source("components/PersistentPlayer.tsx");
+  const soundroom = await source("public/soundroom/index.html");
 
   assert.match(provider, /autoplay:\s*0/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
+  assert.match(soundroom, /handleMixNodeClick[\s\S]*?loadMixToPlayer\(mix, false\)/);
   assert.doesNotMatch(player, /Live signal/i);
   assert.doesNotMatch(player, /player-signal/);
 });
