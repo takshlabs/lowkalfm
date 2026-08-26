@@ -5,48 +5,38 @@ import { sitePath } from "@/lib/site-path";
 
 export function HomeProgrammeIndex() {
   return (
-    <section
-      className="programmes section on-paper"
-      id="programmes"
-      aria-labelledby="programmes-title"
-    >
-      <header className="section-head" data-reveal>
-        <div className="section-head__body">
-          <p className="section-kicker">Programme index</p>
-          <h2 className="section-head__title" id="programmes-title">
-            Each gathering stays together.
-          </h2>
+    <section className="home-programmes" id="programmes" aria-labelledby="home-programmes-title">
+      <header className="home-section-head home-section-head--paper">
+        <div>
+          <span>Programme index</span>
+          <h2 id="home-programmes-title">Each gathering stays together.</h2>
         </div>
-        <p className="section-head__note">
-          Sets, people, and the complete programme record in one place.
-        </p>
+        <p>Sets, people, and the complete programme record in one place.</p>
       </header>
 
-      <div className="programme-grid" data-reveal-group>
+      <div className="home-programme-grid">
         {livePrograms.map((programme) => {
           const record = getSoundRecord(programme.featuredSetSlug);
           if (!record) return null;
 
           return (
-            <article className="programme-card" key={programme.slug} data-reveal>
+            <article className="home-programme-card" key={programme.slug}>
               <MediaFrame
-                variant="fill"
+                variant="editorial"
+                frameClassName="home-programme-art"
                 src={record.artwork}
                 alt={`${programme.label} artwork`}
                 fill
-                sizes="(max-width: 900px) 100vw, 50vw"
+                sizes="(max-width: 760px) 100vw, 50vw"
               />
-              <div className="programme-card__body">
-                <div className="programme-card__meta label label--sm">
+              <div className="home-programme-overlay">
+                <div className="home-programme-meta">
                   <span>Lowkal {programme.number}</span>
                   <span>{programme.date}</span>
                 </div>
-                <p className="programme-card__numeral" aria-hidden="true">{programme.number}</p>
-                <h3 className="programme-card__name">{programme.name}</h3>
-                <p className="programme-card__note">{programme.description}</p>
-                <SiteLink className="link-quiet" href={sitePath("/listen/archive")}>
-                  Open programme record ↗
-                </SiteLink>
+                <h3>{programme.name}</h3>
+                <p>{programme.description}</p>
+                <SiteLink href={sitePath("/listen/archive")}>Open programme record ↗</SiteLink>
               </div>
             </article>
           );

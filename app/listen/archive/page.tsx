@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ArchivePage() {
   return (
-    <main id="main">
+    <main className="soundroom-page">
       <SoundroomCatalog />
     </main>
   );

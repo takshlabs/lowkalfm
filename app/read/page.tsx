@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ReadFeed } from "@/components/ReadFeed";
+import { journalStories } from "@/lib/content";
 
 export const dynamic = "force-static";
 
@@ -10,25 +11,20 @@ export const metadata: Metadata = {
 
 export default function ReadPage() {
   return (
-    <main className="on-paper" id="main">
-      <section className="page-hero read-hero">
-        <span className="page-hero__ghost" aria-hidden="true">02</span>
-        <p className="section-kicker">02 · Read</p>
-        <h1 className="page-hero__title">Stories from the <em>room.</em></h1>
-        <p className="page-hero__note">
-          Artist conversations, field notes, photographs, and programme records from the
-          people who make Lowkal.
-        </p>
+    <main className="journal-page">
+      <section className="section-page-hero read-hero">
+        <span className="section-kicker">02 · Read</span>
+        <h1>Stories from<br />the <em>room.</em></h1>
+        <p>Artist conversations, field notes, photographs, and programme records from the people who make Lowkal.</p>
       </section>
-
-      <ReadFeed />
-
-      <section className="editorial-note on-red" aria-labelledby="read-pitch-title">
-        <p className="section-kicker">Pitch Lowkal</p>
-        <h2 id="read-pitch-title">A good story can begin with one sound.</h2>
-        <a className="link-quiet" href="mailto:hello@lowkal.fm?subject=Story%20pitch">
-          Send a short pitch ↗
-        </a>
+      <ReadFeed fallback={journalStories.map((story, index) => ({
+        ...story,
+        slug: ["dancefloor-workers", "flyover-rain", "last-bus-home", "sarang-meeting-place"][index] ?? `story-${index + 1}`,
+      }))} />
+      <section className="journal-note">
+        <span className="section-kicker">Pitch Lowkal</span>
+        <h2>A good story can begin with one sound.</h2>
+        <a href="mailto:hello@lowkal.fm?subject=Story%20pitch">Send a short pitch ↗</a>
       </section>
     </main>
   );

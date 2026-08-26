@@ -11,8 +11,3 @@ dist/
 npm-debug.log*
 tsconfig.tsbuildinfo
 .vercel
-
-# Local review screenshots and Bun lockfile (npm is the source of truth)
-.shots/
-bun.lock
-.vscode/

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Pause, Play } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatTime, soundRecords, SoundRecord } from "@/lib/content";
 import { ArchiveAtmosphere } from "./ArchiveAtmosphere";
@@ -75,17 +75,20 @@ export function SoundroomCatalog() {
   };
 
   return (
-    <section className="archive-room on-paper" id="archive" aria-labelledby="archive-title">
-      <header className="archive-head">
-        <div className="archive-head__title">
+    <section
+      className="archive-room"
+      id="archive"
+      aria-labelledby="archive-title"
+    >
+      <header className="archive-room-heading">
+        <div className="archive-room-title">
+          <span className="archive-corner archive-corner--tl" aria-hidden="true" />
           <p className="section-kicker">Lowkal listening archive</p>
-          <h1 id="archive-title">Archive Room</h1>
-          <p className="archive-head__count label label--sm">
-            AR — {String(soundRecords.length).padStart(2, "0")} records
-          </p>
+          <h1 id="archive-title">Archive<br />room</h1>
+          <p className="archive-room-index">AR — {String(soundRecords.length).padStart(2, "0")}</p>
         </div>
 
-        <nav className="archive-tabs" aria-label="Archive catalogues">
+        <nav className="archive-group-index" aria-label="Archive catalogues">
           {archiveGroups.map((item) => {
             const count = soundRecords.filter(item.includes).length;
             const isActive = item.id === group.id;
@@ -99,8 +102,9 @@ export function SoundroomCatalog() {
                   if (firstRecord) setSelectedSlug(firstRecord.slug);
                 }}
               >
+                <span className="archive-nav-mark" aria-hidden="true" />
                 <span>{item.shortLabel}</span>
-                <small className="tnum">[{count}]</small>
+                <small>[{count}]</small>
               </button>
             );
           })}
@@ -109,7 +113,6 @@ export function SoundroomCatalog() {
 
       <div className="archive-stage">
         <ArchiveAtmosphere />
-
         <div className="archive-track" aria-label="Lowkal records">
           {soundRecords.map((record, index) => {
             const isSelected = record.slug === selected.slug;
@@ -130,12 +133,12 @@ export function SoundroomCatalog() {
                   if (event.key === "ArrowRight") move(1);
                 }}
               >
-                <span className="archive-record-number">{String(index + 1).padStart(2, "0")}</span>
+                <span className="archive-record-number">[{String(index + 1).padStart(2, "0")}]</span>
                 <span className="archive-record-frame">
                   <span className="archive-record-tab">{record.title}</span>
                   <span className="archive-vinyl">
                     <span className="archive-vinyl-label">
-                      <Image src={record.artwork} alt="" fill sizes="120px" />
+                      <Image src={record.artwork} alt="" fill sizes="96px" />
                     </span>
                   </span>
                 </span>
@@ -149,46 +152,34 @@ export function SoundroomCatalog() {
         </div>
 
         <div className="archive-controls" aria-label="Archive controls">
-          <button type="button" onClick={() => move(-1)} aria-label="Previous record">
-            <ArrowLeft aria-hidden="true" />
-          </button>
-          <span className="archive-controls__count label label--sm tnum">
-            {String(selectedIndex + 1).padStart(2, "0")} / {String(soundRecords.length).padStart(2, "0")}
-          </span>
-          <button type="button" onClick={() => move(1)} aria-label="Next record">
-            <ArrowRight aria-hidden="true" />
-          </button>
+          <button type="button" onClick={() => move(-1)} aria-label="Previous record">←</button>
+          <span>{String(selectedIndex + 1).padStart(2, "0")} / {String(soundRecords.length).padStart(2, "0")}</span>
+          <button type="button" onClick={() => move(1)} aria-label="Next record">→</button>
         </div>
       </div>
 
       <footer className="archive-desk" aria-live="polite">
-        <div className="archive-desk__group">
-          <p className="section-kicker">Catalogue {group.number}</p>
+        <div className="archive-desk-group">
+          <span><i aria-hidden="true" /> Catalogue {group.number}</span>
           <p>{group.description}</p>
         </div>
 
         <div className="archive-selection">
-          <div className="archive-selection__index">
-            <strong>{String(selectedIndex + 1).padStart(2, "0")}</strong>
-            <span className="label label--sm">
-              {selected.format === "weekly" ? "FM volume" : "Scene programme"}
-            </span>
+          <div className="archive-selection-index">
+            <span>[{String(selectedIndex + 1).padStart(2, "0")}]</span>
+            <span>{selected.format === "weekly" ? "FM volume" : "Scene programme"}</span>
           </div>
-
-          <div className="archive-selection__title">
+          <div className="archive-selection-title">
             <h2>{selected.artist}</h2>
             <p>{selected.series} — {selected.title}</p>
-            <div className="archive-selection__meta label label--sm">
-              <span>{selected.date}</span>
-              <em>{selected.genres.join(" / ")}</em>
-              <span className="tnum">{formatTime(selected.duration)}</span>
-            </div>
           </div>
-
+          <div className="archive-selection-meta">
+            <span>{selected.date}</span>
+            <span>{selected.genres.join(" / ")}</span>
+            <span>{formatTime(selected.duration)}</span>
+          </div>
           <button type="button" className="archive-play" onClick={handlePlay}>
-            <span>
-              {selectedIsActive && isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-            </span>
+            {selectedIsActive && isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
             <span>{selectedIsActive && isPlaying ? "Pause" : "Play record"}</span>
           </button>
         </div>

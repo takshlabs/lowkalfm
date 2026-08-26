@@ -190,19 +190,9 @@ export function getSoundRecord(slug: string) {
   return soundRecords.find((record) => record.slug === slug);
 }
 
-/**
- * Formats a duration as h:mm:ss, or m:ss when it is under an hour.
- *
- * A Lowkal programme runs well past sixty minutes, so a plain minute count
- * would read as "156:06" instead of "2:36:06".
- */
 export function formatTime(seconds: number) {
   const safeSeconds = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;
-  const hours = Math.floor(safeSeconds / 3600);
-  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const minutes = Math.floor(safeSeconds / 60);
   const remainder = safeSeconds % 60;
-  const paddedSeconds = remainder.toString().padStart(2, "0");
-
-  if (hours === 0) return `${minutes}:${paddedSeconds}`;
-  return `${hours}:${minutes.toString().padStart(2, "0")}:${paddedSeconds}`;
+  return `${minutes}:${remainder.toString().padStart(2, "0")}`;
 }
