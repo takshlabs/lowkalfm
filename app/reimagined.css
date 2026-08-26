@@ -50,8 +50,13 @@ html { scroll-behavior: smooth; }
 }
 
 .brand-scripts { color: rgba(241, 234, 219, 0.54); }
-.header-nav { gap: clamp(11px, 2vw, 24px); }
-.header-nav a { font-size: 0.68rem; letter-spacing: 0.025em; text-transform: none; }
+.header-nav { gap: clamp(14px, 2.4vw, 30px); }
+.header-nav a {
+  font-size: clamp(0.82rem, 1.15vw, 0.96rem);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
 .header-nav a[aria-current="page"] { color: var(--lowkal-red); }
 
 .home-reimagined {
