@@ -538,6 +538,75 @@ html { scroll-behavior: smooth; }
 }
 .archive-atmosphere { z-index: 0; }
 
+/* Quiet ephemera from the second art set. */
+.home-city {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.home-city::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(13, 13, 17, 0.9), rgba(13, 13, 17, 0.58)),
+    url("/art/lotus-field.jpg") center 46% / cover;
+  opacity: 0.18;
+  filter: saturate(0.78);
+  pointer-events: none;
+}
+.home-city > * { position: relative; z-index: 1; }
+
+.read-hero::before,
+.city-hero::before {
+  content: "";
+  position: absolute;
+  top: 28px;
+  right: 26px;
+  z-index: 2;
+  width: 72px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.52;
+  filter: saturate(0.78) contrast(1.04);
+  pointer-events: none;
+}
+.read-hero::before {
+  aspect-ratio: 600 / 773;
+  background-image: url("/art/bougainvillea-stamp.jpg");
+  transform: rotate(3deg);
+}
+.city-hero::before {
+  top: auto;
+  bottom: 28px;
+  aspect-ratio: 1052 / 1280;
+  background-image: url("/art/nataraja-stamp.jpg");
+  opacity: 0.42;
+  transform: rotate(-2deg);
+}
+
+.site-footer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 0;
+  width: min(38vw, 560px);
+  background:
+    linear-gradient(90deg, #090908, rgba(9, 9, 8, 0.28)),
+    url("/art/red-floral-panel.jpg") center / cover;
+  opacity: 0.24;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+.site-footer > * { position: relative; z-index: 1; }
+
 @media (max-width: 900px) {
   .home-stage-grid { grid-template-columns: 1fr; }
   .home-stage-media { min-height: 0; aspect-ratio: 16 / 10; }
@@ -624,4 +693,9 @@ html { scroll-behavior: smooth; }
   .home-open-call::before,
   .journal-note::after { left: 46%; }
   .city-principle blockquote { font-size: clamp(2.2rem, 10vw, 3.4rem); }
+  .read-hero::before,
+  .city-hero::before { right: 12px; width: 40px; opacity: 0.3; }
+  .read-hero::before { top: 16px; }
+  .city-hero::before { top: 16px; bottom: auto; }
+  .site-footer::before { width: 58vw; opacity: 0.18; }
 }
