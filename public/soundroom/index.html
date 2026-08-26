@@ -1299,6 +1299,7 @@ void main(){
         this.visualizer.init();
         this.setupCursor();
         this.bindEvents();
+        this.bindNavigationBridge();
         this.bindAudioSync();
         this.setupArchiveNodes();
         this.loadMixToPlayer(this.activeMix, false);
@@ -1309,6 +1310,20 @@ void main(){
         window._appInstance = this;
         if (!IS_EMBEDDED && window._ytAPIReady) this.ytEngine.onAPIReady();
         this.sendAudioCommand('request-state');
+      }
+
+      bindNavigationBridge() {
+        if (!IS_EMBEDDED) return;
+        document.querySelectorAll('a[target="_top"]').forEach((link) => {
+          link.addEventListener('click', (event) => {
+            event.preventDefault();
+            window.parent.postMessage({
+              channel: 'lowkal.navigation.v1',
+              type: 'navigate',
+              href: link.href
+            }, window.location.origin);
+          });
+        });
       }
 
       sendAudioCommand(action, details = {}) {
@@ -1657,11 +1672,11 @@ void main(){
           }
         });
         
-        // Load the selected mix in a paused state before the player page opens.
+        // Swap mix, start play, navigate to main player page
         setTimeout(() => {
           this.isTransitioningNode = false;
           
-          this.loadMixToPlayer(mix, false);
+          this.loadMixToPlayer(mix, true);
           this.navigate('home');
           this.setupArchiveNodes();
         }, 650);

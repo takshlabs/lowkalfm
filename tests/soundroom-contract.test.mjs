@@ -11,13 +11,28 @@ async function source(path) {
 test("the floating player is quiet by default and does not advertise a live signal", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const player = await source("components/PersistentPlayer.tsx");
-  const soundroom = await source("public/soundroom/index.html");
 
   assert.match(provider, /autoplay:\s*0/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
-  assert.match(soundroom, /handleMixNodeClick[\s\S]*?loadMixToPlayer\(mix, false\)/);
   assert.doesNotMatch(player, /Live signal/i);
   assert.doesNotMatch(player, /player-signal/);
+});
+
+test("internal navigation preserves the shared player state", async () => {
+  const link = await source("components/SiteLink.tsx");
+  const layout = await source("app/layout.tsx");
+  const readFeed = await source("components/ReadFeed.tsx");
+  const soundroomFrame = await source("components/SoundroomFrame.tsx");
+  const soundroom = await source("public/soundroom/index.html");
+
+  assert.match(link, /import Link from "next\/link"/);
+  assert.match(link, /<Link href=\{href\}/);
+  assert.match(layout, /<AudioProvider>[\s\S]*?\{children\}[\s\S]*?<PersistentPlayer/);
+  assert.match(readFeed, /<SiteLink href=\{`\/read\/\$\{story\.slug\}`\}/);
+  assert.match(soundroomFrame, /router\.push/);
+  assert.match(soundroomFrame, /event\.source !== frameRef\.current\?\.contentWindow/);
+  assert.match(soundroom, /bindNavigationBridge/);
+  assert.match(soundroom, /lowkal\.navigation\.v1/);
 });
 
 test("the isolated Soundroom provides routes back to Lowkal, Read, and Go Out", async () => {
@@ -48,13 +63,15 @@ test("semantic React images use Lowkal's shared media frame", async () => {
 
 test("the original Soundroom opens the vinyl-and-shader archive room", async () => {
   const page = await source("app/listen/page.tsx");
+  const frame = await source("components/SoundroomFrame.tsx");
   const archivePage = await source("app/listen/archive/page.tsx");
   const soundroom = await source("public/soundroom/index.html");
   const catalog = await source("components/SoundroomCatalog.tsx");
   const atmosphere = await source("components/ArchiveAtmosphere.tsx");
 
-  assert.match(page, /<iframe/);
-  assert.match(page, /soundroom\/index\.html/);
+  assert.match(page, /<SoundroomFrame/);
+  assert.match(frame, /<iframe/);
+  assert.match(frame, /soundroom\/index\.html/);
   assert.match(soundroom, /href="\.\.\/listen\/archive"[^>]*target="_top"/i);
   assert.match(archivePage, /SoundroomCatalog/);
   assert.match(catalog, /Lowkal scene programme/i);

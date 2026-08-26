@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
+import { SiteLink } from "@/components/SiteLink";
 import { sanityClient, storiesQuery } from "@/lib/sanity";
 
 type Story = {
@@ -75,7 +76,7 @@ export function ReadFeed({ fallback }: { fallback: Story[] }) {
           {story.imageUrl ? <MediaFrame variant="editorial" frameClassName="read-story-media" src={story.imageUrl} alt={story.imageAlt || `${story.title} artwork`} width={1200} height={900} sizes="(max-width: 760px) 100vw, 36vw" /> : null}
           <div className="read-story-copy">
             <span>{story.type} · {story.readTime}</span>
-            <h2><a href={`/read/${story.slug}`}>{story.title}</a></h2>
+            <h2><SiteLink href={`/read/${story.slug}`}>{story.title}</SiteLink></h2>
             <p>{story.deck}</p>
             <small>By {story.byline}{story.publishedAt ? ` · ${new Date(story.publishedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}` : ""}</small>
           </div>
