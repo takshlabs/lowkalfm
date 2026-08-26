@@ -10,7 +10,10 @@ export const metadata: Metadata = {
 
 export default function ListenPage() {
   return (
-    <main style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#070711" }}>
+    <main
+      id="main"
+      style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#100f0d" }}
+    >
       <iframe
         src={sitePath("/soundroom/index.html")}
         title="Lowkal Soundroom"

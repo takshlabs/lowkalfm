@@ -1,0 +1,591 @@
+/* ==========================================================================
+   Lowkal.fm — Archive Room
+   A paper surface. Records sit on a shelf and one record is always in focus.
+   ========================================================================== */
+
+/* The room is sized to leave the dock its own space, so the shelf, the
+   caption, and the desk all read together without scrolling. */
+.archive-room {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--header-h) - var(--player-h) - var(--space-6));
+  overflow: hidden;
+}
+
+/* --- Heading -------------------------------------------------------------- */
+
+.archive-head {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6) var(--space-12);
+  padding: var(--space-6) var(--gutter) var(--space-5);
+}
+
+.archive-head__title {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.archive-head__title h1 {
+  font-family: var(--font-display);
+  font-size: var(--display-sm);
+  line-height: 0.98;
+  letter-spacing: var(--track-display);
+  text-wrap: nowrap;
+}
+
+.archive-head__count {
+  color: var(--fg-faint);
+}
+
+/* Catalogue tabs. A moving underline marks the active catalogue. */
+.archive-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-self: end;
+  align-self: end;
+}
+
+.archive-tabs button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  color: var(--fg-muted);
+  border: 1px solid var(--rule-paper);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--track-label-tight);
+  text-transform: uppercase;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.archive-tabs button:hover {
+  color: var(--on-paper);
+  border-color: var(--rule-paper-strong);
+}
+
+.archive-tabs button[aria-pressed="true"] {
+  color: var(--paper-50);
+  border-color: var(--red-500);
+  background-color: var(--red-500);
+}
+
+.archive-tabs small {
+  font-size: inherit;
+  opacity: 0.62;
+}
+
+@media (max-width: 900px) {
+  .archive-head {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-tabs {
+    justify-self: start;
+  }
+}
+
+/* --- Stage ---------------------------------------------------------------- */
+
+.archive-stage {
+  position: relative;
+  display: grid;
+  align-content: center;
+  flex: 1 1 auto;
+  min-height: 34svh;
+  padding-block: var(--space-5) var(--space-4);
+  border-block: 1px solid var(--rule-paper);
+  isolation: isolate;
+}
+
+.archive-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Vignette so the outer records fade rather than being cut off. */
+.archive-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    var(--surface-paper) 0%,
+    transparent 18%,
+    transparent 82%,
+    var(--surface-paper) 100%
+  );
+  pointer-events: none;
+}
+
+/* The shelf, the caption, and the desk should be readable together, so the
+   record is kept modest rather than filling the viewport. */
+.archive-track {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: clamp(2rem, 4vw, 4.5rem);
+  padding: var(--space-6) calc(50vw - clamp(100px, 11vw, 150px));
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.archive-track::-webkit-scrollbar {
+  display: none;
+}
+
+.archive-record {
+  position: relative;
+  flex: 0 0 clamp(190px, 18vw, 260px);
+  display: grid;
+  gap: var(--space-3);
+  text-align: left;
+  scroll-snap-align: center;
+  opacity: 0.2;
+  transform: scale(0.84);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+
+.archive-record:hover {
+  opacity: 0.5;
+}
+
+.archive-record.is-selected {
+  z-index: 2;
+  opacity: 1;
+  transform: scale(1);
+}
+
+.archive-record-number {
+  justify-self: end;
+  color: var(--fg-faint);
+  font-family: var(--font-mark);
+  font-size: var(--text-3xs);
+}
+
+.archive-record-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+}
+
+/* Corner ticks appear only on the record in focus. */
+.archive-record.is-selected .archive-record-frame::before,
+.archive-record.is-selected .archive-record-frame::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--rule-paper-strong);
+}
+
+.archive-record.is-selected .archive-record-frame::before {
+  top: 0;
+  left: 0;
+  border-width: 1px 0 0 1px;
+}
+
+.archive-record.is-selected .archive-record-frame::after {
+  right: 0;
+  bottom: 0;
+  border-width: 0 1px 1px 0;
+}
+
+.archive-record-tab {
+  position: absolute;
+  top: -30px;
+  left: 0;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 80%;
+  padding: var(--space-2) var(--space-3);
+  overflow: hidden;
+  color: var(--paper-50);
+  background-color: var(--ink-900);
+  font-family: var(--font-ui);
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  letter-spacing: var(--track-label-tight);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.archive-record-tab::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  background-color: var(--red-500);
+  transform: rotate(45deg);
+}
+
+.archive-record.is-selected .archive-record-tab {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* The vinyl itself. Grooves are drawn, never an image. */
+.archive-vinyl {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 92%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-circle);
+  background:
+    repeating-radial-gradient(circle, #08080700 0 3px, #1a1a1633 4px 5px, #07070600 6px 8px),
+    radial-gradient(circle at 34% 28%, #2a2924, #0a0a09 62%);
+  box-shadow:
+    0 22px 44px rgba(11, 11, 10, 0.24),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+  transition: transform var(--dur-slower) var(--ease-out);
+}
+
+.archive-record:hover .archive-vinyl {
+  transform: rotate(7deg);
+}
+
+.archive-record.is-selected .archive-vinyl {
+  transform: rotate(-3deg);
+}
+
+/* Spindle hole. */
+.archive-vinyl::after {
+  content: "";
+  position: absolute;
+  width: 3.6%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-circle);
+  background-color: var(--surface-paper);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.archive-vinyl-label {
+  position: relative;
+  width: 33%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-circle);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+.archive-vinyl-label img {
+  object-fit: cover;
+  filter: saturate(0.82) contrast(1.06);
+}
+
+.archive-record-caption {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-4);
+}
+
+.archive-record-caption strong {
+  overflow: hidden;
+  font-family: var(--font-title);
+  font-size: var(--text-md);
+  font-weight: 400;
+  letter-spacing: var(--track-title);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.archive-record-caption small {
+  grid-column: 1 / -1;
+  color: var(--fg-faint);
+  font-size: var(--text-3xs);
+  letter-spacing: var(--track-label-tight);
+  text-transform: uppercase;
+}
+
+/* --- Track controls ------------------------------------------------------- */
+
+.archive-controls {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.archive-controls button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: var(--fg-muted);
+  border: 1px solid var(--rule-paper);
+  border-radius: var(--radius-circle);
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.archive-controls button:hover {
+  color: var(--paper-50);
+  border-color: var(--red-500);
+  background-color: var(--red-500);
+}
+
+.archive-controls button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.archive-controls__count {
+  min-width: 82px;
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+/* --- Desk ----------------------------------------------------------------- */
+
+.archive-desk {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.35fr) minmax(0, 1fr);
+  gap: var(--space-8);
+  padding: var(--space-5) var(--gutter) var(--space-6);
+}
+
+.archive-desk__group {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  max-width: 26ch;
+}
+
+.archive-desk__group p {
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+.archive-selection {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: var(--space-6);
+  padding-left: var(--space-6);
+  border-left: 1px solid var(--rule-paper);
+}
+
+.archive-selection__index {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.archive-selection__index strong {
+  font-family: var(--font-mark);
+  font-size: var(--display-xs);
+  font-weight: 400;
+  line-height: 0.8;
+  letter-spacing: var(--track-mark);
+}
+
+.archive-selection__title h2 {
+  font-family: var(--font-display);
+  font-size: var(--display-sm);
+  line-height: var(--leading-display);
+  letter-spacing: var(--track-display);
+}
+
+.archive-selection__title p {
+  margin-top: var(--space-2);
+  color: var(--fg-muted);
+  font-family: var(--font-title);
+  font-size: var(--text-md);
+  letter-spacing: var(--track-title);
+}
+
+.archive-selection__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-4);
+  color: var(--fg-faint);
+}
+
+.archive-selection__meta em {
+  color: var(--red-600);
+  font-style: normal;
+}
+
+.archive-play {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5) var(--space-3) var(--space-3);
+  color: var(--paper-50);
+  background-color: var(--ink-900);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--track-label-tight);
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.archive-play:hover {
+  background-color: var(--red-500);
+  transform: translateY(-1px);
+}
+
+.archive-play span:first-child {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-circle);
+  background-color: color-mix(in srgb, var(--paper-100) 14%, transparent);
+}
+
+.archive-play svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+}
+
+@media (max-width: 900px) {
+  .archive-desk {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-selection {
+    grid-template-columns: auto minmax(0, 1fr);
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .archive-desk__group {
+    display: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .archive-track {
+    gap: var(--space-8);
+    padding-inline: calc(50vw - 116px);
+  }
+
+  .archive-record {
+    flex-basis: 232px;
+  }
+
+  .archive-selection__meta {
+    display: none;
+  }
+
+  .archive-play {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* --- Soundroom canvas fallback (three.js scene, parked) ------------------- */
+
+.soundroom-canvas {
+  position: relative;
+  height: min(72vw, 720px);
+  min-height: 480px;
+  border: 1px solid var(--rule-night);
+  background-color: var(--surface-night);
+}
+
+.soundroom-canvas-fallback {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--on-night-muted);
+}
+
+.scene-instruction {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  color: var(--on-night-faint);
+  font-size: var(--text-3xs);
+  letter-spacing: var(--track-label-tight);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.archive-shelf-label {
+  padding: var(--space-2) var(--space-3);
+  color: var(--on-night);
+  background-color: color-mix(in srgb, var(--ink-900) 84%, transparent);
+  font-family: var(--font-ui);
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  letter-spacing: var(--track-label-tight);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.archive-shelf-label.is-active {
+  color: var(--paper-50);
+  background-color: var(--red-500);
+}
+
+.archive-record-marker {
+  display: grid;
+  gap: 2px;
+  min-width: 140px;
+  padding: var(--space-2) var(--space-3);
+  color: var(--on-night);
+  border: 1px solid var(--rule-night-strong);
+  background-color: color-mix(in srgb, var(--ink-900) 86%, transparent);
+  text-align: left;
+}
+
+.archive-record-marker strong {
+  color: var(--red-400);
+  font-family: var(--font-title);
+  font-size: var(--text-2xs);
+  font-weight: 400;
+}
+
+.archive-record-marker span {
+  font-size: var(--text-3xs);
+  letter-spacing: var(--track-label-tight);
+  text-transform: uppercase;
+}
+
+.soundroom-page {
+  color: var(--on-night);
+  background-color: var(--surface-night);
+}

@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
+import type { YouTubeEvent, YouTubePlayer } from "react-youtube";
 import { getSoundRecord, soundRecords, SoundRecord } from "@/lib/content";
+import { YouTubeEngine } from "./YouTubeEngine";
 
 const STORAGE_KEY = "lowkal.player.v1";
 
@@ -14,6 +15,15 @@ type SavedPlayerState = {
 };
 
 const AUDIO_SYNC_CHANNEL = "lowkal.audio.v1";
+
+/**
+ * The play queue. Several records point at the same recording, so the queue
+ * keeps the first entry for each source and drops the duplicates. Without this
+ * a listener would hear the same set twice in a row.
+ */
+export const playQueue: SoundRecord[] = soundRecords.filter(
+  (record, index, records) => records.findIndex((item) => item.youtubeId === record.youtubeId) === index
+);
 
 type AudioCommand =
   | { action: "request-state" }
@@ -28,13 +38,20 @@ type AudioCommand =
 
 type AudioContextValue = {
   activeRecord: SoundRecord;
+  queue: SoundRecord[];
   currentTime: number;
   duration: number;
   isPlaying: boolean;
   isReady: boolean;
+  isShuffled: boolean;
+  isRepeat: boolean;
   volume: number;
   playRecord: (slug: string, autoplay?: boolean) => void;
   togglePlayback: () => void;
+  playNext: () => void;
+  playPrevious: () => void;
+  toggleShuffle: () => void;
+  toggleRepeat: () => void;
   seek: (seconds: number) => void;
   setVolume: (volume: number) => void;
 };
@@ -56,6 +73,13 @@ function readSavedState(): SavedPlayerState | null {
   } catch {
     return null;
   }
+}
+
+/** True when the visitor is typing, so a shortcut must not steal the key. */
+function isTypingTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 }
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
@@ -130,26 +154,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearInterval(timer);
   }, [isReady, persist]);
 
-  useEffect(() => {
-    if (!("mediaSession" in navigator)) return;
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: `${activeRecord.series} — ${activeRecord.title}`,
-      artist: activeRecord.artist,
-      album: "Lowkal Soundroom",
-      artwork: [{ src: activeRecord.artwork, sizes: "512x512", type: "image/png" }]
-    });
-    navigator.mediaSession.setActionHandler("play", () => playerRef.current?.playVideo());
-    navigator.mediaSession.setActionHandler("pause", () => playerRef.current?.pauseVideo());
-    navigator.mediaSession.setActionHandler("seekto", (details) => {
-      if (details.seekTime != null) playerRef.current?.seekTo(details.seekTime, true);
-    });
-    return () => {
-      navigator.mediaSession.setActionHandler("play", null);
-      navigator.mediaSession.setActionHandler("pause", null);
-      navigator.mediaSession.setActionHandler("seekto", null);
-    };
-  }, [activeRecord]);
-
   const onReady = useCallback((event: YouTubeEvent) => {
     playerRef.current = event.target;
     setIsReady(true);
@@ -177,6 +181,30 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setActiveSlug(slug);
   }, [activeSlug]);
 
+  /** Steps through the queue. Shuffle picks any other entry at random. */
+  const step = useCallback((direction: -1 | 1) => {
+    if (playQueue.length === 0) return;
+    const current = Math.max(0, playQueue.findIndex((record) => record.youtubeId === activeRecord.youtubeId));
+    let next = (current + direction + playQueue.length) % playQueue.length;
+    if (isShuffled && playQueue.length > 1) {
+      do {
+        next = Math.floor(Math.random() * playQueue.length);
+      } while (next === current);
+    }
+    playRecord(playQueue[next].slug, true);
+  }, [activeRecord.youtubeId, isShuffled, playRecord]);
+
+  const playNext = useCallback(() => step(1), [step]);
+  const playPrevious = useCallback(() => {
+    // A press in the first few seconds moves back a set. Later it restarts.
+    if (currentTimeRef.current > 5) {
+      playerRef.current?.seekTo(0, true);
+      setCurrentTime(0);
+      return;
+    }
+    step(-1);
+  }, [step]);
+
   const onStateChange = useCallback((event: YouTubeEvent) => {
     setIsPlaying(event.data === 1);
     if (event.data === 2 || event.data === 0) persist();
@@ -189,24 +217,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const playableRecords = soundRecords.filter((record, index, records) => (
-      records.findIndex((item) => item.youtubeId === record.youtubeId) === index
-    ));
-    const currentIndex = Math.max(0, playableRecords.findIndex((record) => record.youtubeId === activeRecord.youtubeId));
-    let nextIndex = (currentIndex + 1) % playableRecords.length;
-    if (isShuffled && playableRecords.length > 1) {
-      do {
-        nextIndex = Math.floor(Math.random() * playableRecords.length);
-      } while (nextIndex === currentIndex);
-    }
-    playRecord(playableRecords[nextIndex].slug, true);
-  }, [activeRecord.youtubeId, isRepeat, isShuffled, persist, playRecord]);
+    step(1);
+  }, [isRepeat, persist, step]);
 
   const togglePlayback = useCallback(() => {
     if (!playerRef.current) return;
     if (isPlaying) playerRef.current.pauseVideo();
     else playerRef.current.playVideo();
   }, [isPlaying]);
+
+  const toggleShuffle = useCallback(() => setIsShuffled((value) => !value), []);
+  const toggleRepeat = useCallback(() => setIsRepeat((value) => !value), []);
 
   const seek = useCallback((seconds: number) => {
     const bounded = Math.min(duration || activeRecord.duration, Math.max(0, seconds));
@@ -220,6 +241,74 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setVolumeState(bounded);
     playerRef.current?.setVolume(bounded);
   }, []);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: `${activeRecord.series} — ${activeRecord.title}`,
+      artist: activeRecord.artist,
+      album: "Lowkal Soundroom",
+      artwork: [{ src: activeRecord.artwork, sizes: "512x512", type: "image/png" }]
+    });
+    navigator.mediaSession.setActionHandler("play", () => playerRef.current?.playVideo());
+    navigator.mediaSession.setActionHandler("pause", () => playerRef.current?.pauseVideo());
+    navigator.mediaSession.setActionHandler("nexttrack", () => playNext());
+    navigator.mediaSession.setActionHandler("previoustrack", () => playPrevious());
+    navigator.mediaSession.setActionHandler("seekto", (details) => {
+      if (details.seekTime != null) playerRef.current?.seekTo(details.seekTime, true);
+    });
+    return () => {
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+      navigator.mediaSession.setActionHandler("nexttrack", null);
+      navigator.mediaSession.setActionHandler("previoustrack", null);
+      navigator.mediaSession.setActionHandler("seekto", null);
+    };
+  }, [activeRecord, playNext, playPrevious]);
+
+  /* --- Keyboard control -----------------------------------------------------
+     Shortcuts stay out of the way while the visitor types and never fire with
+     a modifier held, so browser and screen-reader commands keep working.
+     ------------------------------------------------------------------------ */
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isTypingTarget(event.target)) return;
+
+      switch (event.key) {
+        case " ":
+        case "k":
+          event.preventDefault();
+          togglePlayback();
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          seek(currentTimeRef.current + 15);
+          break;
+        case "ArrowLeft":
+          event.preventDefault();
+          seek(currentTimeRef.current - 15);
+          break;
+        case "n":
+          playNext();
+          break;
+        case "p":
+          playPrevious();
+          break;
+        case "s":
+          toggleShuffle();
+          break;
+        case "r":
+          toggleRepeat();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [playNext, playPrevious, seek, toggleRepeat, toggleShuffle, togglePlayback]);
 
   const postState = useCallback(async (target?: Window) => {
     const snapshot = stateRef.current;
@@ -282,8 +371,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       if (command.action === "pause") playerRef.current?.pauseVideo();
       if (command.action === "seek" && Number.isFinite(command.seconds)) seek(command.seconds);
       if (command.action === "volume" && Number.isFinite(command.volume)) setVolume(command.volume);
-      if (command.action === "shuffle") setIsShuffled((value) => !value);
-      if (command.action === "repeat") setIsRepeat((value) => !value);
+      if (command.action === "shuffle") toggleShuffle();
+      if (command.action === "repeat") toggleRepeat();
       if (command.action === "select") {
         const record = soundRecords.find((item) => item.youtubeId === command.youtubeId);
         if (record) playRecord(record.slug, command.autoplay);
@@ -292,43 +381,64 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [playRecord, postState, seek, setVolume, togglePlayback]);
+  }, [playRecord, postState, seek, setVolume, toggleRepeat, toggleShuffle, togglePlayback]);
 
   const value = useMemo<AudioContextValue>(() => ({
+    activeRecord,
+    queue: playQueue,
+    currentTime,
+    duration,
+    isPlaying,
+    isReady,
+    isShuffled,
+    isRepeat,
+    volume,
+    playRecord,
+    togglePlayback,
+    playNext,
+    playPrevious,
+    toggleShuffle,
+    toggleRepeat,
+    seek,
+    setVolume
+  }), [
     activeRecord,
     currentTime,
     duration,
     isPlaying,
     isReady,
+    isShuffled,
+    isRepeat,
     volume,
     playRecord,
     togglePlayback,
+    playNext,
+    playPrevious,
+    toggleShuffle,
+    toggleRepeat,
     seek,
     setVolume
-  }), [activeRecord, currentTime, duration, isPlaying, isReady, volume, playRecord, togglePlayback, seek, setVolume]);
+  ]);
 
   return (
     <AudioContext.Provider value={value}>
       {children}
-      <div className="youtube-engine" aria-hidden="true">
-        <YouTube
-          key={activeRecord.slug}
-          videoId={activeRecord.youtubeId}
-          onReady={onReady}
-          onStateChange={onStateChange}
-          opts={{
-            width: "1",
-            height: "1",
-            playerVars: {
-              autoplay: 0,
-              controls: 0,
-              disablekb: 1,
-              playsinline: 1,
-              rel: 0
-            }
-          }}
-        />
-      </div>
+      <YouTubeEngine
+        videoId={activeRecord.youtubeId}
+        onReady={onReady}
+        onStateChange={onStateChange}
+        opts={{
+          width: "1",
+          height: "1",
+          playerVars: {
+            autoplay: 0,
+            controls: 0,
+            disablekb: 1,
+            playsinline: 1,
+            rel: 0
+          }
+        }}
+      />
     </AudioContext.Provider>
   );
 }

@@ -57,15 +57,18 @@ const fragmentShaderSource = `
     float halo = exp(-3.2 * length(p - pointer));
     float grain = noise(gl_FragCoord.xy * 0.17 + u_time * 0.4);
 
-    vec3 night = vec3(0.063, 0.043, 0.086);
-    vec3 red = vec3(0.714, 0.184, 0.157);
-    vec3 accent = vec3(0.941, 0.267, 0.216);
-    vec3 color = mix(night, red, smoothstep(0.40, 0.76, field));
-    color = mix(color, accent, smoothstep(0.72, 0.98, ribbon + halo * 0.18) * 0.28);
+    // The Archive Room is a paper surface, so the atmosphere warms the page
+    // rather than darkening it. Dust carries the field, ember lifts the
+    // ribbon, and both stay well under the contrast of the type above.
+    vec3 dust = vec3(0.769, 0.702, 0.596);
+    vec3 clay = vec3(0.667, 0.478, 0.361);
+    vec3 ember = vec3(0.851, 0.353, 0.243);
+    vec3 color = mix(dust, clay, smoothstep(0.38, 0.78, field));
+    color = mix(color, ember, smoothstep(0.70, 0.98, ribbon + halo * 0.2) * 0.34);
 
-    float edgeFade = smoothstep(0.92, 0.22, length(p * vec2(0.76, 1.0)));
-    float alpha = (0.025 + field * 0.07 + ribbon * 0.055 + halo * 0.025) * edgeFade;
-    alpha *= 0.9 + grain * 0.1;
+    float edgeFade = smoothstep(0.94, 0.18, length(p * vec2(0.76, 1.0)));
+    float alpha = (0.05 + field * 0.16 + ribbon * 0.12 + halo * 0.06) * edgeFade;
+    alpha *= 0.92 + grain * 0.08;
     gl_FragColor = vec4(color, alpha);
   }
 `;

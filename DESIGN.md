@@ -30,10 +30,43 @@ The page can use the content rhythm of Rinse FM as a reference. It must not copy
 - **Lowkal red:** vermilion for programme markers, actions, and strong section changes.
 - **Paper:** warm off-white for archive and editorial surfaces.
 - **Supporting colour:** colours from programme artwork can appear inside the artwork only.
-- **Display type:** a heavy, direct sans serif that supports the Lowkal wordmark.
-- **Information type:** a clean sans serif with clear numbers and compact metadata.
 - **Shape:** square or lightly softened image cards. Use pills only for small filters or tags.
 - **Motion:** horizontal shelf movement, simple image transitions, and playback progress only.
+
+## Typefaces
+
+Four faces, each with one job. All four are self-hosted from `public/fonts`, so
+the site never depends on a font CDN. Each role is reached through a token, not
+by naming the family in a component.
+
+| Role | Face | Token | Used for |
+| --- | --- | --- | --- |
+| Headline | Lancelot | `--font-display` | Page and section headlines |
+| Editorial title | Marcellus | `--font-title` | Artist lines, decks, card titles |
+| Mark | Notable | `--font-mark` | The wordmark, programme numbers, index numerals |
+| Interface | Philosopher | `--font-ui` | Body copy, labels, controls, metadata |
+
+Notable carries the heavy, direct voice the wordmark needs. Lancelot and
+Marcellus are calligraphic, so they take neutral to open tracking. Never apply
+the tight negative tracking that suits a grotesque.
+
+The wordmark scripts use micro-subsets of Noto Serif Devanagari, Kannada, and
+Bengali that contain only the glyphs for "lowkal".
+
+## Stylesheet architecture
+
+`app/globals.css` is an index. It declares four cascade layers and imports the
+parts in order:
+
+    tokens → base → components → utilities
+
+Utilities sit last so a shared primitive such as `.section-kicker` or `.label`
+always wins over a component rule on the same element. No rule should ever
+raise its specificity to be heard.
+
+Every colour, size, space, radius, shadow, duration, and easing curve lives in
+`app/styles/tokens.css`. Component styles read tokens. They do not invent
+values.
 
 ## Home page structure
 

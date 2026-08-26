@@ -3,18 +3,22 @@
 import { Pause, Play } from "lucide-react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
-import { soundRecords } from "@/lib/content";
+import { formatTime, soundRecords } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 import { useAudio } from "./AudioProvider";
 
 const featured = soundRecords[0];
-const programmeName = featured.series.includes("|")
-  ? featured.series.split("|").slice(1).join("|").trim()
-  : featured.series;
+
+/** "Lowkal 002 | Garden City Gallivanting" splits into a label and a name. */
+const [seriesLabel, ...seriesRest] = featured.series.split("|");
+const programmeLabel = seriesLabel.trim();
+const programmeName = seriesRest.length > 0 ? seriesRest.join("|").trim() : featured.series;
+const programmeNumber = programmeLabel.match(/\d+/)?.[0] ?? "";
 
 export function HomeStage() {
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
   const isFeaturedActive = activeRecord.slug === featured.slug;
+  const isFeaturedPlaying = isFeaturedActive && isPlaying;
 
   const handlePlay = () => {
     if (isFeaturedActive) togglePlayback();
@@ -22,50 +26,70 @@ export function HomeStage() {
   };
 
   return (
-    <section className="home-stage" aria-labelledby="home-stage-title">
-      <div className="home-stage-utility">
+    <section className="stage on-night" aria-labelledby="stage-title">
+      <div className="stage__utility label label--sm">
         <span>Bengaluru</span>
         <span>Multi-genre</span>
         <span>Low-end focused</span>
+        <span className="tnum">{formatTime(featured.duration)}</span>
       </div>
 
-      <div className="home-stage-grid">
-        <div className="home-stage-media">
+      <div className="stage__grid">
+        <div className="stage__media">
           <MediaFrame
-            variant="hero"
-            frameClassName="home-stage-frame"
+            variant="fill"
             src={featured.artwork}
             alt={`${featured.artist} performing at ${featured.series}`}
             fill
-            sizes="(max-width: 760px) 100vw, 62vw"
+            sizes="(max-width: 980px) 100vw, 62vw"
             priority
           />
-          <span className="home-stage-stamp">Latest session</span>
+          <span className="stage__stamp">Latest session</span>
+          {programmeNumber ? (
+            <span className="stage__numeral" aria-hidden="true">{programmeNumber}</span>
+          ) : null}
+          <span className="stage__cue label label--sm" aria-hidden="true">
+            Scroll
+            <i />
+          </span>
         </div>
 
-        <div className="home-stage-copy">
-          <div className="home-stage-copy-head">
-            <span>{featured.series.split("|")[0].trim()}</span>
+        <div className="stage__plate on-red">
+          <div className="stage__plate-head label label--sm">
+            <span>{programmeLabel}</span>
             <span>{featured.date}</span>
           </div>
-          <div className="home-stage-title-block">
-            <p>Latest Lowkal programme</p>
-            <h1 id="home-stage-title">{programmeName}</h1>
-            <h2>{featured.artist}</h2>
+
+          <div className="stage__titles">
+            <span className="stage__eyebrow">Latest Lowkal programme</span>
+            <h1 className="stage__title" id="stage-title">{programmeName}</h1>
+            <p className="stage__artist">{featured.artist}</p>
+            <p className="stage__intro">Multi-genre. Low-end focused. From Bengaluru.</p>
           </div>
-          <p className="home-stage-intro">Multi-genre. Low-end focused. From Bengaluru.</p>
-          <div className="home-stage-actions">
-            <button type="button" onClick={handlePlay} aria-label={`${isFeaturedActive && isPlaying ? "Pause" : "Play"} ${featured.artist} — ${featured.title}`}>
-              <span className="home-stage-play-icon">
-                {isFeaturedActive && isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+
+          <div className="stage__actions">
+            <button
+              type="button"
+              className="play-control"
+              onClick={handlePlay}
+              aria-label={`${isFeaturedPlaying ? "Pause" : "Play"} ${featured.artist} — ${featured.title}`}
+            >
+              <span className="play-control__disc">
+                {isFeaturedPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
               </span>
-              <span>{isFeaturedActive && isPlaying ? "Pause session" : "Play session"}</span>
+              <span>{isFeaturedPlaying ? "Pause session" : "Play session"}</span>
             </button>
-            <SiteLink href={sitePath("/listen/archive")}>Open Archive Room ↗</SiteLink>
+
+            <SiteLink className="link-quiet" href={sitePath("/listen/archive")}>
+              Open Archive Room ↗
+            </SiteLink>
           </div>
-          <div className="home-stage-tags" aria-label="Session genres">
-            {featured.genres.map((genre) => <span key={genre}>{genre}</span>)}
-          </div>
+
+          <ul className="stage__tags" aria-label="Session genres">
+            {featured.genres.map((genre) => (
+              <li className="tag" key={genre}>{genre}</li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
