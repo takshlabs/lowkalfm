@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatTime, soundRecords, SoundRecord } from "@/lib/content";
+import { sitePath } from "@/lib/site-path";
 import { ArchiveAtmosphere } from "./ArchiveAtmosphere";
 import { useAudio } from "./AudioProvider";
 
@@ -112,6 +113,7 @@ export function SoundroomCatalog() {
       </header>
 
       <div className="archive-stage">
+        <Image className="archive-art-field" src={sitePath("/art/signal-bloom-pattern.jpg")} alt="" fill sizes="100vw" />
         <ArchiveAtmosphere />
         <div className="archive-track" aria-label="Lowkal records">
           {soundRecords.map((record, index) => {

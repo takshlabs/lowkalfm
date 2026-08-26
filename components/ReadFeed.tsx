@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
 import { sanityClient, storiesQuery } from "@/lib/sanity";
+import { sitePath } from "@/lib/site-path";
 
 type Story = {
   slug: string;
@@ -64,10 +65,13 @@ export function ReadFeed({ fallback }: { fallback: Story[] }) {
     <section className="read-stream" aria-label="Latest stories">
       {stories.length === 0 ? (
         <div className="read-empty">
-          <span>Field notes</span>
-          <h2>The first stories are being prepared.</h2>
-          <p>For programme photographs and new session notices, follow Lowkal on Instagram.</p>
-          <a href="https://www.instagram.com/lowkal.fm/" target="_blank" rel="noreferrer">Open Instagram ↗</a>
+          <div className="empty-copy read-empty-copy">
+            <span>Field notes</span>
+            <h2>The first stories are being prepared.</h2>
+            <p>For programme photographs and new session notices, follow Lowkal on Instagram.</p>
+            <a href="https://www.instagram.com/lowkal.fm/" target="_blank" rel="noreferrer">Open Instagram ↗</a>
+          </div>
+          <MediaFrame variant="editorial" frameClassName="empty-art-panel read-empty-art" src={sitePath("/art/signal-flowers.jpg")} alt="Pixel-like red flowers on a deep red field" fill sizes="(max-width: 680px) 100vw, 38vw" />
         </div>
       ) : null}
       {stories.map((story, index) => (

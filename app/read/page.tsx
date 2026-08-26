@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { MediaFrame } from "@/components/MediaFrame";
 import { ReadFeed } from "@/components/ReadFeed";
 import { journalStories } from "@/lib/content";
+import { sitePath } from "@/lib/site-path";
 
 export const dynamic = "force-static";
 
@@ -13,6 +15,7 @@ export default function ReadPage() {
   return (
     <main className="journal-page">
       <section className="section-page-hero read-hero">
+        <MediaFrame variant="hero" frameClassName="section-hero-art read-hero-art" src={sitePath("/art/lotus-collage.jpg")} alt="Red collage with lotus flowers and painted eyes" fill sizes="(max-width: 680px) 64vw, 34vw" priority />
         <span className="section-kicker">02 · Read</span>
         <h1>Stories from<br />the <em>room.</em></h1>
         <p>Artist conversations, field notes, photographs, and programme records from the people who make Lowkal.</p>

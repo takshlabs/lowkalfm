@@ -177,6 +177,18 @@
       transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
     }
 
+    .soundroom-art-field {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(90deg, rgba(19,19,19,0.96) 0%, rgba(19,19,19,0.2) 44%, rgba(19,19,19,0.9) 100%),
+        url("../art/signal-bloom-pattern.jpg") center / cover;
+      mix-blend-mode: screen;
+      opacity: 0.09;
+      pointer-events: none;
+    }
+
     .soundroom-return-nav {
       display: flex;
       align-items: center;
@@ -312,6 +324,8 @@ void main(){
     })();
     </script>
   </div>
+
+  <div class="soundroom-art-field" aria-hidden="true"></div>
 
   <!-- Three.js Canvas Layer -->
   <canvas class="absolute inset-0 z-10 w-full h-full pointer-events-none opacity-50" id="visualizer-canvas"></canvas>

@@ -406,6 +406,138 @@ html { scroll-behavior: smooth; }
 .journal-note h2 { font-family: "Arial Black", Arial, sans-serif; color: var(--lowkal-black); text-transform: uppercase; }
 .journal-note a { color: var(--lowkal-black); font-weight: 700; }
 
+/* Attached art becomes a recurring broadcast layer, not programme artwork. */
+.home-shader::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(14, 14, 13, 0.88), rgba(14, 14, 13, 0.2) 48%, rgba(14, 14, 13, 0.78)),
+    url("/art/signal-bloom-pattern.jpg") center / cover;
+  mix-blend-mode: screen;
+  opacity: 0.12;
+  pointer-events: none;
+}
+.rinse-hero-frame .media-frame-image {
+  object-position: center 28%;
+  filter: saturate(0.96) contrast(1.08) brightness(0.82);
+}
+.rinse-hero-wash {
+  background:
+    linear-gradient(90deg, rgba(8, 8, 12, 0.94) 0%, rgba(8, 8, 12, 0.54) 46%, rgba(8, 8, 12, 0.08) 78%),
+    linear-gradient(0deg, rgba(5, 5, 8, 0.52), transparent 58%);
+}
+.city-card:first-child .media-frame-image { object-position: center 43%; }
+.city-card:last-child .media-frame-image { object-position: center 53%; }
+.home-open-call { position: relative; overflow: hidden; isolation: isolate; }
+.home-open-call::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 62%;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(200, 255, 36, 0.96), rgba(200, 255, 36, 0.2)),
+    url("/art/floral-exposure.jpg") center 42% / cover;
+  opacity: 0.66;
+}
+.home-open-call > * { position: relative; z-index: 1; }
+
+.section-page-hero { isolation: isolate; }
+.section-page-hero > .section-kicker,
+.section-page-hero > h1 { position: relative; z-index: 3; }
+.section-page-hero > p { z-index: 3; }
+.section-hero-art {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 0;
+  width: min(42vw, 650px);
+  height: 100%;
+}
+.section-hero-art .media-frame-mount { border: 0; }
+.section-hero-art .media-frame-guard { display: none; }
+.section-hero-art .media-frame-image { object-fit: cover; }
+.section-page-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.read-hero::after {
+  background: linear-gradient(90deg, var(--lowkal-paper) 0 47%, rgba(241, 234, 219, 0.88) 64%, rgba(241, 234, 219, 0.12));
+}
+.read-hero-art .media-frame-image { object-position: center; filter: saturate(0.88) contrast(1.05); }
+.city-hero::after {
+  background: linear-gradient(90deg, var(--lowkal-red) 0 44%, rgba(240, 68, 55, 0.88) 61%, rgba(240, 68, 55, 0.08));
+}
+.city-hero-art .media-frame-image { object-position: center 48%; filter: saturate(0.98) contrast(1.06); }
+.city-hero h1 em { color: var(--lowkal-paper); }
+.city-hero > p { color: rgba(14, 14, 13, 0.72); }
+
+.read-empty,
+.city-empty {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.48fr);
+  gap: clamp(30px, 6vw, 90px);
+  align-items: stretch;
+  min-height: 620px;
+  padding-top: 64px;
+  padding-bottom: 64px;
+}
+.city-empty { grid-template-columns: minmax(300px, 0.48fr) minmax(0, 1fr); }
+.empty-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.empty-copy > span { color: var(--lowkal-red); font-size: 0.62rem; font-weight: 700; text-transform: uppercase; }
+.empty-copy h2,
+.empty-copy h3 { max-width: 900px; margin: 30px 0 22px; font-family: "Arial Black", Arial, sans-serif; font-size: clamp(3.2rem, 7vw, 7.5rem); line-height: 0.8; letter-spacing: -0.075em; text-transform: uppercase; }
+.empty-copy p { max-width: 520px; line-height: 1.4; }
+.empty-copy a { align-self: flex-start; margin-top: 24px; font-size: 0.64rem; font-weight: 700; text-decoration: none; text-transform: uppercase; }
+.empty-art-panel { min-height: 490px; height: 100%; }
+.empty-art-panel .media-frame-mount { border: 0; }
+.empty-art-panel .media-frame-guard { display: none; }
+.empty-art-panel .media-frame-image { object-fit: cover; }
+.read-empty-art .media-frame-image { object-position: center 50%; filter: saturate(0.9) contrast(1.08); transform: scale(1.08); }
+.city-empty-art .media-frame-image { object-position: center; filter: saturate(0.94) contrast(1.05); }
+
+.journal-note,
+.city-principle { position: relative; overflow: hidden; isolation: isolate; }
+.journal-note::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 62%;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, var(--lowkal-red), rgba(240, 68, 55, 0.12)),
+    url("/art/floral-exposure.jpg") center / cover;
+  opacity: 0.62;
+}
+.city-principle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(90deg, rgba(14, 14, 13, 0.98), rgba(14, 14, 13, 0.74)),
+    url("/art/signal-bloom-pattern.jpg") center / cover;
+  opacity: 0.42;
+}
+.journal-note > *,
+.city-principle > * { position: relative; z-index: 1; }
+.archive-art-field {
+  z-index: 0;
+  object-fit: cover;
+  object-position: center 42%;
+  opacity: 0.08;
+  filter: saturate(0.35) contrast(1.16);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.archive-atmosphere { z-index: 0; }
+
 @media (max-width: 900px) {
   .home-stage-grid { grid-template-columns: 1fr; }
   .home-stage-media { min-height: 0; aspect-ratio: 16 / 10; }
@@ -415,6 +547,10 @@ html { scroll-behavior: smooth; }
   .home-gathering { grid-template-columns: 1fr; }
   .home-gathering-art,
   .home-gathering-art .media-frame-mount { min-height: 0; aspect-ratio: 16 / 10; }
+  .section-hero-art { width: 52vw; }
+  .read-empty,
+  .city-empty { grid-template-columns: minmax(0, 1fr) minmax(260px, 0.56fr); }
+  .city-empty { grid-template-columns: minmax(260px, 0.56fr) minmax(0, 1fr); }
   .lowkal-player.lowkal-player--compact { grid-template-columns: 52px 46px minmax(180px, 1fr) minmax(180px, 0.75fr) 42px; }
   .lowkal-player--compact .lowkal-player-volume { display: none; }
   .lowkal-player--compact .lowkal-player-room { grid-column: 5; }
@@ -469,14 +605,23 @@ html { scroll-behavior: smooth; }
   .lowkal-player--compact .lowkal-player-timecode { display: none; }
   .lowkal-player--compact .lowkal-player-room { grid-row: 1; grid-column: 4; }
   .site-footer { grid-template-columns: 1fr; padding: 58px 14px 126px; }
+  .footer-mark { font-size: clamp(2.65rem, 12.2vw, 3.5rem); white-space: nowrap; }
   .site-footer nav { justify-content: flex-start; }
   .site-footer > small { grid-column: 1; margin-top: 48px; }
   .section-page-hero { min-height: 590px; padding: 34px 14px; }
   .section-page-hero h1 { margin-top: 84px; font-size: clamp(4.1rem, 21vw, 6.5rem); }
   .section-page-hero > p { right: 14px; bottom: 28px; left: 14px; font-size: 1rem; }
+  .section-hero-art { width: 72vw; opacity: 0.78; }
+  .read-hero::after { background: linear-gradient(90deg, var(--lowkal-paper) 0 20%, rgba(241, 234, 219, 0.88) 58%, rgba(241, 234, 219, 0.24)); }
+  .city-hero::after { background: linear-gradient(90deg, var(--lowkal-red) 0 16%, rgba(240, 68, 55, 0.9) 58%, rgba(240, 68, 55, 0.22)); }
   .read-stream { padding: 0 14px; }
   .read-empty,
-  .city-empty { min-height: 420px; padding-top: 52px; }
+  .city-empty { grid-template-columns: 1fr; gap: 18px; min-height: 420px; padding-top: 20px; padding-bottom: 48px; }
+  .city-empty .empty-art-panel { order: 2; }
+  .empty-art-panel { min-height: 380px; }
   .read-empty h2,
   .city-empty h3 { font-size: clamp(3rem, 15vw, 5rem); }
+  .home-open-call::before,
+  .journal-note::after { left: 46%; }
+  .city-principle blockquote { font-size: clamp(2.2rem, 10vw, 3.4rem); }
 }

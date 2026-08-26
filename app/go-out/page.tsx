@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { MediaFrame } from "@/components/MediaFrame";
 import { cityEvents } from "@/lib/content";
+import { sitePath } from "@/lib/site-path";
 
 export const dynamic = "force-static";
 
@@ -12,6 +14,7 @@ export default function GoOutPage() {
   return (
     <main className="city-page">
       <section className="section-page-hero city-hero">
+        <MediaFrame variant="hero" frameClassName="section-hero-art city-hero-art" src={sitePath("/art/ember-bloom.jpg")} alt="Red and orange flower emerging from a dark field" fill sizes="(max-width: 680px) 70vw, 38vw" priority />
         <span className="section-kicker">03 · Go out</span>
         <h1>A small guide<br />to a <em>large city.</em></h1>
         <p>We list fewer things and say more about them. Each entry includes useful access notes and a reason to go.</p>
@@ -24,10 +27,13 @@ export default function GoOutPage() {
         <div className="city-event-list">
           {cityEvents.length === 0 ? (
             <div className="city-empty">
-              <span>Next listing</span>
-              <h3>The next Lowkal gathering will appear here.</h3>
-              <p>Follow Lowkal for the date, place, artists, cost, and access information.</p>
-              <a href="https://www.instagram.com/lowkal.fm/" target="_blank" rel="noreferrer">Open Instagram ↗</a>
+              <MediaFrame variant="editorial" frameClassName="empty-art-panel city-empty-art" src={sitePath("/art/floral-exposure.jpg")} alt="Red floral exposure on a dark background" fill sizes="(max-width: 680px) 100vw, 38vw" />
+              <div className="empty-copy city-empty-copy">
+                <span>Next listing</span>
+                <h3>The next Lowkal gathering will appear here.</h3>
+                <p>Follow Lowkal for the date, place, artists, cost, and access information.</p>
+                <a href="https://www.instagram.com/lowkal.fm/" target="_blank" rel="noreferrer">Open Instagram ↗</a>
+              </div>
             </div>
           ) : null}
           {cityEvents.map((event, index) => (
