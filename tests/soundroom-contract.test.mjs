@@ -14,6 +14,9 @@ test("the floating player is quiet by default and does not advertise a live sign
 
   assert.match(provider, /autoplay:\s*0/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
+  assert.match(provider, /PLAYBACK_INTENT_KEY/);
+  assert.match(provider, /window\.sessionStorage\.getItem\(PLAYBACK_INTENT_KEY\) === "playing"/);
+  assert.match(provider, /window\.sessionStorage\.setItem\(PLAYBACK_INTENT_KEY, shouldPlay \? "playing" : "paused"\)/);
   assert.doesNotMatch(player, /Live signal/i);
   assert.doesNotMatch(player, /player-signal/);
 });

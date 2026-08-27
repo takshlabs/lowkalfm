@@ -5,6 +5,7 @@ import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
 import { getSoundRecord, soundRecords, SoundRecord } from "@/lib/content";
 
 const STORAGE_KEY = "lowkal.player.v1";
+const PLAYBACK_INTENT_KEY = "lowkal.player.playback-intent.v1";
 
 type SavedPlayerState = {
   slug: string;
@@ -58,6 +59,22 @@ function readSavedState(): SavedPlayerState | null {
   }
 }
 
+function readPlaybackIntent() {
+  try {
+    return window.sessionStorage.getItem(PLAYBACK_INTENT_KEY) === "playing";
+  } catch {
+    return false;
+  }
+}
+
+function savePlaybackIntent(shouldPlay: boolean) {
+  try {
+    window.sessionStorage.setItem(PLAYBACK_INTENT_KEY, shouldPlay ? "playing" : "paused");
+  } catch {
+    // Playback still works if browser storage is unavailable.
+  }
+}
+
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [activeSlug, setActiveSlug] = useState(soundRecords[0].slug);
   const [currentTime, setCurrentTime] = useState(0);
@@ -69,7 +86,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [isRepeat, setIsRepeat] = useState(false);
   const playerRef = useRef<YouTubePlayer | null>(null);
   const resumeAtRef = useRef(0);
-  const autoplayRef = useRef(false);
+  const autoplayRef = useRef(typeof window !== "undefined" && readPlaybackIntent());
   const currentTimeRef = useRef(0);
   const stateRef = useRef({ activeSlug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat });
   const activeRecord = getSoundRecord(activeSlug) ?? soundRecords[0];
@@ -138,8 +155,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       album: "Lowkal Soundroom",
       artwork: [{ src: activeRecord.artwork, sizes: "512x512", type: "image/png" }]
     });
-    navigator.mediaSession.setActionHandler("play", () => playerRef.current?.playVideo());
-    navigator.mediaSession.setActionHandler("pause", () => playerRef.current?.pauseVideo());
+    navigator.mediaSession.setActionHandler("play", () => {
+      savePlaybackIntent(true);
+      autoplayRef.current = true;
+      playerRef.current?.playVideo();
+    });
+    navigator.mediaSession.setActionHandler("pause", () => {
+      savePlaybackIntent(false);
+      autoplayRef.current = false;
+      playerRef.current?.pauseVideo();
+    });
     navigator.mediaSession.setActionHandler("seekto", (details) => {
       if (details.seekTime != null) playerRef.current?.seekTo(details.seekTime, true);
     });
@@ -158,6 +183,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (autoplayRef.current) {
       autoplayRef.current = false;
       event.target.playVideo();
+    } else {
+      event.target.pauseVideo();
     }
   }, [volume]);
 
@@ -165,9 +192,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const record = getSoundRecord(slug);
     if (!record) return;
     if (slug === activeSlug && playerRef.current) {
+      savePlaybackIntent(shouldPlay);
+      autoplayRef.current = shouldPlay;
       if (shouldPlay) playerRef.current.playVideo();
+      else playerRef.current.pauseVideo();
       return;
     }
+    savePlaybackIntent(shouldPlay);
     autoplayRef.current = shouldPlay;
     resumeAtRef.current = 0;
     setCurrentTime(0);
@@ -204,8 +235,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const togglePlayback = useCallback(() => {
     if (!playerRef.current) return;
-    if (isPlaying) playerRef.current.pauseVideo();
-    else playerRef.current.playVideo();
+    const shouldPlay = !isPlaying;
+    savePlaybackIntent(shouldPlay);
+    autoplayRef.current = shouldPlay;
+    if (shouldPlay) playerRef.current.playVideo();
+    else playerRef.current.pauseVideo();
   }, [isPlaying]);
 
   const seek = useCallback((seconds: number) => {
@@ -278,8 +312,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       if (command.action === "toggle") togglePlayback();
-      if (command.action === "play") playerRef.current?.playVideo();
-      if (command.action === "pause") playerRef.current?.pauseVideo();
+      if (command.action === "play") {
+        savePlaybackIntent(true);
+        autoplayRef.current = true;
+        playerRef.current?.playVideo();
+      }
+      if (command.action === "pause") {
+        savePlaybackIntent(false);
+        autoplayRef.current = false;
+        playerRef.current?.pauseVideo();
+      }
       if (command.action === "seek" && Number.isFinite(command.seconds)) seek(command.seconds);
       if (command.action === "volume" && Number.isFinite(command.volume)) setVolume(command.volume);
       if (command.action === "shuffle") setIsShuffled((value) => !value);
