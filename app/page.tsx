@@ -20,14 +20,23 @@ export default function Home() {
         <div className="rinse-hero-art">
           <MediaFrame variant="hero" frameClassName="rinse-hero-frame" src={sitePath("/art/eye-in-hand.jpg")} alt="Green collage of a face, hands, and painted eyes" fill sizes="(max-width: 820px) 100vw, 58vw" priority />
           <div className="rinse-hero-wash" aria-hidden="true" />
+          <div className="rinse-hero-signal" aria-label="Lowkal broadcast frequency">
+            <div className="rinse-signal-readout">
+              <span>Tuned to</span>
+              <strong>93.5</strong>
+              <small>MHz</small>
+            </div>
+            <div className="rinse-signal-scale" aria-hidden="true"><i /></div>
+            <p>12.9716° N · 77.5946° E<br />Independent transmission</p>
+          </div>
         </div>
       </section>
 
       <nav className="home-channel-row" aria-label="Lowkal channels">
-        <SiteLink href={sitePath("/listen")}><span>01</span><strong>Listen</strong><i aria-hidden="true">↗</i></SiteLink>
-        <SiteLink href={sitePath("/read")}><span>02</span><strong>Read</strong><i aria-hidden="true">↗</i></SiteLink>
-        <SiteLink href={sitePath("/go-out")}><span>03</span><strong>Go out</strong><i aria-hidden="true">↗</i></SiteLink>
-        <SiteLink href={sitePath("/listen/archive")}><span>AR</span><strong>Archive</strong><i aria-hidden="true">↗</i></SiteLink>
+        <SiteLink href={sitePath("/listen")}><span className="channel-index">01</span><span className="channel-spectrum" aria-hidden="true"><b /></span><strong>Listen</strong><small>Soundroom · 93.5</small><i aria-hidden="true">↗</i></SiteLink>
+        <SiteLink href={sitePath("/read")}><span className="channel-index">02</span><span className="channel-spectrum" aria-hidden="true"><b /></span><strong>Read</strong><small>City journal · BLR</small><i aria-hidden="true">↗</i></SiteLink>
+        <SiteLink href={sitePath("/go-out")}><span className="channel-index">03</span><span className="channel-spectrum" aria-hidden="true"><b /></span><strong>Go out</strong><small>Local signal · Tonight</small><i aria-hidden="true">↗</i></SiteLink>
+        <SiteLink href={sitePath("/listen/archive")}><span className="channel-index">AR</span><span className="channel-spectrum" aria-hidden="true"><b /></span><strong>Archive</strong><small>Recorded in Bengaluru</small><i aria-hidden="true">↗</i></SiteLink>
       </nav>
 
       <HomeTransmissionDeck />
