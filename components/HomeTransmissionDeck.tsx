@@ -19,10 +19,10 @@ export function HomeTransmissionDeck() {
     <section className="home-transmissions" aria-labelledby="home-transmissions-title">
       <div className="rinse-section-head">
         <div>
-          <span>On demand · Lowkal archive</span>
-          <h2 id="home-transmissions-title">Latest transmissions</h2>
+          <span>Archive</span>
+          <h2 id="home-transmissions-title">Latest</h2>
         </div>
-        <SiteLink href={sitePath("/listen/archive")}>See the full archive ↗</SiteLink>
+        <SiteLink href={sitePath("/listen/archive")}>All records ↗</SiteLink>
       </div>
 
       <div className="transmission-row">

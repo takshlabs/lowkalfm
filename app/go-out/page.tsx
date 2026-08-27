@@ -17,7 +17,7 @@ export default function GoOutPage() {
         <MediaFrame variant="hero" frameClassName="section-hero-art city-hero-art" src={sitePath("/art/ember-bloom.jpg")} alt="Red and orange flower emerging from a dark field" fill sizes="(max-width: 680px) 70vw, 38vw" priority />
         <span className="section-kicker">03 · Go out</span>
         <h1>A small guide<br />to a <em>large city.</em></h1>
-        <p>We list fewer things and say more about them. Each entry includes useful access notes and a reason to go.</p>
+        <p>Selected nights and independent spaces in Bengaluru.</p>
       </section>
       <section className="city-guide" aria-labelledby="city-guide-title">
         <div className="city-guide-head">
@@ -31,7 +31,7 @@ export default function GoOutPage() {
               <div className="empty-copy city-empty-copy">
                 <span>Next listing</span>
                 <h3>The next Lowkal gathering will appear here.</h3>
-                <p>Follow Lowkal for the date, place, artists, cost, and access information.</p>
+                <p>Follow Lowkal for the next date.</p>
                 <a href="https://www.instagram.com/lowkal.fm/" target="_blank" rel="noreferrer">Open Instagram ↗</a>
               </div>
             </div>
@@ -52,7 +52,7 @@ export default function GoOutPage() {
       </section>
       <section className="city-principle">
         <span className="section-kicker">The Lowkal guide</span>
-        <blockquote>“Useful before exhaustive. Independent before obvious. Clear about cost and access.”</blockquote>
+        <blockquote>“Independent, useful, and clear.”</blockquote>
         <a href="mailto:hello@lowkal.fm?subject=City%20guide%20suggestion">Suggest something ↗</a>
       </section>
     </main>

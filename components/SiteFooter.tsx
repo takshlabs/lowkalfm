@@ -13,7 +13,7 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="site-footer-lead">
         <span className="footer-mark">LOWKAL.FM</span>
-        <p>Multi-genre. Low-end focused. From Bengaluru.</p>
+        <p>From Bengaluru.</p>
       </div>
       <nav aria-label="Footer navigation">
         <SiteLink href={sitePath("/listen")}>Soundroom</SiteLink>

@@ -18,7 +18,7 @@ export default function ReadPage() {
         <MediaFrame variant="hero" frameClassName="section-hero-art read-hero-art" src={sitePath("/art/lotus-collage.jpg")} alt="Red collage with lotus flowers and painted eyes" fill sizes="(max-width: 680px) 64vw, 34vw" priority />
         <span className="section-kicker">02 · Read</span>
         <h1>Stories from<br />the <em>room.</em></h1>
-        <p>Artist conversations, field notes, photographs, and programme records from the people who make Lowkal.</p>
+        <p>Conversations and field notes from Lowkal.</p>
       </section>
       <ReadFeed fallback={journalStories.map((story, index) => ({
         ...story,

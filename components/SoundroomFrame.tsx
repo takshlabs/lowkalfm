@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { sitePath } from "@/lib/site-path";
 
 const NAVIGATION_CHANNEL = "lowkal.navigation.v1";
 
 export function SoundroomFrame() {
   const frameRef = useRef<HTMLIFrameElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -18,12 +16,12 @@ export function SoundroomFrame() {
 
       const destination = new URL(message.href, window.location.origin);
       if (destination.origin !== window.location.origin) return;
-      router.push(`${destination.pathname}${destination.search}${destination.hash}`);
+      window.location.assign(`${destination.pathname}${destination.search}${destination.hash}`);
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [router]);
+  }, []);
 
   return (
     <iframe

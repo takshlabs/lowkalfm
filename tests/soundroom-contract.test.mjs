@@ -18,18 +18,18 @@ test("the floating player is quiet by default and does not advertise a live sign
   assert.doesNotMatch(player, /player-signal/);
 });
 
-test("internal navigation preserves the shared player state", async () => {
+test("internal navigation uses stable document links", async () => {
   const link = await source("components/SiteLink.tsx");
   const layout = await source("app/layout.tsx");
   const readFeed = await source("components/ReadFeed.tsx");
   const soundroomFrame = await source("components/SoundroomFrame.tsx");
   const soundroom = await source("public/soundroom/index.html");
 
-  assert.match(link, /import Link from "next\/link"/);
-  assert.match(link, /<Link href=\{href\}/);
+  assert.doesNotMatch(link, /next\/link/);
+  assert.match(link, /<a href=\{href\}/);
   assert.match(layout, /<AudioProvider>[\s\S]*?\{children\}[\s\S]*?<PersistentPlayer/);
   assert.match(readFeed, /<SiteLink href=\{`\/read\/\$\{story\.slug\}`\}/);
-  assert.match(soundroomFrame, /router\.push/);
+  assert.match(soundroomFrame, /window\.location\.assign/);
   assert.match(soundroomFrame, /event\.source !== frameRef\.current\?\.contentWindow/);
   assert.match(soundroom, /bindNavigationBridge/);
   assert.match(soundroom, /lowkal\.navigation\.v1/);
