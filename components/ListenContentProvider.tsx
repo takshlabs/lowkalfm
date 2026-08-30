@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { artistProfiles, livePrograms, soundRecords, type ArchiveSection, type ArtistProfile, type LiveProgram, type SoundFormat, type SoundRecord } from "@/lib/content";
-import { listenContentQuery, sanityClient } from "@/lib/sanity";
+import { isSanityConfigured, listenContentQuery, sanityClient } from "@/lib/sanity";
 
 type SanityArtist = ArtistProfile;
 type SanityMix = {
@@ -86,7 +86,7 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
   const [content, setContent] = useState<SanityListenContent | null>(null);
 
   useEffect(() => {
-    if (!sanityClient.config().projectId) return;
+    if (!isSanityConfigured) return;
     let active = true;
     sanityClient.fetch<SanityListenContent>(listenContentQuery)
       .then((result) => { if (active) setContent(result); })

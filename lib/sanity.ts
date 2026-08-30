@@ -3,7 +3,15 @@ import { createClient } from "@sanity/client";
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "";
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
 
-export const sanityClient = createClient({ projectId, dataset, apiVersion: "2026-08-24", useCdn: true, perspective: "published" });
+export const isSanityConfigured = projectId.length > 0;
+
+export const sanityClient = createClient({
+  projectId: projectId || "placeholder",
+  dataset,
+  apiVersion: "2026-08-24",
+  useCdn: true,
+  perspective: "published"
+});
 
 export const storiesQuery = `*[_type == "editorialStory" && defined(publishedAt)] | order(publishedAt desc) {
   "slug": slug.current,

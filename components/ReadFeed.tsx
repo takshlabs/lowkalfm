@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
-import { sanityClient, storiesQuery } from "@/lib/sanity";
+import { isSanityConfigured, sanityClient, storiesQuery } from "@/lib/sanity";
 import { sitePath } from "@/lib/site-path";
 
 type Story = {
@@ -52,6 +52,7 @@ export function ReadFeed({ fallback }: { fallback: Story[] }) {
   const [stories, setStories] = useState(fallback);
 
   useEffect(() => {
+    if (!isSanityConfigured) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       void sanityClient.fetch<SanityStory[]>(storiesQuery, {}, { signal: controller.signal })
