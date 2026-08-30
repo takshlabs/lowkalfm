@@ -384,7 +384,7 @@ void main(){
       <a href="../go-out" target="_top">Go out</a>
     </nav>
 
-    <!-- Right elements: Station tag & manifesto button -->
+    <!-- Right elements: Station tag & tracklist button -->
     <div class="flex items-center gap-6">
       <div class="flex items-center gap-3 cursor-pointer group" id="header-logo">
         <img src="../lowkal-logo.jpg" class="w-8 h-8 rounded-md border border-white/10 group-hover:border-primary/30 transition-all duration-300" alt="Lowkal.fm Logo" />
@@ -392,9 +392,9 @@ void main(){
           LOWKAL.FM
         </h1>
       </div>
-      <button class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-colors py-2 px-4 rounded-full border border-white/10 hover:border-primary/30 bg-surface/30 backdrop-blur-md" id="btn-manifesto-open">
-        <span class="material-symbols-outlined text-lg">info</span>
-        <span>manifesto</span>
+      <button class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-colors py-2 px-4 rounded-full border border-white/10 hover:border-primary/30 bg-surface/30 backdrop-blur-md" id="btn-tracklist-open" aria-controls="modal-tracklist">
+        <span class="material-symbols-outlined text-lg">format_list_numbered</span>
+        <span>tracklist</span>
       </button>
     </div>
   </header>
@@ -491,9 +491,9 @@ void main(){
         <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6 bg-transparent" id="main-details-scroll">
           
           <!-- Mix Description -->
-          <div class="space-y-2">
+          <div class="space-y-2" id="detail-mix-description">
             <h3 class="font-display font-extrabold text-[12px] tracking-widest text-white uppercase">Mix Description</h3>
-            <p class="text-white/70 text-sm leading-relaxed font-ui italic" id="detail-mix-desc">
+            <p class="text-white/70 text-sm leading-relaxed font-ui whitespace-pre-line" id="detail-mix-desc">
               Mix description copy goes here.
             </p>
           </div>
@@ -554,13 +554,14 @@ void main(){
     </div>
   </div>
 
-  <!-- STATION MANIFESTO MODAL -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-6 md:p-12 opacity-0 pointer-events-none transition-all duration-500 ease-out" id="modal-manifesto"
+  <!-- TRACKLIST MODAL -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-6 md:p-12 opacity-0 pointer-events-none transition-all duration-500 ease-out" id="modal-tracklist" role="dialog" aria-modal="true" aria-labelledby="tracklist-title"
     style="backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); background: rgba(10,10,10,0.6);">
 
     <!-- Close Button -->
     <button class="absolute top-6 right-6 w-11 h-11 flex items-center justify-center text-white/50 hover:text-primary focus:outline-none transition-colors duration-200"
-      id="btn-manifesto-close"
+      id="btn-tracklist-close"
+      aria-label="Close tracklist"
       style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; backdrop-filter: blur(12px);">
       <span class="material-symbols-outlined text-xl">close</span>
     </button>
@@ -575,63 +576,21 @@ void main(){
         <img src="../lowkal-logo.jpg" class="w-14 h-14 shrink-0" alt="Lowkal.fm"
           style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 0 20px rgba(85,233,59,0.08);"/>
         <div>
-          <div class="font-mono text-xs tracking-widest uppercase mb-1" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">STATION BROADCAST</div>
-          <h2 class="font-display font-bold uppercase leading-none" style="font-size: clamp(1.6rem, 4vw, 2.5rem); letter-spacing: -0.01em;">LOWKAL MANIFESTO</h2>
+          <div class="font-mono text-xs tracking-widest uppercase mb-1" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">CURRENT MIX</div>
+          <h2 class="font-display font-bold uppercase leading-none" id="tracklist-title" style="font-size: clamp(1.6rem, 4vw, 2.5rem); letter-spacing: -0.01em;">TRACKLIST</h2>
+          <p class="font-ui text-sm mt-2 text-white/60" id="tracklist-mix-meta">Select a mix to see its tracklist.</p>
         </div>
       </div>
 
       <!-- Scrollable body -->
       <div class="overflow-y-auto custom-scrollbar flex-1 p-6 md:p-8 flex flex-col gap-7">
-
-        <!-- Manifesto text in a recessed glass panel -->
-        <div style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 20px 24px;">
-          <p class="font-ui text-sm leading-7" style="color: rgba(229,226,225,0.75);">
-            Lowkal.fm is an art-forward, distraction-free digital canvas dedicated to underground electronic music. We discard traditional cluttered interfaces, social media integrations, and analytics tracking in favor of deep visual atmosphere and focused sonic discovery.
-          </p>
-          <p class="font-ui text-sm leading-7 mt-4" style="color: rgba(229,226,225,0.75);">
-            We operate as an independent station. Every stream is synthesized or curated in real time to generate deep, atmospheric, and kinetic sonic moods. This is radio for deep listening, programming, and spatial exploration.
-          </p>
-        </div>
-
-        <!-- Schedule -->
         <div>
           <div class="flex items-center gap-3 mb-4">
-            <span class="font-mono text-xs tracking-widest uppercase" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">Weekly Broadcast Schedule</span>
+            <span class="font-mono text-xs tracking-widest uppercase" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">Tracklist</span>
             <div class="flex-1" style="height:1px; background: linear-gradient(to right, rgba(85,233,59,0.3), transparent);"></div>
           </div>
-
-          <div class="flex flex-col gap-1">
-            <!-- Schedule rows — alternating glass tiers -->
-            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">MON 20:00–22:00</span>
-              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">DJ Oblivion — Industrial Techno</span>
-            </div>
-            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
-              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">TUE 21:00–23:00</span>
-              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Silent Servant — Darkwave & EBM</span>
-            </div>
-            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">WED 22:00–00:00</span>
-              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">System Fault — Noise & Ambient</span>
-            </div>
-            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
-              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">THU 20:00–22:00</span>
-              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Acid Trax — Chicago House & Acid</span>
-            </div>
-            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">FRI 22:00–00:00</span>
-              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Void Dweller — Drone & Experimental</span>
-            </div>
-            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
-              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">SAT 20:00–23:00</span>
-              <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Rotary Club — Deep House & Dub</span>
-            </div>
-            <!-- Resident row — acid green highlight -->
-            <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(85,233,59,0.04); border: 1px solid rgba(85,233,59,0.18); box-shadow: 0 0 16px rgba(85,233,59,0.05) inset;">
-              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:#55e93b;">SUN 18:00–20:00 · RESIDENT</span>
-              <span class="font-ui text-sm font-semibold" style="color:#55e93b;">Takezo — Drum & Bass</span>
-            </div>
-          </div>
+          <ol class="flex flex-col gap-1" id="tracklist-entries"></ol>
+          <p class="font-ui text-sm leading-7" id="tracklist-empty" style="color: rgba(229,226,225,0.65);" hidden>No tracklist has been added for this mix yet.</p>
         </div>
 
       </div>
@@ -797,6 +756,13 @@ void main(){
       const m = Math.floor(secs / 60);
       const s = Math.floor(secs % 60);
       return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function plainText(value) {
+      return String(value || '')
+        .replace(/<br\s*\/?>(\r?\n)?/gi, '\n')
+        .replace(/<[^>]*>/g, '')
+        .trim();
     }
 
     // -------------------------------------------------------------
@@ -1651,11 +1617,15 @@ void main(){
         // App header logo resets
         document.getElementById('header-logo').addEventListener('click', () => this.navigate('home'));
 
-        // Manifesto trigger modal
-        document.getElementById('btn-manifesto-open').addEventListener('click', () => this.showManifesto(true));
-        document.getElementById('btn-manifesto-close').addEventListener('click', () => this.showManifesto(false));
-        document.getElementById('modal-manifesto').addEventListener('click', (e) => {
-          if (e.target.id === 'modal-manifesto') this.showManifesto(false);
+        // Tracklist modal
+        document.getElementById('btn-tracklist-open').addEventListener('click', () => this.showTracklist(true));
+        document.getElementById('btn-tracklist-close').addEventListener('click', () => this.showTracklist(false));
+        document.getElementById('modal-tracklist').addEventListener('click', (e) => {
+          if (e.target.id === 'modal-tracklist') this.showTracklist(false);
+        });
+        document.addEventListener('keydown', (event) => {
+          const tracklist = document.getElementById('modal-tracklist');
+          if (event.key === 'Escape' && tracklist.style.pointerEvents !== 'none') this.showTracklist(false);
         });
 
         // Homepage detailed player controls
@@ -1800,15 +1770,56 @@ void main(){
         }, 650);
       }
 
-      showManifesto(show) {
-        const modal = document.getElementById('modal-manifesto');
+      showTracklist(show) {
+        const modal = document.getElementById('modal-tracklist');
         if (show) {
           modal.style.opacity = 1;
           modal.style.pointerEvents = 'auto';
+          document.getElementById('btn-tracklist-close').focus();
         } else {
           modal.style.opacity = 0;
           modal.style.pointerEvents = 'none';
+          document.getElementById('btn-tracklist-open').focus();
         }
+      }
+
+      renderTracklist(mix) {
+        const list = document.getElementById('tracklist-entries');
+        const empty = document.getElementById('tracklist-empty');
+        const meta = document.getElementById('tracklist-mix-meta');
+        const tracks = Array.isArray(mix.tracks) ? mix.tracks : [];
+
+        meta.textContent = `${mix.title} · ${mix.dj}`;
+        list.replaceChildren();
+        list.hidden = tracks.length === 0;
+        empty.hidden = tracks.length > 0;
+
+        tracks.forEach((track, index) => {
+          const row = document.createElement('li');
+          row.className = 'grid grid-cols-[auto_1fr] gap-4 items-start px-4 py-3 rounded';
+          row.style.background = index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.015)';
+          row.style.border = `1px solid ${index % 2 === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.04)'}`;
+
+          const time = document.createElement('span');
+          time.className = 'font-mono text-xs pt-0.5';
+          time.style.color = 'rgba(229,226,225,0.6)';
+          time.textContent = formatTime(Number(track.time) || 0);
+
+          const copy = document.createElement('div');
+          copy.className = 'min-w-0';
+          const title = document.createElement('p');
+          title.className = 'font-ui text-sm leading-tight';
+          title.style.color = 'rgba(229,226,225,0.92)';
+          title.textContent = plainText(track.title) || 'Untitled';
+          const artist = document.createElement('p');
+          artist.className = 'font-ui text-xs mt-1';
+          artist.style.color = 'rgba(229,226,225,0.58)';
+          artist.textContent = plainText(track.artist) || 'Unknown artist';
+
+          copy.append(title, artist);
+          row.append(time, copy);
+          list.append(row);
+        });
       }
 
       // -------------------------------------------------------------
@@ -1821,8 +1832,11 @@ void main(){
         document.getElementById('main-title').textContent = mix.title;
         document.getElementById('main-host-date').textContent = `Hosted by ${mix.dj} • ${mix.date}`;
         document.getElementById('main-cover-img').src = mix.artUrl;
-        document.getElementById('detail-mix-desc').textContent = mix.description;
-        document.getElementById('detail-artist-bio').textContent = mix.artistBio;
+        const description = plainText(mix.description);
+        document.getElementById('detail-mix-desc').textContent = description;
+        document.getElementById('detail-mix-description').hidden = !description;
+        document.getElementById('detail-artist-bio').textContent = plainText(mix.artistBio);
+        this.renderTracklist(mix);
         const artistLink = document.getElementById('detail-artist-link');
         artistLink.href = mix.artistUrl || '#';
         artistLink.hidden = !mix.artistUrl;

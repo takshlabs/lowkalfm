@@ -106,6 +106,23 @@ test("each mix can control the Soundroom shader palette", async () => {
   assert.match(soundroom, /u_paletteAccent/);
 });
 
+test("Soundroom displays CMS tracklists and plain-text mix descriptions", async () => {
+  const schema = await source("sanity/schemaTypes/mixType.ts");
+  const query = await source("lib/sanity.ts");
+  const frame = await source("components/SoundroomFrame.tsx");
+  const soundroom = await source("public/soundroom/index.html");
+
+  assert.match(schema, /name:\s*"tracks"/);
+  assert.match(schema, /title:\s*"Tracklist"/);
+  assert.match(query, /tracks\[\]\{time, title, artist\}/);
+  assert.match(frame, /tracks:\s*record\.tracks/);
+  assert.match(soundroom, /btn-tracklist-open/);
+  assert.match(soundroom, /modal-tracklist/);
+  assert.match(soundroom, /renderTracklist\(mix\)/);
+  assert.match(soundroom, /detail-mix-description.*hidden = !description/s);
+  assert.doesNotMatch(soundroom, /id="detail-mix-desc"[^>]*\bitalic\b/);
+});
+
 test("the floating player and embedded Soundroom use one audio authority", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const soundroom = await source("public/soundroom/index.html");

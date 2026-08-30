@@ -71,9 +71,10 @@ export const mixType = defineType({
     defineField({ name: "homeOrder", title: "Home order", type: "number", group: "placement", initialValue: 100 }),
     defineField({
       name: "tracks",
-      title: "Tracks",
+      title: "Tracklist",
       type: "array",
       group: "tracklist",
+      description: "Add tracks in play order. Soundroom shows each start time, title, and artist.",
       of: [defineArrayMember({
         name: "track",
         title: "Track",
