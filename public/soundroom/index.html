@@ -27,7 +27,6 @@
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Geist:wght@300;400;500;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   
   <script id="tailwind-config">
@@ -45,9 +44,9 @@
             "accent": "#ff8eb6",          // Tertiary Pink
           },
           fontFamily: {
-            "display": ["Archivo Narrow", "sans-serif"],
-            "ui": ["Geist", "sans-serif"],
-            "mono": ["JetBrains Mono", "monospace"],
+            "display": ["Arial Black", "Arial", "sans-serif"],
+            "ui": ["Arial", "Helvetica", "sans-serif"],
+            "mono": ["Arial", "Helvetica", "sans-serif"],
           },
           borderRadius: {
             "DEFAULT": "0.25rem",
@@ -72,12 +71,12 @@
       overflow: hidden;
       background-color: #131313;
       color: #e5e2e1;
-      font-family: 'Geist', sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       cursor: none !important;
     }
 
     h1, h2, h3, .font-display {
-      font-family: 'Archivo Narrow', sans-serif;
+      font-family: "Arial Black", Arial, sans-serif;
     }
 
     /* Force cursor none for interactive elements */
@@ -202,7 +201,7 @@
     .soundroom-return-nav a {
       padding: 0.44rem 0.58rem;
       color: rgba(229,226,225,0.84);
-      font-family: 'JetBrains Mono', monospace;
+      font-family: Arial, Helvetica, sans-serif;
       font-size: 0.62rem;
       letter-spacing: 0.06em;
       text-decoration: none;
@@ -537,7 +536,7 @@ void main(){
         <img src="../lowkal-logo.jpg" class="w-14 h-14 shrink-0" alt="Lowkal.fm"
           style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 0 20px rgba(85,233,59,0.08);"/>
         <div>
-          <div class="font-mono text-xs tracking-widest uppercase mb-1" style="color:#55e93b; font-family:'JetBrains Mono',monospace;">STATION BROADCAST</div>
+          <div class="font-mono text-xs tracking-widest uppercase mb-1" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">STATION BROADCAST</div>
           <h2 class="font-display font-bold uppercase leading-none" style="font-size: clamp(1.6rem, 4vw, 2.5rem); letter-spacing: -0.01em;">LOWKAL MANIFESTO</h2>
         </div>
       </div>
@@ -558,39 +557,39 @@ void main(){
         <!-- Schedule -->
         <div>
           <div class="flex items-center gap-3 mb-4">
-            <span class="font-mono text-xs tracking-widest uppercase" style="color:#55e93b; font-family:'JetBrains Mono',monospace;">Weekly Broadcast Schedule</span>
+            <span class="font-mono text-xs tracking-widest uppercase" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">Weekly Broadcast Schedule</span>
             <div class="flex-1" style="height:1px; background: linear-gradient(to right, rgba(85,233,59,0.3), transparent);"></div>
           </div>
 
           <div class="flex flex-col gap-1">
             <!-- Schedule rows — alternating glass tiers -->
             <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">MON 20:00–22:00</span>
+              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">MON 20:00–22:00</span>
               <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">DJ Oblivion — Industrial Techno</span>
             </div>
             <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
-              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">TUE 21:00–23:00</span>
+              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">TUE 21:00–23:00</span>
               <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Silent Servant — Darkwave & EBM</span>
             </div>
             <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">WED 22:00–00:00</span>
+              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">WED 22:00–00:00</span>
               <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">System Fault — Noise & Ambient</span>
             </div>
             <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
-              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">THU 20:00–22:00</span>
+              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">THU 20:00–22:00</span>
               <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Acid Trax — Chicago House & Acid</span>
             </div>
             <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
-              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">FRI 22:00–00:00</span>
+              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">FRI 22:00–00:00</span>
               <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Void Dweller — Drone & Experimental</span>
             </div>
             <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04);">
-              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:rgba(229,226,225,0.6);">SAT 20:00–23:00</span>
+              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:rgba(229,226,225,0.6);">SAT 20:00–23:00</span>
               <span class="font-ui text-sm" style="color:rgba(229,226,225,0.85);">Rotary Club — Deep House & Dub</span>
             </div>
             <!-- Resident row — acid green highlight -->
             <div class="flex justify-between items-center px-4 py-3 rounded" style="background: rgba(85,233,59,0.04); border: 1px solid rgba(85,233,59,0.18); box-shadow: 0 0 16px rgba(85,233,59,0.05) inset;">
-              <span class="font-mono text-xs" style="font-family:'JetBrains Mono',monospace; color:#55e93b;">SUN 18:00–20:00 · RESIDENT</span>
+              <span class="font-mono text-xs" style="font-family:Arial,Helvetica,sans-serif; color:#55e93b;">SUN 18:00–20:00 · RESIDENT</span>
               <span class="font-ui text-sm font-semibold" style="color:#55e93b;">Takezo — Drum & Bass</span>
             </div>
           </div>
