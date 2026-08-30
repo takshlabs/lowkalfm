@@ -1,9 +1,12 @@
+"use client";
+
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
-import { getSoundRecord, livePrograms } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
+import { useListenContent } from "./ListenContentProvider";
 
 export function HomeProgrammeIndex() {
+  const { programmes, getRecord } = useListenContent();
   return (
     <section className="home-programmes" id="programmes" aria-labelledby="home-programmes-title">
       <header className="home-section-head home-section-head--paper">
@@ -15,8 +18,8 @@ export function HomeProgrammeIndex() {
       </header>
 
       <div className="home-programme-grid">
-        {livePrograms.map((programme) => {
-          const record = getSoundRecord(programme.featuredSetSlug);
+        {programmes.map((programme) => {
+          const record = getRecord(programme.featuredSetSlug);
           if (!record) return null;
 
           return (

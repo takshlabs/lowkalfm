@@ -17,3 +17,50 @@ export const storiesQuery = `*[_type == "editorialStory" && defined(publishedAt)
   accent,
   body[]{..., _type == "image" => { ..., "asset": asset-> }}
 }`;
+
+export const listenContentQuery = `{
+  "mixes": *[_type == "mix" && published == true] | order(playerOrder asc, releaseDate desc) {
+    "slug": slug.current,
+    format,
+    series,
+    title,
+    artistDisplayName,
+    "artists": artists[]->{name, "slug": slug.current},
+    releaseDate,
+    duration,
+    youtubeId,
+    "artwork": coalesce(artwork.asset->url, thumbnail.asset->url),
+    genres,
+    description,
+    featured,
+    archiveSection,
+    showInPlayer,
+    showInSoundroom,
+    showInArchive,
+    showOnHome,
+    tracks[]{time, title, artist},
+    "programmeSlug": *[_type == "programme" && references(^._id)][0].slug.current
+  },
+  "programmes": *[_type == "programme" && published == true] | order(sortOrder asc, date desc) {
+    "slug": slug.current,
+    number,
+    name,
+    label,
+    "dateISO": date,
+    description,
+    "featuredSetSlug": featuredMix->slug.current,
+    "setSlugs": mixes[]->slug.current
+  },
+  "artists": *[_type == "artist" && published == true] | order(sortOrder asc, name asc) {
+    "slug": slug.current,
+    name,
+    relationship,
+    location,
+    genres,
+    shortBio,
+    bio,
+    "portrait": portrait.asset->url,
+    "coverImage": coverImage.asset->url,
+    links[]{label, url}
+  }
+}`;

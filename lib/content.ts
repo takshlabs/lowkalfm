@@ -1,6 +1,7 @@
 import { sitePath } from "@/lib/site-path";
 
 export type SoundFormat = "weekly" | "live-set";
+export type ArchiveSection = "scene-programmes" | "volumes-residents" | "volumes-guests";
 
 export type Track = {
   time: number;
@@ -23,7 +24,28 @@ export type SoundRecord = {
   description: string;
   featured?: boolean;
   programSlug?: string;
+  artistSlugs: string[];
+  archiveSection: ArchiveSection;
+  showInPlayer: boolean;
+  showInSoundroom: boolean;
+  showInArchive: boolean;
+  showOnHome: boolean;
   tracks: Track[];
+};
+
+export type ArtistLink = { label: string; url: string };
+
+export type ArtistProfile = {
+  slug: string;
+  name: string;
+  relationship: "resident" | "guest" | "collective" | "other";
+  location: string;
+  genres: string[];
+  shortBio: string;
+  bio: unknown[];
+  portrait?: string;
+  coverImage?: string;
+  links: ArtistLink[];
 };
 
 export type LiveProgram = {
@@ -53,6 +75,12 @@ export const soundRecords: SoundRecord[] = [
     description: "Samgod, Sinhatra and Takezo share one long Lowkal session from Bengaluru.",
     featured: true,
     programSlug: "lowkal-002-garden-city-gallivanting",
+    artistSlugs: ["samgod", "sinhatra", "takezo"],
+    archiveSection: "scene-programmes",
+    showInPlayer: true,
+    showInSoundroom: true,
+    showInArchive: true,
+    showOnHome: true,
     tracks: []
   },
   {
@@ -68,6 +96,12 @@ export const soundRecords: SoundRecord[] = [
     artwork: sitePath("/kinetic-drift.png"),
     genres: ["Drum + bass", "Breaks", "Footwork"],
     description: "A low-to-high pressure mix built around shifting drums, deep bass and the many forms that keep a floor moving.",
+    artistSlugs: ["takezo"],
+    archiveSection: "volumes-residents",
+    showInPlayer: true,
+    showInSoundroom: true,
+    showInArchive: true,
+    showOnHome: true,
     tracks: [
       { time: 0, title: "Intro (Atmosphere)", artist: "Unknown" },
       { time: 255, title: "Sub-bass Frequency", artist: "Autechre" },
@@ -88,6 +122,12 @@ export const soundRecords: SoundRecord[] = [
     artwork: sitePath("/meeting-point.png"),
     genres: ["Footwork", "Polyrhythmic", "Bass"],
     description: "A fast-moving meeting point between polyrhythm, bass pressure and wide electronic space.",
+    artistSlugs: ["sa-rang"],
+    archiveSection: "volumes-guests",
+    showInPlayer: true,
+    showInSoundroom: true,
+    showInArchive: true,
+    showOnHome: true,
     tracks: [
       { time: 0, title: "La Real", artist: "Surgeon" },
       { time: 270, title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },
@@ -110,6 +150,12 @@ export const soundRecords: SoundRecord[] = [
     description: "The featured set from Lowkal 001, selected from the full multi-artist programme.",
     featured: true,
     programSlug: "lowkal-001-redline",
+    artistSlugs: ["takezo"],
+    archiveSection: "scene-programmes",
+    showInPlayer: true,
+    showInSoundroom: false,
+    showInArchive: true,
+    showOnHome: false,
     tracks: [
       { time: 0, title: "Intro (Atmosphere)", artist: "Unknown" },
       { time: 255, title: "Sub-bass Frequency", artist: "Autechre" },
@@ -131,6 +177,12 @@ export const soundRecords: SoundRecord[] = [
     genres: ["Footwork", "Polyrhythmic"],
     description: "A set from Lowkal 001, held inside the complete live-program record.",
     programSlug: "lowkal-001-redline",
+    artistSlugs: ["sa-rang"],
+    archiveSection: "scene-programmes",
+    showInPlayer: true,
+    showInSoundroom: false,
+    showInArchive: true,
+    showOnHome: false,
     tracks: [
       { time: 0, title: "La Real", artist: "Surgeon" },
       { time: 270, title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },
@@ -160,6 +212,31 @@ export const livePrograms: LiveProgram[] = [
     setSlugs: ["lowkal-001-takezo", "lowkal-001-sarang"],
     description: "A multi-artist live programme. Each Lowkal programme keeps every set together and marks one set as the featured recording."
   }
+];
+
+export const artistProfiles: ArtistProfile[] = [
+  {
+    slug: "takezo",
+    name: "Takezo",
+    relationship: "resident",
+    location: "Bengaluru",
+    genres: ["Drum + bass", "Breaks", "Garage", "Footwork"],
+    shortBio: "Saswat Biswas, known as Takezo, moves through bass music with a focus on rhythm, intensity, and the dancefloor.",
+    bio: [],
+    links: []
+  },
+  {
+    slug: "sa-rang",
+    name: "sa:rang",
+    relationship: "guest",
+    location: "Bengaluru",
+    genres: ["Footwork", "Polyrhythmic", "Bass"],
+    shortBio: "Bengaluru musician and DJ sa:rang builds sets from grooved rhythms, broad soundscapes, and electronic dance music.",
+    bio: [],
+    links: []
+  },
+  { slug: "samgod", name: "Samgod", relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [] },
+  { slug: "sinhatra", name: "Sinhatra", relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [] }
 ];
 
 export type JournalStory = {

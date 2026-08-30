@@ -43,7 +43,7 @@ export function PersistentPlayer() {
           <span><i aria-hidden="true" /> {isPlaying ? "Playing" : "Ready"}</span>
           <span>{activeRecord.format === "weekly" ? "Weekly volume" : "Programme set"}</span>
         </div>
-        <SiteLink className="lowkal-player-title" href={sitePath("/listen")}>{activeRecord.artist}</SiteLink>
+        <SiteLink className="lowkal-player-title" href={sitePath(activeRecord.artistSlugs[0] ? `/artists/${activeRecord.artistSlugs[0]}` : "/listen")}>{activeRecord.artist}</SiteLink>
         <span className="lowkal-player-record">{activeRecord.series} <i>/</i> {activeRecord.title}</span>
       </div>
 

@@ -3,12 +3,14 @@
 import { Pause, Play } from "lucide-react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
-import { soundRecords } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 import { useAudio } from "./AudioProvider";
+import { useListenContent } from "./ListenContentProvider";
 
 export function HomeTransmissionDeck() {
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
+  const { records } = useListenContent();
+  const homeRecords = records.filter((record) => record.showOnHome);
 
   const toggleRecord = (slug: string) => {
     if (activeRecord.slug === slug) togglePlayback();
@@ -26,7 +28,7 @@ export function HomeTransmissionDeck() {
       </div>
 
       <div className="transmission-row">
-        {soundRecords.slice(0, 3).map((record, index) => {
+        {homeRecords.slice(0, 3).map((record, index) => {
           const active = activeRecord.slug === record.slug;
           const playing = active && isPlaying;
 

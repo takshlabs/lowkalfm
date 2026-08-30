@@ -3,10 +3,11 @@
 import Image from "next/image";
 import { Pause, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { formatTime, soundRecords, SoundRecord } from "@/lib/content";
+import { formatTime, SoundRecord } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 import { ArchiveAtmosphere } from "./ArchiveAtmosphere";
 import { useAudio } from "./AudioProvider";
+import { useListenContent } from "./ListenContentProvider";
 
 type ArchiveGroup = {
   id: string;
@@ -24,7 +25,7 @@ const archiveGroups: ArchiveGroup[] = [
     label: "Lowkal scene programmes",
     shortLabel: "Programmes",
     description: "Complete programme recordings and sets kept together from each Lowkal gathering.",
-    includes: (record) => record.format === "live-set"
+    includes: (record) => record.archiveSection === "scene-programmes"
   },
   {
     id: "volumes-residents",
@@ -32,7 +33,7 @@ const archiveGroups: ArchiveGroup[] = [
     label: "Lowkal FM resident volumes",
     shortLabel: "Residents",
     description: "Recurring Lowkal voices and the selections that shape the station over time.",
-    includes: (record) => record.format === "weekly" && record.artist.toLowerCase() === "takezo"
+    includes: (record) => record.archiveSection === "volumes-residents"
   },
   {
     id: "volumes-guests",
@@ -40,7 +41,7 @@ const archiveGroups: ArchiveGroup[] = [
     label: "Lowkal FM guest volumes",
     shortLabel: "Guests",
     description: "One-off contributions from artists who pass through the room and leave a record behind.",
-    includes: (record) => record.format === "weekly" && record.artist.toLowerCase() !== "takezo"
+    includes: (record) => record.archiveSection === "volumes-guests"
   }
 ];
 
@@ -49,11 +50,13 @@ function getGroup(record: SoundRecord) {
 }
 
 export function SoundroomCatalog() {
-  const [selectedSlug, setSelectedSlug] = useState(soundRecords[0].slug);
+  const { records } = useListenContent();
+  const archiveRecords = useMemo(() => records.filter((record) => record.showInArchive), [records]);
+  const [selectedSlug, setSelectedSlug] = useState(archiveRecords[0].slug);
   const recordRefs = useRef(new Map<string, HTMLButtonElement>());
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
-  const selectedIndex = Math.max(0, soundRecords.findIndex((record) => record.slug === selectedSlug));
-  const selected = soundRecords[selectedIndex];
+  const selectedIndex = Math.max(0, archiveRecords.findIndex((record) => record.slug === selectedSlug));
+  const selected = archiveRecords[selectedIndex] ?? archiveRecords[0];
   const group = useMemo(() => getGroup(selected), [selected]);
   const selectedIsActive = activeRecord.slug === selected.slug;
 
@@ -66,8 +69,8 @@ export function SoundroomCatalog() {
   }, [selected.slug]);
 
   const move = (direction: -1 | 1) => {
-    const nextIndex = (selectedIndex + direction + soundRecords.length) % soundRecords.length;
-    setSelectedSlug(soundRecords[nextIndex].slug);
+    const nextIndex = (selectedIndex + direction + archiveRecords.length) % archiveRecords.length;
+    setSelectedSlug(archiveRecords[nextIndex].slug);
   };
 
   const handlePlay = () => {
@@ -86,12 +89,12 @@ export function SoundroomCatalog() {
           <span className="archive-corner archive-corner--tl" aria-hidden="true" />
           <p className="section-kicker">Lowkal listening archive</p>
           <h1 id="archive-title">Archive<br />room</h1>
-          <p className="archive-room-index">AR — {String(soundRecords.length).padStart(2, "0")}</p>
+          <p className="archive-room-index">AR — {String(archiveRecords.length).padStart(2, "0")}</p>
         </div>
 
         <nav className="archive-group-index" aria-label="Archive catalogues">
           {archiveGroups.map((item) => {
-            const count = soundRecords.filter(item.includes).length;
+            const count = archiveRecords.filter(item.includes).length;
             const isActive = item.id === group.id;
             return (
               <button
@@ -99,7 +102,7 @@ export function SoundroomCatalog() {
                 aria-pressed={isActive}
                 key={item.id}
                 onClick={() => {
-                  const firstRecord = soundRecords.find(item.includes);
+                  const firstRecord = archiveRecords.find(item.includes);
                   if (firstRecord) setSelectedSlug(firstRecord.slug);
                 }}
               >
@@ -116,7 +119,7 @@ export function SoundroomCatalog() {
         <Image className="archive-art-field" src={sitePath("/art/signal-bloom-pattern.jpg")} alt="" fill sizes="100vw" />
         <ArchiveAtmosphere />
         <div className="archive-track" aria-label="Lowkal records">
-          {soundRecords.map((record, index) => {
+          {archiveRecords.map((record, index) => {
             const isSelected = record.slug === selected.slug;
             return (
               <button
@@ -155,7 +158,7 @@ export function SoundroomCatalog() {
 
         <div className="archive-controls" aria-label="Archive controls">
           <button type="button" onClick={() => move(-1)} aria-label="Previous record">←</button>
-          <span>{String(selectedIndex + 1).padStart(2, "0")} / {String(soundRecords.length).padStart(2, "0")}</span>
+          <span>{String(selectedIndex + 1).padStart(2, "0")} / {String(archiveRecords.length).padStart(2, "0")}</span>
           <button type="button" onClick={() => move(1)} aria-label="Next record">→</button>
         </div>
       </div>

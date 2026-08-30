@@ -5,5 +5,8 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/client",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/artists/:slug", "destination": "/artists" }
+  ]
 }

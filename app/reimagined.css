@@ -865,3 +865,66 @@ html { scroll-behavior: smooth; }
   .city-hero::before { top: 16px; bottom: auto; }
   .site-footer::before { width: 58vw; opacity: 0.18; }
 }
+/* Artist directory and profile */
+.artist-directory,
+.artist-profile { min-height: 100vh; padding: clamp(110px, 13vw, 180px) clamp(20px, 5vw, 76px) 180px; background: var(--paper); color: var(--ink); }
+.artist-directory > header { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.6fr); gap: 40px; align-items: end; margin-bottom: 72px; }
+.artist-directory > header .section-kicker { grid-column: 1 / -1; }
+.artist-directory > header h1 { margin: 0; font-family: var(--font-lowkal-editorial), serif; font-size: clamp(4rem, 9vw, 9rem); font-weight: 400; line-height: 0.78; letter-spacing: -0.065em; }
+.artist-directory > header > p:last-child { max-width: 440px; margin: 0 0 6px; font-size: clamp(1rem, 1.5vw, 1.3rem); line-height: 1.35; }
+.artist-directory-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--ink); border-left: 1px solid var(--ink); }
+.artist-directory-card { display: grid; grid-template-rows: auto minmax(220px, 1fr) auto auto; gap: 14px; min-height: 500px; padding: 16px; color: inherit; text-decoration: none; border-right: 1px solid var(--ink); border-bottom: 1px solid var(--ink); transition: background 180ms ease, color 180ms ease; }
+.artist-directory-card:hover { color: var(--night-ink); background: var(--night); }
+.artist-directory-index { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.12em; }
+.artist-directory-image,
+.artist-directory-monogram { position: relative; display: grid; min-height: 220px; overflow: hidden; place-items: center; background: var(--red); color: var(--paper); font-family: var(--font-lowkal-editorial), serif; font-size: clamp(4rem, 8vw, 8rem); text-transform: uppercase; }
+.artist-directory-image img { object-fit: cover; filter: saturate(0.8) contrast(1.05); transition: transform 350ms ease; }
+.artist-directory-card:hover .artist-directory-image img { transform: scale(1.025); }
+.artist-directory-card strong { font-family: var(--font-lowkal-editorial), serif; font-size: clamp(2.2rem, 3.5vw, 4rem); font-weight: 400; line-height: 0.9; }
+.artist-directory-card p { margin: 0; font-size: 0.82rem; line-height: 1.4; }
+.artist-profile { padding-left: 0; padding-right: 0; }
+.artist-profile-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr); min-height: 620px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+.artist-profile-heading { display: flex; flex-direction: column; justify-content: space-between; padding: clamp(24px, 5vw, 72px); }
+.artist-profile-heading h1 { max-width: 8ch; margin: 40px 0 auto; font-family: var(--font-lowkal-editorial), serif; font-size: clamp(5rem, 11vw, 12rem); font-weight: 400; line-height: 0.75; letter-spacing: -0.075em; overflow-wrap: anywhere; }
+.artist-profile-meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 40px; }
+.artist-profile-meta span { padding: 6px 9px; border: 1px solid currentColor; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.artist-profile-image,
+.artist-profile-monogram { position: relative; min-height: 620px; border-left: 1px solid var(--ink); }
+.artist-profile-image img { object-fit: cover; }
+.artist-profile-monogram { display: grid; place-items: center; color: var(--paper); background: var(--red); font-family: var(--font-lowkal-editorial), serif; font-size: clamp(8rem, 19vw, 20rem); text-transform: uppercase; }
+.artist-profile-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 0.28fr); border-bottom: 1px solid var(--ink); }
+.artist-profile-bio { padding: clamp(40px, 7vw, 100px); font-family: var(--font-lowkal-editorial), serif; font-size: clamp(1.6rem, 3.2vw, 3.2rem); line-height: 1.08; }
+.artist-profile-bio p { max-width: 26ch; margin: 0 0 1em; }
+.artist-profile-links { display: flex; flex-direction: column; gap: 14px; padding: 32px; border-left: 1px solid var(--ink); }
+.artist-profile-links a { color: inherit; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.artist-profile-mixes { display: grid; grid-template-columns: minmax(220px, 0.34fr) 1fr; border-bottom: 1px solid var(--ink); }
+.artist-profile-mixes > header { padding: clamp(28px, 5vw, 64px); }
+.artist-profile-mixes h2 { margin: 12px 0 0; font-family: var(--font-lowkal-editorial), serif; font-size: clamp(3rem, 6vw, 7rem); font-weight: 400; }
+.artist-profile-mixes > div { border-left: 1px solid var(--ink); }
+.artist-mix-card { display: grid; grid-template-columns: 120px 1fr; gap: 20px; align-items: center; min-height: 150px; padding: 15px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--ink); }
+.artist-mix-art { position: relative; width: 120px; aspect-ratio: 1; overflow: hidden; }
+.artist-mix-art img { object-fit: cover; }
+.artist-mix-card > span:last-child { display: grid; gap: 5px; }
+.artist-mix-card small,
+.artist-mix-card em { font-size: 0.68rem; font-style: normal; text-transform: uppercase; letter-spacing: 0.08em; }
+.artist-mix-card strong { font-family: var(--font-lowkal-editorial), serif; font-size: clamp(1.8rem, 3vw, 3.2rem); font-weight: 400; }
+
+@media (max-width: 900px) {
+  .artist-directory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .artist-profile-hero { grid-template-columns: 1fr; }
+  .artist-profile-image,
+  .artist-profile-monogram { min-height: 460px; border-top: 1px solid var(--ink); border-left: 0; }
+}
+
+@media (max-width: 640px) {
+  .artist-directory,
+  .artist-profile { padding-top: 96px; padding-bottom: 130px; }
+  .artist-directory > header { grid-template-columns: 1fr; margin-bottom: 42px; }
+  .artist-directory-grid { grid-template-columns: 1fr; }
+  .artist-directory-card { min-height: 450px; }
+  .artist-profile-heading { min-height: 470px; }
+  .artist-profile-body,
+  .artist-profile-mixes { grid-template-columns: 1fr; }
+  .artist-profile-links,
+  .artist-profile-mixes > div { border-top: 1px solid var(--ink); border-left: 0; }
+}

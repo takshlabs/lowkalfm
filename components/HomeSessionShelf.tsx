@@ -3,16 +3,16 @@
 import { Pause, Play } from "lucide-react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
-import { soundRecords } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 import { useAudio } from "./AudioProvider";
-
-const sessions = soundRecords.filter((record, index, records) => (
-  records.findIndex((item) => item.youtubeId === record.youtubeId) === index
-));
+import { useListenContent } from "./ListenContentProvider";
 
 export function HomeSessionShelf() {
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
+  const { records } = useListenContent();
+  const sessions = records.filter((record, index, items) => (
+    record.showOnHome && items.findIndex((item) => item.youtubeId === record.youtubeId) === index
+  ));
 
   return (
     <section className="home-sessions" aria-labelledby="home-sessions-title">

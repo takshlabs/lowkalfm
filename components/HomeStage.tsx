@@ -3,17 +3,18 @@
 import { Pause, Play } from "lucide-react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
-import { soundRecords } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 import { useAudio } from "./AudioProvider";
-
-const featured = soundRecords[0];
-const programmeName = featured.series.includes("|")
-  ? featured.series.split("|").slice(1).join("|").trim()
-  : featured.series;
+import { useListenContent } from "./ListenContentProvider";
 
 export function HomeStage() {
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
+  const { records } = useListenContent();
+  const homeRecords = records.filter((record) => record.showOnHome);
+  const featured = homeRecords.find((record) => record.featured) ?? homeRecords[0] ?? records[0];
+  const programmeName = featured.series.includes("|")
+    ? featured.series.split("|").slice(1).join("|").trim()
+    : featured.series;
   const isFeaturedActive = activeRecord.slug === featured.slug;
 
   const handlePlay = () => {

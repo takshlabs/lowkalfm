@@ -466,6 +466,7 @@ void main(){
             <p class="text-white/60 text-sm leading-relaxed font-ui" id="detail-artist-bio">
               Artist bio copy goes here.
             </p>
+            <a id="detail-artist-link" target="_top" class="inline-block text-primary text-xs font-bold uppercase tracking-widest hover:underline" hidden>Open artist page ↗</a>
           </div>
         </div>
       </div>
@@ -609,6 +610,7 @@ void main(){
   <!-- Core JavaScript Code -->
   <script>
     const AUDIO_SYNC_CHANNEL = 'lowkal.audio.v1';
+    const CATALOG_CHANNEL = 'lowkal.catalog.v1';
     const IS_EMBEDDED = window.parent !== window;
 
     // -------------------------------------------------------------
@@ -1315,6 +1317,7 @@ void main(){
         this.bindEvents();
         this.bindNavigationBridge();
         this.bindAudioSync();
+        this.bindCatalogSync();
         this.setupArchiveNodes();
         this.loadMixToPlayer(this.activeMix, false);
         // Pre-cue initial mix — loadMixToPlayer skips ytEngine.load when mix hasn't changed
@@ -1356,6 +1359,23 @@ void main(){
           const message = event.data;
           if (!message || message.channel !== AUDIO_SYNC_CHANNEL || message.type !== 'state') return;
           this.applyExternalAudioState(message.state);
+        });
+      }
+
+      bindCatalogSync() {
+        if (!IS_EMBEDDED) return;
+        window.addEventListener('message', (event) => {
+          if (event.source !== window.parent || event.origin !== window.location.origin) return;
+          const message = event.data;
+          if (!message || message.channel !== CATALOG_CHANNEL || message.type !== 'catalog' || !Array.isArray(message.mixes) || message.mixes.length === 0) return;
+          MIXES = message.mixes;
+          const active = MIXES.find((mix) => mix.youtubeId === this.activeMix?.youtubeId) || MIXES[0];
+          this.activeMix = active;
+          this.syncMixDetails(active, true);
+          this.setupArchiveNodes();
+          this.updatePlayerUI();
+          this.updateMiniPlayerUI();
+          this.sendAudioCommand('request-state');
         });
       }
 
@@ -1716,8 +1736,11 @@ void main(){
         document.getElementById('main-title').textContent = mix.title;
         document.getElementById('main-host-date').textContent = `Hosted by ${mix.dj} • ${mix.date}`;
         document.getElementById('main-cover-img').src = mix.artUrl;
-        document.getElementById('detail-mix-desc').innerHTML = mix.description;
-        document.getElementById('detail-artist-bio').innerHTML = mix.artistBio;
+        document.getElementById('detail-mix-desc').textContent = mix.description;
+        document.getElementById('detail-artist-bio').textContent = mix.artistBio;
+        const artistLink = document.getElementById('detail-artist-link');
+        artistLink.href = mix.artistUrl || '#';
+        artistLink.hidden = !mix.artistUrl;
         document.getElementById('main-details-scroll').scrollTop = 0;
 
         if (resetTime) {

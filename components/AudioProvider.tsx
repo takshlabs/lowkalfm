@@ -2,7 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import YouTube, { YouTubeEvent, YouTubePlayer } from "react-youtube";
-import { getSoundRecord, soundRecords, SoundRecord } from "@/lib/content";
+import type { SoundRecord } from "@/lib/content";
+import { useListenContent } from "./ListenContentProvider";
 
 const STORAGE_KEY = "lowkal.player.v1";
 const PLAYBACK_INTENT_KEY = "lowkal.player.playback-intent.v1";
@@ -47,7 +48,7 @@ function readSavedState(): SavedPlayerState | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<SavedPlayerState>;
-    if (!parsed.slug || !getSoundRecord(parsed.slug)) return null;
+    if (!parsed.slug) return null;
     return {
       slug: parsed.slug,
       currentTime: Number(parsed.currentTime) || 0,
@@ -76,9 +77,12 @@ function savePlaybackIntent(shouldPlay: boolean) {
 }
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  const [activeSlug, setActiveSlug] = useState(soundRecords[0].slug);
+  const { records, getRecord } = useListenContent();
+  const playableRecords = useMemo(() => records.filter((record) => record.showInPlayer), [records]);
+  const firstRecord = playableRecords[0] ?? records[0];
+  const [activeSlug, setActiveSlug] = useState(firstRecord.slug);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(soundRecords[0].duration);
+  const [duration, setDuration] = useState(firstRecord.duration);
   const [volume, setVolumeState] = useState(82);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
@@ -88,24 +92,24 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const resumeAtRef = useRef(0);
   const autoplayRef = useRef(typeof window !== "undefined" && readPlaybackIntent());
   const currentTimeRef = useRef(0);
-  const stateRef = useRef({ activeSlug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat });
-  const activeRecord = getSoundRecord(activeSlug) ?? soundRecords[0];
+  const activeRecord = getRecord(activeSlug) ?? firstRecord;
+  const stateRef = useRef({ activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat });
 
   useEffect(() => {
-    stateRef.current = { activeSlug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat };
-  }, [activeSlug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat]);
+    stateRef.current = { activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat };
+  }, [activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat]);
 
   useEffect(() => {
     const saved = readSavedState();
-    if (!saved) return;
+    if (!saved || !getRecord(saved.slug)) return;
     resumeAtRef.current = saved.currentTime;
     // This client-only value is available only after hydration.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveSlug(saved.slug);
     setCurrentTime(saved.currentTime);
     setVolumeState(saved.volume);
-    setDuration(getSoundRecord(saved.slug)?.duration ?? 0);
-  }, []);
+    setDuration(getRecord(saved.slug)?.duration ?? 0);
+  }, [getRecord]);
 
   useEffect(() => {
     currentTimeRef.current = currentTime;
@@ -114,7 +118,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const persist = useCallback((time = currentTimeRef.current) => {
     try {
       const state: SavedPlayerState = {
-        slug: activeSlug,
+        slug: activeRecord.slug,
         currentTime: time,
         volume,
         savedAt: Date.now()
@@ -123,7 +127,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Playback still works if browser storage is unavailable.
     }
-  }, [activeSlug, volume]);
+  }, [activeRecord.slug, volume]);
 
   useEffect(() => {
     const handlePageExit = () => persist();
@@ -189,7 +193,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   }, [volume]);
 
   const playRecord = useCallback((slug: string, shouldPlay = true) => {
-    const record = getSoundRecord(slug);
+    const record = getRecord(slug);
     if (!record) return;
     if (slug === activeSlug && playerRef.current) {
       savePlaybackIntent(shouldPlay);
@@ -206,7 +210,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     setIsPlaying(false);
     setIsReady(false);
     setActiveSlug(slug);
-  }, [activeSlug]);
+  }, [activeSlug, getRecord]);
 
   const onStateChange = useCallback((event: YouTubeEvent) => {
     setIsPlaying(event.data === 1);
@@ -220,18 +224,18 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const playableRecords = soundRecords.filter((record, index, records) => (
+    const uniqueRecords = playableRecords.filter((record, index, records) => (
       records.findIndex((item) => item.youtubeId === record.youtubeId) === index
     ));
-    const currentIndex = Math.max(0, playableRecords.findIndex((record) => record.youtubeId === activeRecord.youtubeId));
-    let nextIndex = (currentIndex + 1) % playableRecords.length;
-    if (isShuffled && playableRecords.length > 1) {
+    const currentIndex = Math.max(0, uniqueRecords.findIndex((record) => record.youtubeId === activeRecord.youtubeId));
+    let nextIndex = (currentIndex + 1) % uniqueRecords.length;
+    if (isShuffled && uniqueRecords.length > 1) {
       do {
-        nextIndex = Math.floor(Math.random() * playableRecords.length);
+        nextIndex = Math.floor(Math.random() * uniqueRecords.length);
       } while (nextIndex === currentIndex);
     }
-    playRecord(playableRecords[nextIndex].slug, true);
-  }, [activeRecord.youtubeId, isRepeat, isShuffled, persist, playRecord]);
+    if (uniqueRecords[nextIndex]) playRecord(uniqueRecords[nextIndex].slug, true);
+  }, [activeRecord.youtubeId, isRepeat, isShuffled, persist, playRecord, playableRecords]);
 
   const togglePlayback = useCallback(() => {
     if (!playerRef.current) return;
@@ -269,7 +273,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       // The last observed values are sufficient during a transient player error.
     }
 
-    const record = getSoundRecord(snapshot.activeSlug) ?? soundRecords[0];
+    const record = getRecord(snapshot.activeSlug) ?? firstRecord;
     const message = {
       channel: AUDIO_SYNC_CHANNEL,
       type: "state",
@@ -294,7 +298,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     for (let index = 0; index < window.frames.length; index += 1) {
       window.frames[index]?.postMessage(message, window.location.origin);
     }
-  }, []);
+  }, [firstRecord, getRecord]);
 
   useEffect(() => {
     void postState();
@@ -327,14 +331,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       if (command.action === "shuffle") setIsShuffled((value) => !value);
       if (command.action === "repeat") setIsRepeat((value) => !value);
       if (command.action === "select") {
-        const record = soundRecords.find((item) => item.youtubeId === command.youtubeId);
+        const record = playableRecords.find((item) => item.youtubeId === command.youtubeId);
         if (record) playRecord(record.slug, command.autoplay);
       }
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [playRecord, postState, seek, setVolume, togglePlayback]);
+  }, [playRecord, playableRecords, postState, seek, setVolume, togglePlayback]);
 
   const value = useMemo<AudioContextValue>(() => ({
     activeRecord,

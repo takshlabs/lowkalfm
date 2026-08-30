@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AudioProvider } from "@/components/AudioProvider";
+import { ListenContentProvider } from "@/components/ListenContentProvider";
 import { PersistentPlayer } from "@/components/PersistentPlayer";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -45,12 +46,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
-        <AudioProvider>
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-          <PersistentPlayer />
-        </AudioProvider>
+        <ListenContentProvider>
+          <AudioProvider>
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+            <PersistentPlayer />
+          </AudioProvider>
+        </ListenContentProvider>
       </body>
     </html>
   );
