@@ -32,3 +32,20 @@ test("Studio embeds Sanity and supports flexible editorial fields", async () => 
   assert.match(schema, /pullQuote/);
   assert.doesNotMatch(header, /Studio/);
 });
+
+test("Listen artist profiles are managed in Sanity", async () => {
+  const schema = await source("sanity/schemaTypes/artistType.ts");
+  const query = await source("lib/sanity.ts");
+  const profile = await source("components/ArtistsDirectory.tsx");
+
+  assert.match(schema, /Keep the artist bio to 200 words or fewer/);
+  assert.match(schema, /featuredMix/);
+  assert.match(schema, /externalMixes/);
+  assert.match(schema, /productions/);
+  assert.match(schema, /fieldNotes/);
+  assert.match(query, /featuredMixSlug/);
+  assert.match(query, /goOutSlug/);
+  assert.match(profile, /ArtistFocusPlayer/);
+  assert.match(profile, /open\.spotify\.com\/embed/);
+  assert.match(profile, /Open in Go Out/);
+});

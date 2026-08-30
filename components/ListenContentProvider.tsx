@@ -107,7 +107,15 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
           description: programme.description
         }))
       : livePrograms;
-    const artists = content?.artists?.length ? content.artists : artistProfiles;
+    const artists = content?.artists?.length ? content.artists.map((artist) => ({
+      ...artist,
+      bio: artist.bio ?? [],
+      genres: artist.genres ?? [],
+      links: artist.links ?? [],
+      externalMixes: artist.externalMixes ?? [],
+      productions: artist.productions ?? [],
+      fieldNotes: artist.fieldNotes ?? []
+    })) : artistProfiles;
     return {
       records,
       programmes,

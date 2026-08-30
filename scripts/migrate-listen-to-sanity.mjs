@@ -35,17 +35,17 @@ const artists = [
       block("takezo-2", "His sets move through breaks, garage, footwork, and drum and bass. He balances technical range with a focus on emotional intensity."),
       block("takezo-3", "Takezo is the founder and curator of Lowkal.fm, a grassroots collective focused on low-end frequencies and community-driven sound.")
     ],
-    links: [], published: true, sortOrder: 10
+    links: [], featuredMix: { _type: "reference", _ref: "mix-lowkal-fm-vol-01" }, externalMixes: [], productions: [], fieldNotes: [], published: true, sortOrder: 10
   },
   {
     _id: "artist-sa-rang", _type: "artist", name: "sa:rang", slug: { _type: "slug", current: "sa-rang" }, relationship: "guest", location: "Bengaluru",
     genres: ["Footwork", "Polyrhythmic", "Bass"],
     shortBio: "Bengaluru musician and DJ sa:rang builds sets from grooved rhythms, broad soundscapes, and electronic dance music.",
     bio: [block("sarang-1", "sa:rang is a Bengaluru musician and DJ. His sound combines grooved rhythms, broad soundscapes, electronic music, and dance music. His performances take the audience through a focused sonic journey built for the dancefloor.")],
-    links: [], published: true, sortOrder: 20
+    links: [], featuredMix: { _type: "reference", _ref: "mix-lowkal-fm-vol-02" }, externalMixes: [], productions: [], fieldNotes: [], published: true, sortOrder: 20
   },
-  { _id: "artist-samgod", _type: "artist", name: "Samgod", slug: { _type: "slug", current: "samgod" }, relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [], published: true, sortOrder: 30 },
-  { _id: "artist-sinhatra", _type: "artist", name: "Sinhatra", slug: { _type: "slug", current: "sinhatra" }, relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [], published: true, sortOrder: 40 }
+  { _id: "artist-samgod", _type: "artist", name: "Samgod", slug: { _type: "slug", current: "samgod" }, relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [], externalMixes: [], productions: [], fieldNotes: [], published: true, sortOrder: 30 },
+  { _id: "artist-sinhatra", _type: "artist", name: "Sinhatra", slug: { _type: "slug", current: "sinhatra" }, relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [], externalMixes: [], productions: [], fieldNotes: [], published: true, sortOrder: 40 }
 ];
 
 const tracklists = {

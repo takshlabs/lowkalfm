@@ -61,6 +61,10 @@ export const listenContentQuery = `{
     bio,
     "portrait": portrait.asset->url,
     "coverImage": coverImage.asset->url,
-    links[]{label, url}
+    links[]{label, url},
+    "featuredMixSlug": featuredMix->slug.current,
+    externalMixes[]{title, platform, url, note, "artwork": artwork.asset->url},
+    productions[]{title, releaseType, year, spotifyUrl, externalUrl, "artwork": artwork.asset->url},
+    fieldNotes[]{placeName, area, note, tags, mapUrl, "goOutSlug": goOutSlug.current}
   }
 }`;

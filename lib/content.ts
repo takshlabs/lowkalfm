@@ -34,6 +34,9 @@ export type SoundRecord = {
 };
 
 export type ArtistLink = { label: string; url: string };
+export type ArtistExternalMix = { title: string; platform: string; url: string; note: string; artwork?: string };
+export type ArtistProduction = { title: string; releaseType: string; year?: number; spotifyUrl?: string; externalUrl?: string; artwork?: string };
+export type ArtistFieldNote = { placeName: string; area: string; note: string; mapUrl?: string; goOutSlug?: string; tags: string[] };
 
 export type ArtistProfile = {
   slug: string;
@@ -46,6 +49,10 @@ export type ArtistProfile = {
   portrait?: string;
   coverImage?: string;
   links: ArtistLink[];
+  featuredMixSlug?: string;
+  externalMixes: ArtistExternalMix[];
+  productions: ArtistProduction[];
+  fieldNotes: ArtistFieldNote[];
 };
 
 export type LiveProgram = {
@@ -223,7 +230,11 @@ export const artistProfiles: ArtistProfile[] = [
     genres: ["Drum + bass", "Breaks", "Garage", "Footwork"],
     shortBio: "Saswat Biswas, known as Takezo, moves through bass music with a focus on rhythm, intensity, and the dancefloor.",
     bio: [],
-    links: []
+    links: [],
+    featuredMixSlug: "lowkal-fm-vol-01",
+    externalMixes: [],
+    productions: [],
+    fieldNotes: []
   },
   {
     slug: "sa-rang",
@@ -233,10 +244,14 @@ export const artistProfiles: ArtistProfile[] = [
     genres: ["Footwork", "Polyrhythmic", "Bass"],
     shortBio: "Bengaluru musician and DJ sa:rang builds sets from grooved rhythms, broad soundscapes, and electronic dance music.",
     bio: [],
-    links: []
+    links: [],
+    featuredMixSlug: "lowkal-fm-vol-02",
+    externalMixes: [],
+    productions: [],
+    fieldNotes: []
   },
-  { slug: "samgod", name: "Samgod", relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [] },
-  { slug: "sinhatra", name: "Sinhatra", relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [] }
+  { slug: "samgod", name: "Samgod", relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [], externalMixes: [], productions: [], fieldNotes: [] },
+  { slug: "sinhatra", name: "Sinhatra", relationship: "guest", location: "", genres: [], shortBio: "", bio: [], links: [], externalMixes: [], productions: [], fieldNotes: [] }
 ];
 
 export type JournalStory = {
