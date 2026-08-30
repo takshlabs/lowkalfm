@@ -901,7 +901,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .city-principle blockquote { max-width: 1050px; margin: 70px 0 40px; font-family: var(--font-lowkal-display), serif; font-size: clamp(3.5rem, 7.5vw, 8rem); line-height: 0.86; letter-spacing: -0.045em; }
 .city-principle a { font-family: var(--font-lowkal-body), sans-serif; font-size: 0.65rem; text-transform: uppercase; }
 
-.sanity-studio { min-height: 100svh; }
+.sanity-studio {
+  height: 100svh;
+  min-height: 100svh;
+}
 
 /* Read is a shelf, not a dashboard: each piece has enough room to be entered. */
 .read-stream { display: grid; border-top: 1px solid var(--rule); }
