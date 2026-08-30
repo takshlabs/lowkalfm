@@ -27,11 +27,5 @@ export default defineConfig([
     settings: {
       react: { version: "detect" }
     }
-  },
-  {
-    files: ["components/SoundroomScene.tsx"],
-    rules: {
-      "react/no-unknown-property": "off"
-    }
   }
 ]);

@@ -4,7 +4,7 @@ function bioWordLimit(value: unknown) {
   if (!Array.isArray(value)) return true;
   const text = value.flatMap((block) => (
     block && typeof block === "object" && "children" in block && Array.isArray(block.children)
-      ? block.children.map((child) => child && typeof child === "object" && "text" in child ? String(child.text) : "")
+      ? block.children.map((child: unknown) => child && typeof child === "object" && "text" in child ? String(child.text) : "")
       : []
   )).join(" ");
   return text.trim().split(/\s+/).filter(Boolean).length <= 200 || "Keep the artist bio to 200 words or fewer.";

@@ -53,6 +53,8 @@ export function SoundroomFrame() {
 
       const destination = new URL(message.href, window.location.origin);
       if (destination.origin !== window.location.origin) return;
+      // The isolated Soundroom uses document navigation to leave its iframe safely.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign(`${destination.pathname}${destination.search}${destination.hash}`);
     };
 

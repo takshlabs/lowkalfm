@@ -48,8 +48,7 @@ test("the isolated Soundroom provides routes back to Lowkal, Read, and Go Out", 
 
 test("semantic React images use Lowkal's shared media frame", async () => {
   const files = [
-    "components/HomeStage.tsx",
-    "components/HomeSessionShelf.tsx",
+    "components/HomeTransmissionDeck.tsx",
     "components/PersistentPlayer.tsx",
   ];
 
