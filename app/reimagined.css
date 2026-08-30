@@ -607,7 +607,7 @@ html { scroll-behavior: smooth; }
 }
 .site-footer > * { position: relative; z-index: 1; }
 
-/* Editorial hero: let the portrait artwork carry across the entire canvas. */
+/* Editorial hero: a full-bleed scene keeps the page active across its width. */
 .rinse-hero {
   position: relative;
   height: auto;
@@ -649,7 +649,7 @@ html { scroll-behavior: smooth; }
   inset: -26px;
   background:
     linear-gradient(90deg, #0b0d0c 0%, rgba(11, 13, 12, 0.82) 28%, rgba(11, 13, 12, 0.18) 63%, rgba(11, 13, 12, 0.54) 100%),
-    url("/art/eye-in-hand.jpg") center / cover;
+    url("/art/bengaluru-sound-system-hero.png") center / cover;
   opacity: 0.68;
   filter: blur(22px) saturate(0.76);
   transform: scale(1.1);
@@ -658,10 +658,10 @@ html { scroll-behavior: smooth; }
 .rinse-hero-frame .media-frame-mount { position: absolute; inset: 0; width: 100%; height: 100%; }
 .rinse-hero-frame .media-frame-mount { border: 0; }
 .rinse-hero-frame .media-frame-image {
-  object-fit: contain !important;
-  object-position: 72% center !important;
-  filter: saturate(0.96) contrast(1.08) brightness(0.9);
-  transform: none;
+  object-fit: cover !important;
+  object-position: center !important;
+  filter: saturate(0.92) contrast(1.08) brightness(0.82);
+  transform: scale(1.01);
 }
 .rinse-hero-wash {
   position: absolute;
@@ -755,7 +755,7 @@ html { scroll-behavior: smooth; }
   .rinse-hero { min-height: 430px; }
   .rinse-hero-copy { min-height: 430px; max-width: 78%; padding: 54px 20px 46px; }
   .rinse-hero-copy h1 { margin: 18px 0 24px; font-size: clamp(4rem, 16vw, 6.6rem); }
-  .rinse-hero-frame .media-frame-image { object-position: 68% center !important; }
+  .rinse-hero-frame .media-frame-image { object-position: 58% center !important; }
   .home-channel-row { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0; }
   .home-channel-row a { min-height: 154px; padding: 17px 18px; border-bottom: 1px solid rgba(245, 241, 232, 0.16); }
   .home-channel-row a:nth-child(2) { border-right: 0; }
@@ -765,7 +765,7 @@ html { scroll-behavior: smooth; }
   .rinse-hero { min-height: 510px; }
   .rinse-hero-copy { min-height: 510px; max-width: 100%; }
   .rinse-hero-copy h1 { font-size: clamp(3.7rem, 18vw, 5.5rem); }
-  .rinse-hero-frame .media-frame-image { object-position: 66% center !important; opacity: 0.86; }
+  .rinse-hero-frame .media-frame-image { object-position: 61% center !important; opacity: 0.86; }
   .rinse-hero-wash { background: linear-gradient(90deg, #0b0d0c 0%, rgba(11, 13, 12, 0.88) 43%, rgba(11, 13, 12, 0.3) 100%), linear-gradient(0deg, rgba(5, 8, 5, 0.5), transparent 58%); }
   .home-channel-row { gap: 0; padding: 0; }
   .home-channel-row a { min-height: 144px; padding: 15px 14px; }

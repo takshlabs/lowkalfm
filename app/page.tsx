@@ -18,7 +18,7 @@ export default function Home() {
           <SiteLink href={sitePath("/listen")}>Enter soundroom <span aria-hidden="true">↗</span></SiteLink>
         </div>
         <div className="rinse-hero-art">
-          <MediaFrame variant="hero" frameClassName="rinse-hero-frame" src={sitePath("/art/eye-in-hand.jpg")} alt="Green collage of a face, hands, and painted eyes" fill sizes="(max-width: 820px) 100vw, 58vw" priority />
+          <MediaFrame variant="hero" frameClassName="rinse-hero-frame" src={sitePath("/art/bengaluru-sound-system-hero.png")} alt="Night-time Bengaluru street collage with a stacked sound system, flowers, and people" fill sizes="100vw" priority />
           <div className="rinse-hero-wash" aria-hidden="true" />
         </div>
       </section>
@@ -41,7 +41,7 @@ export default function Home() {
         </div>
         <div className="city-card-row">
           <SiteLink className="city-card" href={sitePath("/read")}>
-            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/lotus-collage.jpg")} alt="Red collage with lotus flowers and painted eyes" fill sizes="(max-width: 760px) 88vw, 31vw" />
+            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/eye-in-hand.jpg")} alt="Green collage of a face, hands, and painted eyes" fill sizes="(max-width: 760px) 88vw, 31vw" />
             <div><span>Journal · 02</span><h3>Stories behind the signal.</h3><p>Read the room ↗</p></div>
           </SiteLink>
           <SiteLink className="city-card" href={sitePath("/go-out")}>
