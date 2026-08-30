@@ -41,12 +41,16 @@ export default function Home() {
         </div>
         <div className="city-card-row">
           <SiteLink className="city-card" href={sitePath("/read")}>
-            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/lotus-collage.jpg")} alt="Red collage with lotus flowers and painted eyes" fill sizes="(max-width: 760px) 88vw, 47vw" />
+            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/lotus-collage.jpg")} alt="Red collage with lotus flowers and painted eyes" fill sizes="(max-width: 760px) 88vw, 31vw" />
             <div><span>Journal · 02</span><h3>Stories behind the signal.</h3><p>Read the room ↗</p></div>
           </SiteLink>
           <SiteLink className="city-card" href={sitePath("/go-out")}>
-            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/ember-bloom.jpg")} alt="Red and orange flower emerging from a dark field" fill sizes="(max-width: 760px) 88vw, 47vw" />
+            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/ember-bloom.jpg")} alt="Red and orange flower emerging from a dark field" fill sizes="(max-width: 760px) 88vw, 31vw" />
             <div><span>City guide · 03</span><h3>Bengaluru is better off-screen.</h3><p>Go out ↗</p></div>
+          </SiteLink>
+          <SiteLink className="city-card" href={sitePath("/listen/archive")}>
+            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/lowkal-002.jpg")} alt="Lowkal 002 archive artwork" fill sizes="(max-width: 760px) 88vw, 31vw" />
+            <div><span>Archive · 01</span><h3>Sessions worth returning to.</h3><p>Browse records ↗</p></div>
           </SiteLink>
         </div>
       </section>

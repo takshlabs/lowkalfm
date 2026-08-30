@@ -26,14 +26,14 @@ export function HomeTransmissionDeck() {
       </div>
 
       <div className="transmission-row">
-        {soundRecords.slice(0, 2).map((record, index) => {
+        {soundRecords.slice(0, 3).map((record, index) => {
           const active = activeRecord.slug === record.slug;
           const playing = active && isPlaying;
 
           return (
             <article className="transmission-card" key={record.slug}>
               <div className="transmission-media">
-                <MediaFrame variant="editorial" frameClassName="transmission-frame" src={record.artwork} alt={`${record.series} artwork`} fill sizes="(max-width: 760px) 88vw, 47vw" priority={index === 0} />
+                <MediaFrame variant="editorial" frameClassName="transmission-frame" src={record.artwork} alt={`${record.series} artwork`} fill sizes="(max-width: 760px) 88vw, 31vw" priority={index === 0} />
                 <div className="transmission-channel"><span>●</span> BLR · {String(index + 1).padStart(2, "0")}</div>
                 <button type="button" onClick={() => toggleRecord(record.slug)} aria-label={`${playing ? "Pause" : "Play"} ${record.series}`}>
                   {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
