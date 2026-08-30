@@ -79,6 +79,33 @@
       font-family: "Arial Black", Arial, sans-serif;
     }
 
+    /* Keep this standalone room on the Lowkal font system. Tailwind utility
+       classes and injected catalogue content must not restore its old suite. */
+    body,
+    button,
+    input,
+    select,
+    textarea,
+    .font-ui,
+    .font-mono,
+    .font-sans {
+      font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .font-display {
+      font-family: "Arial Black", Arial, sans-serif !important;
+    }
+
+    .material-symbols-outlined {
+      font-family: "Material Symbols Outlined" !important;
+    }
+
     /* Force cursor none for interactive elements */
     a, button, input, select, textarea, [role="button"], img {
       cursor: none !important;
