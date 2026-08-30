@@ -270,6 +270,9 @@ varying vec2 v_texCoord;
 uniform float u_time;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
+uniform vec3 u_paletteBase;
+uniform vec3 u_paletteMid;
+uniform vec3 u_paletteAccent;
 vec3 permute(vec3 x){return mod(((x*34.0)+1.0)*x,289.0);}
 float snoise(vec2 v){
   const vec4 C=vec4(0.211324865405187,0.366025403784439,-0.577350269189626,0.024390243902439);
@@ -302,15 +305,10 @@ void main(){
   float mouseEffect=smoothstep(0.5,0.0,dist)*0.5;
   float pulse=sin(u_time*0.5)*0.5+0.5;
   float signal=noise2+mouseEffect+(pulse*0.1);
-  vec3 baseColor=vec3(0.0,0.0,0.0);
-  // Slow atmospheric hue cycle — full rotation ~210s
-  float hc = u_time * 0.03;
-  vec3 accentColor = vec3(
-    0.5 + 0.45 * cos(hc),
-    0.08 + 0.32 * cos(hc + 2.094),
-    0.6 + 0.4 * cos(hc + 4.189)
-  );
-  vec3 color=mix(baseColor,accentColor,signal*0.6);
+  float body=smoothstep(-0.35,0.72,signal);
+  float highlight=smoothstep(0.30,1.10,signal+noise1*0.18);
+  vec3 color=mix(u_paletteBase,u_paletteMid,body*0.72);
+  color=mix(color,u_paletteAccent,highlight*0.52);
   float grain=fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453);
   color+=(grain-0.5)*0.05;
   gl_FragColor=vec4(color,1.0);
@@ -329,6 +327,16 @@ void main(){
       const uTime=gl.getUniformLocation(prog,'u_time');
       const uRes=gl.getUniformLocation(prog,'u_resolution');
       const uMouse=gl.getUniformLocation(prog,'u_mouse');
+      const uPaletteBase=gl.getUniformLocation(prog,'u_paletteBase');
+      const uPaletteMid=gl.getUniformLocation(prog,'u_paletteMid');
+      const uPaletteAccent=gl.getUniformLocation(prog,'u_paletteAccent');
+      let paletteCurrent=[[0.01,0.02,0.05],[0.30,0.04,0.28],[0.94,0.14,0.32]];
+      let paletteTarget=paletteCurrent.map((color)=>color.slice());
+      window.setSoundroomShaderPalette=(palette)=>{
+        if(!Array.isArray(palette)||palette.length!==3)return;
+        const valid=palette.every((color)=>Array.isArray(color)&&color.length===3&&color.every(Number.isFinite));
+        if(valid)paletteTarget=palette.map((color)=>color.map((channel)=>Math.min(1,Math.max(0,channel))));
+      };
       let mouse={x:canvas.width/2,y:canvas.height/2};
       window.addEventListener('mousemove',(e)=>{
         const r=canvas.getBoundingClientRect();
@@ -343,6 +351,10 @@ void main(){
         if(uTime)gl.uniform1f(uTime,t*0.001);
         if(uRes)gl.uniform2f(uRes,canvas.width,canvas.height);
         if(uMouse)gl.uniform2f(uMouse,mouse.x,mouse.y);
+        paletteCurrent=paletteCurrent.map((color,index)=>color.map((channel,channelIndex)=>channel+(paletteTarget[index][channelIndex]-channel)*0.025));
+        if(uPaletteBase)gl.uniform3fv(uPaletteBase,paletteCurrent[0]);
+        if(uPaletteMid)gl.uniform3fv(uPaletteMid,paletteCurrent[1]);
+        if(uPaletteAccent)gl.uniform3fv(uPaletteAccent,paletteCurrent[2]);
         gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
         requestAnimationFrame(render);
       }
@@ -728,6 +740,52 @@ void main(){
         cloud: { size: 150, speedClass: 'slow', zIndex: 10, basePos: { top: 75, left: 35 }, vx: -0.08, vy: -0.06 }
       }
     ];
+
+    // Shader mood selection
+    const SHADER_PALETTES = {
+      garden: [[0.01, 0.06, 0.025], [0.10, 0.55, 0.20], [1.00, 0.86, 0.20]],
+      nocturnal: [[0.025, 0.00, 0.06], [0.48, 0.02, 0.28], [0.96, 0.08, 0.28]],
+      ocean: [[0.00, 0.035, 0.08], [0.00, 0.36, 0.52], [0.12, 0.90, 0.82]],
+      ember: [[0.07, 0.012, 0.00], [0.64, 0.10, 0.015], [1.00, 0.56, 0.08]],
+      ethereal: [[0.025, 0.02, 0.09], [0.26, 0.18, 0.62], [0.48, 0.86, 1.00]],
+      earth: [[0.045, 0.028, 0.012], [0.34, 0.20, 0.07], [0.72, 0.68, 0.34]]
+    };
+
+    const SHADER_MOOD_TERMS = {
+      garden: ['yellow','green','garden','daytime','daylight','sun','sunny','warm','leaf','leaves','nature','organic','spring','summer','city park','outdoor'],
+      nocturnal: ['red','purple','violet','magenta','dark','night','minimal','dnb','drum and bass','drum + bass','warehouse','pressure','heavy','industrial','menacing','intense'],
+      ocean: ['blue','cyan','teal','ocean','sea','water','aquatic','rain','liquid','cool','coastal'],
+      ember: ['orange','amber','fire','flame','hot','heat','sunset','desert','rust','acid'],
+      ethereal: ['pink','lavender','sky','air','dream','dreamy','ethereal','ambient','space','cosmic','soft','floating','glitch','experimental'],
+      earth: ['brown','ochre','earth','earthy','wood','soil','dust','grounded','acoustic','natural']
+    };
+
+    function shaderPaletteNameForMix(mix) {
+      const prompt = String(mix.shaderMoodPrompt || '').toLowerCase();
+      const fallback = [mix.title, mix.series, mix.genre, mix.description, mix.synthStyle].filter(Boolean).join(' ').toLowerCase();
+      const scores = Object.fromEntries(Object.keys(SHADER_PALETTES).map((name) => [name, 0]));
+      Object.entries(SHADER_MOOD_TERMS).forEach(([name, terms]) => {
+        terms.forEach((term) => {
+          if (prompt.includes(term)) scores[name] += 4;
+          if (fallback.includes(term)) scores[name] += 1;
+        });
+      });
+      const winner = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+      return winner && winner[1] > 0 ? winner[0] : 'ethereal';
+    }
+
+    function shaderPaletteForMix(mix) {
+      return SHADER_PALETTES[shaderPaletteNameForMix(mix)];
+    }
+
+    window.resolveSoundroomShaderPalette = shaderPaletteForMix;
+
+    function applyShaderMood(mix) {
+      if (!mix || !window.setSoundroomShaderPalette) return;
+      const paletteName = shaderPaletteNameForMix(mix);
+      document.getElementById('shader-canvas-ANIMATION_5').dataset.moodPalette = paletteName;
+      window.setSoundroomShaderPalette(SHADER_PALETTES[paletteName]);
+    }
 
     // Helper: MIDI Note to Frequency
     function midiToFreq(note) {
@@ -1758,6 +1816,7 @@ void main(){
       // -------------------------------------------------------------
 
       syncMixDetails(mix, resetTime) {
+        applyShaderMood(mix);
         document.getElementById('main-genre').textContent = mix.genre.toUpperCase();
         document.getElementById('main-title').textContent = mix.title;
         document.getElementById('main-host-date').textContent = `Hosted by ${mix.dj} • ${mix.date}`;

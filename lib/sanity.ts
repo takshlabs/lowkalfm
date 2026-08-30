@@ -32,6 +32,7 @@ export const listenContentQuery = `{
     "artwork": coalesce(artwork.asset->url, thumbnail.asset->url),
     genres,
     description,
+    shaderMoodPrompt,
     featured,
     archiveSection,
     showInPlayer,

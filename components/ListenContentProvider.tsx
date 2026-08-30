@@ -18,6 +18,7 @@ type SanityMix = {
   artwork?: string;
   genres?: string[];
   description?: string;
+  shaderMoodPrompt?: string;
   featured?: boolean;
   archiveSection?: ArchiveSection;
   showInPlayer?: boolean;
@@ -69,6 +70,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     artwork: mix.artwork,
     genres: mix.genres ?? [],
     description: mix.description ?? "",
+    shaderMoodPrompt: mix.shaderMoodPrompt?.trim() || undefined,
     featured: Boolean(mix.featured),
     programSlug: mix.programmeSlug,
     archiveSection: mix.archiveSection ?? "volumes-guests",

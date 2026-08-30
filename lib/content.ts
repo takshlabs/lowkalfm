@@ -22,6 +22,7 @@ export type SoundRecord = {
   artwork: string;
   genres: string[];
   description: string;
+  shaderMoodPrompt?: string;
   featured?: boolean;
   programSlug?: string;
   artistSlugs: string[];
@@ -80,6 +81,7 @@ export const soundRecords: SoundRecord[] = [
     artwork: sitePath("/lowkal-002.jpg"),
     genres: ["Multi-genre", "Low end", "B2B2B"],
     description: "Samgod, Sinhatra and Takezo share one long Lowkal session from Bengaluru.",
+    shaderMoodPrompt: "A daytime electronic session in Bengaluru's garden city, with green leaves and warm yellow sunlight.",
     featured: true,
     programSlug: "lowkal-002-garden-city-gallivanting",
     artistSlugs: ["samgod", "sinhatra", "takezo"],
@@ -103,6 +105,7 @@ export const soundRecords: SoundRecord[] = [
     artwork: sitePath("/kinetic-drift.png"),
     genres: ["Drum + bass", "Breaks", "Footwork"],
     description: "A low-to-high pressure mix built around shifting drums, deep bass and the many forms that keep a floor moving.",
+    shaderMoodPrompt: "Dark minimal drum and bass with red pressure, deep purple shadows, and a late-night warehouse mood.",
     artistSlugs: ["takezo"],
     archiveSection: "volumes-residents",
     showInPlayer: true,
@@ -129,6 +132,7 @@ export const soundRecords: SoundRecord[] = [
     artwork: sitePath("/meeting-point.png"),
     genres: ["Footwork", "Polyrhythmic", "Bass"],
     description: "A fast-moving meeting point between polyrhythm, bass pressure and wide electronic space.",
+    shaderMoodPrompt: "Fast nocturnal bass music with electric violet, hot pink, and cold blue flashes.",
     artistSlugs: ["sa-rang"],
     archiveSection: "volumes-guests",
     showInPlayer: true,

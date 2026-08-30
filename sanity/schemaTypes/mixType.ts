@@ -7,6 +7,7 @@ export const mixType = defineType({
   groups: [
     { name: "identity", title: "Mix", default: true },
     { name: "playback", title: "Playback" },
+    { name: "visuals", title: "Visuals" },
     { name: "placement", title: "Placement" },
     { name: "tracklist", title: "Tracklist" }
   ],
@@ -37,6 +38,15 @@ export const mixType = defineType({
     defineField({ name: "youtubeId", title: "YouTube video ID", type: "string", group: "playback", description: "Use only the video ID, not the full URL.", validation: (rule) => rule.required() }),
     defineField({ name: "externalUrl", title: "Original mix link", type: "url", group: "playback" }),
     defineField({ name: "duration", title: "Duration in seconds", type: "number", group: "playback", validation: (rule) => rule.required().integer().positive() }),
+    defineField({
+      name: "shaderMoodPrompt",
+      title: "Shader mood prompt",
+      type: "text",
+      rows: 3,
+      group: "visuals",
+      description: "Describe the setting, time, energy, and color mood. Example: Daytime electronic music in a green garden city with warm yellow light. Leave this empty to use the title and genres.",
+      validation: (rule) => rule.max(280).warning("Keep the prompt below 280 characters.")
+    }),
     defineField({ name: "published", title: "Published", type: "boolean", group: "placement", initialValue: false }),
     defineField({ name: "featured", title: "Featured mix", type: "boolean", group: "placement", initialValue: false }),
     defineField({ name: "showInPlayer", title: "Available in player", type: "boolean", group: "placement", initialValue: true }),

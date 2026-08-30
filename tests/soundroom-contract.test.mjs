@@ -87,6 +87,25 @@ test("the original Soundroom opens the vinyl-and-shader archive room", async () 
   assert.match(atmosphere, /prefers-reduced-motion/);
 });
 
+test("each mix can control the Soundroom shader palette", async () => {
+  const schema = await source("sanity/schemaTypes/mixType.ts");
+  const query = await source("lib/sanity.ts");
+  const provider = await source("components/ListenContentProvider.tsx");
+  const frame = await source("components/SoundroomFrame.tsx");
+  const soundroom = await source("public/soundroom/index.html");
+
+  assert.match(schema, /name:\s*"shaderMoodPrompt"/);
+  assert.match(query, /shaderMoodPrompt/);
+  assert.match(provider, /shaderMoodPrompt:\s*mix\.shaderMoodPrompt/);
+  assert.match(frame, /shaderMoodPrompt:\s*record\.shaderMoodPrompt/);
+  assert.match(soundroom, /function shaderPaletteForMix\(mix\)/);
+  assert.match(soundroom, /window\.resolveSoundroomShaderPalette\s*=\s*shaderPaletteForMix/);
+  assert.match(soundroom, /dataset\.moodPalette\s*=\s*paletteName/);
+  assert.match(soundroom, /applyShaderMood\(mix\)/);
+  assert.match(soundroom, /u_paletteBase/);
+  assert.match(soundroom, /u_paletteAccent/);
+});
+
 test("the floating player and embedded Soundroom use one audio authority", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const soundroom = await source("public/soundroom/index.html");
