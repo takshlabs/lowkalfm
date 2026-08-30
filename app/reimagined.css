@@ -607,10 +607,9 @@ html { scroll-behavior: smooth; }
 }
 .site-footer > * { position: relative; z-index: 1; }
 
-/* Editorial hero: keep tall art intact and let the frame absorb its edges. */
+/* Editorial hero: let the portrait artwork carry across the entire canvas. */
 .rinse-hero {
-  display: grid;
-  grid-template-columns: minmax(340px, 0.78fr) minmax(480px, 1.22fr);
+  position: relative;
   height: auto;
   min-height: clamp(560px, 56vw, 760px);
   overflow: hidden;
@@ -618,15 +617,13 @@ html { scroll-behavior: smooth; }
 }
 .rinse-hero-copy {
   position: relative;
-  inset: auto;
   z-index: 3;
+  display: flex;
+  flex-direction: column;
   justify-content: center;
-  width: auto;
-  min-width: 0;
+  min-height: clamp(560px, 56vw, 760px);
+  max-width: min(58%, 780px);
   padding: clamp(48px, 6vw, 94px) clamp(28px, 4.5vw, 72px);
-  background:
-    radial-gradient(circle at 92% 32%, rgba(76, 161, 40, 0.2), transparent 36%),
-    #0b0d0c;
 }
 .rinse-hero-copy h1 {
   max-width: 8.4ch;
@@ -645,95 +642,35 @@ html { scroll-behavior: smooth; }
 }
 .rinse-hero-copy a:hover,
 .rinse-hero-copy a:focus-visible { color: var(--lowkal-black); background: var(--lowkal-paper); }
-.rinse-hero-art { position: relative; min-width: 0; overflow: hidden; background: #14200f; }
+.rinse-hero-art { position: absolute; inset: 0; overflow: hidden; background: #14200f; }
 .rinse-hero-art::before {
   content: "";
   position: absolute;
   inset: -26px;
   background:
-    linear-gradient(90deg, rgba(11, 13, 12, 0.72), rgba(11, 13, 12, 0.08) 35% 65%, rgba(11, 13, 12, 0.6)),
+    linear-gradient(90deg, #0b0d0c 0%, rgba(11, 13, 12, 0.82) 28%, rgba(11, 13, 12, 0.18) 63%, rgba(11, 13, 12, 0.54) 100%),
     url("/art/eye-in-hand.jpg") center / cover;
-  opacity: 0.42;
-  filter: blur(18px) saturate(0.72);
-  transform: scale(1.06);
+  opacity: 0.68;
+  filter: blur(22px) saturate(0.76);
+  transform: scale(1.1);
 }
 .rinse-hero-frame,
 .rinse-hero-frame .media-frame-mount { position: absolute; inset: 0; width: 100%; height: 100%; }
 .rinse-hero-frame .media-frame-mount { border: 0; }
 .rinse-hero-frame .media-frame-image {
   object-fit: contain !important;
-  object-position: center !important;
-  filter: saturate(0.96) contrast(1.08) brightness(0.88);
+  object-position: 72% center !important;
+  filter: saturate(0.96) contrast(1.08) brightness(0.9);
   transform: none;
 }
 .rinse-hero-wash {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, #0b0d0c 0, rgba(11, 13, 12, 0.34) 13%, transparent 30%),
+    linear-gradient(90deg, #0b0d0c 0, rgba(11, 13, 12, 0.9) 27%, rgba(11, 13, 12, 0.44) 48%, transparent 72%),
     linear-gradient(0deg, rgba(5, 8, 5, 0.42), transparent 28% 78%, rgba(5, 8, 5, 0.28));
   pointer-events: none;
 }
-.rinse-hero-signal {
-  position: absolute;
-  bottom: clamp(28px, 5vw, 68px);
-  left: clamp(22px, 4vw, 62px);
-  z-index: 2;
-  width: clamp(190px, 22vw, 300px);
-  padding: 14px 15px 13px;
-  border-top: 1px solid rgba(245, 241, 232, 0.42);
-  border-bottom: 1px solid rgba(245, 241, 232, 0.2);
-  color: var(--lowkal-paper);
-  background: rgba(8, 11, 8, 0.38);
-  backdrop-filter: blur(9px);
-}
-.rinse-signal-readout {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: baseline;
-  gap: 7px;
-}
-.rinse-signal-readout span,
-.rinse-signal-readout small,
-.rinse-hero-signal p {
-  font-size: 0.54rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-.rinse-signal-readout strong {
-  font-family: "Arial Black", Arial, sans-serif;
-  font-size: clamp(1.55rem, 2.4vw, 2.5rem);
-  line-height: 0.9;
-  letter-spacing: -0.06em;
-}
-.rinse-signal-readout small { color: var(--lowkal-red); }
-.rinse-signal-scale {
-  position: relative;
-  height: 30px;
-  margin: 11px 0 8px;
-  border-top: 1px solid rgba(245, 241, 232, 0.34);
-  background: repeating-linear-gradient(90deg, rgba(245, 241, 232, 0.36) 0 1px, transparent 1px 19px);
-}
-.rinse-signal-scale::after {
-  content: "";
-  position: absolute;
-  top: -4px;
-  bottom: 0;
-  left: 64%;
-  width: 2px;
-  background: var(--lowkal-red);
-  box-shadow: 0 0 12px rgba(240, 68, 55, 0.72);
-}
-.rinse-signal-scale i {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 9px;
-  background: linear-gradient(90deg, transparent 0 4%, rgba(245, 241, 232, 0.16) 4% 8%, transparent 8% 13%, rgba(245, 241, 232, 0.3) 13% 18%, transparent 18% 24%, rgba(245, 241, 232, 0.14) 24% 31%, transparent 31% 38%, rgba(245, 241, 232, 0.36) 38% 45%, transparent 45% 51%, rgba(245, 241, 232, 0.18) 51% 61%, transparent 61% 69%, rgba(245, 241, 232, 0.3) 69% 76%, transparent 76% 84%, rgba(245, 241, 232, 0.16) 84% 91%, transparent 91%);
-}
-.rinse-hero-signal p { margin: 0; color: rgba(245, 241, 232, 0.58); line-height: 1.5; }
 
 /* A compact channel index with editorial spacing and clear targets. */
 .home-channel-row { gap: 0; padding: 0; background: #111211; }
@@ -815,21 +752,21 @@ html { scroll-behavior: smooth; }
 .home-channel-row i { grid-column: 2; grid-row: 3 / 5; align-self: center; font-style: normal; font-size: 1.1rem; }
 
 @media (max-width: 820px) {
-  .rinse-hero { grid-template-columns: 1fr; min-height: 0; }
-  .rinse-hero-copy { min-height: 430px; padding: 54px 20px 46px; }
+  .rinse-hero { min-height: 430px; }
+  .rinse-hero-copy { min-height: 430px; max-width: 78%; padding: 54px 20px 46px; }
   .rinse-hero-copy h1 { margin: 18px 0 24px; font-size: clamp(4rem, 16vw, 6.6rem); }
-  .rinse-hero-art { min-height: min(118vw, 720px); }
-  .rinse-hero-signal { width: min(260px, calc(100% - 44px)); }
+  .rinse-hero-frame .media-frame-image { object-position: 68% center !important; }
   .home-channel-row { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 0; }
   .home-channel-row a { min-height: 154px; padding: 17px 18px; border-bottom: 1px solid rgba(245, 241, 232, 0.16); }
   .home-channel-row a:nth-child(2) { border-right: 0; }
 }
 
 @media (max-width: 520px) {
-  .rinse-hero { height: auto; min-height: 0; }
-  .rinse-hero-copy { min-height: 390px; }
+  .rinse-hero { min-height: 510px; }
+  .rinse-hero-copy { min-height: 510px; max-width: 100%; }
   .rinse-hero-copy h1 { font-size: clamp(3.7rem, 18vw, 5.5rem); }
-  .rinse-hero-art { min-height: 150vw; max-height: 700px; }
+  .rinse-hero-frame .media-frame-image { object-position: 66% center !important; opacity: 0.86; }
+  .rinse-hero-wash { background: linear-gradient(90deg, #0b0d0c 0%, rgba(11, 13, 12, 0.88) 43%, rgba(11, 13, 12, 0.3) 100%), linear-gradient(0deg, rgba(5, 8, 5, 0.5), transparent 58%); }
   .home-channel-row { gap: 0; padding: 0; }
   .home-channel-row a { min-height: 144px; padding: 15px 14px; }
   .home-channel-row strong { font-size: 1.34rem; }

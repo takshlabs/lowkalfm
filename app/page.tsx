@@ -20,15 +20,6 @@ export default function Home() {
         <div className="rinse-hero-art">
           <MediaFrame variant="hero" frameClassName="rinse-hero-frame" src={sitePath("/art/eye-in-hand.jpg")} alt="Green collage of a face, hands, and painted eyes" fill sizes="(max-width: 820px) 100vw, 58vw" priority />
           <div className="rinse-hero-wash" aria-hidden="true" />
-          <div className="rinse-hero-signal" aria-label="Lowkal broadcast frequency">
-            <div className="rinse-signal-readout">
-              <span>Tuned to</span>
-              <strong>93.5</strong>
-              <small>MHz</small>
-            </div>
-            <div className="rinse-signal-scale" aria-hidden="true"><i /></div>
-            <p>12.9716° N · 77.5946° E<br />Independent transmission</p>
-          </div>
         </div>
       </section>
 
