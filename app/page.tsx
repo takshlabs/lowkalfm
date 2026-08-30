@@ -18,7 +18,7 @@ export default function Home() {
           <SiteLink href={sitePath("/listen")}>Enter soundroom <span aria-hidden="true">↗</span></SiteLink>
         </div>
         <div className="rinse-hero-art">
-          <MediaFrame variant="hero" frameClassName="rinse-hero-frame" src={sitePath("/art/bengaluru-sound-system-hero.png")} alt="Night-time Bengaluru street collage with a stacked sound system, flowers, and people" fill sizes="100vw" priority />
+          <MediaFrame variant="hero" frameClassName="rinse-hero-frame" src={sitePath("/kinetic-drift.png")} alt="DJ playing a live set in a Bengaluru soundroom" fill sizes="100vw" priority />
           <div className="rinse-hero-wash" aria-hidden="true" />
         </div>
       </section>
