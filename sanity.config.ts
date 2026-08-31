@@ -2,7 +2,10 @@ import { defineConfig } from "sanity";
 import { structureTool, type StructureResolver } from "sanity/structure";
 import { schemaTypes } from "@/sanity/schemaTypes";
 
-const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "";
+const configuredProjectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID?.trim();
+export const isSanityStudioConfigured = Boolean(configuredProjectId);
+
+const projectId = configuredProjectId || "placeholder";
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
 
 const structure: StructureResolver = (S) => S.list()
