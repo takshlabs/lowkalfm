@@ -32,6 +32,12 @@ export default function Home() {
 
       <HomeTransmissionDeck />
 
+      <section className="home-art-interlude" aria-label="Lowkal visual interlude">
+        <MediaFrame variant="editorial" frameClassName="home-art-interlude-frame home-art-interlude-frame--queen" src={sitePath("/art/queen-of-hearts.jpg")} alt="Red halftone collage of a dancer framed as a playing card" fill sizes="(max-width: 760px) 70vw, 34vw" />
+        <MediaFrame variant="editorial" frameClassName="home-art-interlude-frame home-art-interlude-frame--dance" src={sitePath("/art/motion-dancer.jpg")} alt="Dancer moving through warm orange light" fill sizes="(max-width: 760px) 70vw, 28vw" />
+        <MediaFrame variant="editorial" frameClassName="home-art-interlude-frame home-art-interlude-frame--dj" src={sitePath("/art/dj-hands-red.jpg")} alt="DJ working a mixer under deep red light" fill sizes="(max-width: 760px) 70vw, 38vw" />
+      </section>
+
       <section className="home-city" aria-labelledby="home-city-title">
         <div className="rinse-section-head">
           <div>
