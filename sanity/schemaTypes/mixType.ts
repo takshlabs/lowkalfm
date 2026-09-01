@@ -35,7 +35,42 @@ export const mixType = defineType({
     defineField({ name: "genres", title: "Genres", type: "array", group: "identity", of: [defineArrayMember({ type: "string" })], options: { layout: "tags" } }),
     defineField({ name: "artwork", title: "Artwork", type: "image", group: "identity", options: { hotspot: true }, fields: [defineField({ name: "alt", title: "Description", type: "string" })], validation: (rule) => rule.required() }),
     defineField({ name: "thumbnail", title: "Optional thumbnail", type: "image", group: "identity", description: "Use only when a surface needs a separate crop.", options: { hotspot: true }, fields: [defineField({ name: "alt", title: "Description", type: "string" })] }),
-    defineField({ name: "youtubeId", title: "YouTube video ID", type: "string", group: "playback", description: "Use only the video ID, not the full URL.", validation: (rule) => rule.required() }),
+    defineField({
+      name: "audio",
+      title: "Audio",
+      type: "object",
+      group: "playback",
+      description: "Upload a lossless WAV master here. Publish the mix to copy it automatically to Lowkal's audio CDN.",
+      fields: [
+        defineField({
+          name: "master",
+          title: "WAV master",
+          type: "file",
+          options: { accept: "audio/wav,audio/x-wav,audio/flac,audio/mpeg,audio/mp4,audio/aac" },
+          description: "Use WAV for the archive master. The site streams this file from the audio CDN after publication."
+        }),
+        defineField({
+          name: "deliveryUrl",
+          title: "CDN delivery URL",
+          type: "url",
+          readOnly: true,
+          description: "Set automatically after the WAV is copied to the audio CDN."
+        }),
+        defineField({
+          name: "sourceAssetId",
+          title: "Source asset ID",
+          type: "string",
+          readOnly: true,
+          hidden: true
+        }),
+        defineField({
+          name: "syncedAt",
+          title: "Last CDN sync",
+          type: "datetime",
+          readOnly: true
+        })
+      ]
+    }),
     defineField({ name: "externalUrl", title: "Original mix link", type: "url", group: "playback" }),
     defineField({ name: "duration", title: "Duration in seconds", type: "number", group: "playback", validation: (rule) => rule.required().integer().positive() }),
     defineField({

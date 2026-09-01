@@ -21,7 +21,7 @@ export function SoundroomFrame() {
       dj: record.artist,
       date: record.date,
       genre: record.genres.join(" / ") || "Lowkal",
-      youtubeId: record.youtubeId,
+      audioUrl: record.audioUrl,
       artUrl: record.artwork,
       description: record.description,
       shaderMoodPrompt: record.shaderMoodPrompt,

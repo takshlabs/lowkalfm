@@ -8,11 +8,14 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("the floating player is quiet by default and does not advertise a live signal", async () => {
+test("the floating player is quiet by default and uses the native audio engine", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const player = await source("components/PersistentPlayer.tsx");
 
-  assert.match(provider, /autoplay:\s*0/);
+  assert.match(provider, /HTMLAudioElement/);
+  assert.match(provider, /<audio/);
+  assert.match(provider, /audioUrl/);
+  assert.doesNotMatch(provider, /react-youtube/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
   assert.match(provider, /PLAYBACK_INTENT_KEY/);
   assert.match(provider, /window\.sessionStorage\.getItem\(PLAYBACK_INTENT_KEY\) === "playing"/);
@@ -129,7 +132,7 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(provider, /lowkal\.audio\.v1/);
   assert.match(provider, /request-state/);
   assert.match(provider, /event\.origin !== window\.location\.origin/);
-  assert.match(provider, /getCurrentTime/);
+  assert.match(provider, /audio\?\.currentTime/);
   assert.match(provider, /action === "select"/);
 
   assert.match(soundroom, /lowkal\.audio\.v1/);
@@ -138,5 +141,6 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(soundroom, /sendAudioCommand\('volume'/);
   assert.match(soundroom, /applyExternalAudioState/);
   assert.match(soundroom, /Only the parent can make sound/);
-  assert.match(soundroom, /if \(IS_EMBEDDED\) return;\s*if \(window\._appInstance\)/);
+  assert.match(soundroom, /HtmlAudioPlayerEngine/);
+  assert.doesNotMatch(soundroom, /youtube\.com\/iframe_api/);
 });

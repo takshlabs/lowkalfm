@@ -77,31 +77,31 @@ async function main() {
     {
       _id: "mix-lowkal-002-garden-city-gallivanting", _type: "mix", title: "Full session", slug: { _type: "slug", current: "lowkal-002-garden-city-gallivanting" },
       series: "Lowkal 002 | Garden City Gallivanting", format: "fullSession", artists: [ref("artist-samgod", "samgod"), ref("artist-sinhatra", "sinhatra"), ref("artist-takezo", "takezo")], artistDisplayName: "Samgod · Sinhatra · Takezo",
-      releaseDate: "2026-07-05", duration: 9366, youtubeId: "NZETtyc9MFo", externalUrl: "https://www.youtube.com/watch?v=NZETtyc9MFo", artwork: { _type: "image", asset: { _type: "reference", _ref: sessionArt._id }, alt: "Lowkal 002 artwork" },
+      releaseDate: "2026-07-05", duration: 9366, externalUrl: "https://www.youtube.com/watch?v=NZETtyc9MFo", artwork: { _type: "image", asset: { _type: "reference", _ref: sessionArt._id }, alt: "Lowkal 002 artwork" },
       genres: ["Multi-genre", "Low end", "B2B2B"], description: "Samgod, Sinhatra and Takezo share one long Lowkal session from Bengaluru.", tracks: [], featured: true,
       ...commonPlacement, showInSoundroom: true, showOnHome: true, archiveSection: "scene-programmes", playerOrder: 10, soundroomOrder: 10, archiveOrder: 10, homeOrder: 10
     },
     {
       _id: "mix-lowkal-fm-vol-01", _type: "mix", title: "Redline 006", slug: { _type: "slug", current: "lowkal-fm-vol-01" }, series: "Lowkal.fm Vol. 01", format: "volume", artists: [ref("artist-takezo", "takezo")],
-      releaseDate: "2026-04-13", duration: 3120, youtubeId: "fw2mtwgCeGo", externalUrl: "https://www.youtube.com/watch?v=fw2mtwgCeGo", artwork: { _type: "image", asset: { _type: "reference", _ref: takezoArt._id }, alt: "Redline 006 artwork" },
+      releaseDate: "2026-04-13", duration: 3120, externalUrl: "https://www.youtube.com/watch?v=fw2mtwgCeGo", artwork: { _type: "image", asset: { _type: "reference", _ref: takezoArt._id }, alt: "Redline 006 artwork" },
       genres: ["Drum + bass", "Breaks", "Footwork"], description: "A low-to-high pressure mix built around shifting drums, deep bass and the many forms that keep a floor moving.", tracks: tracklists.takezo,
       ...commonPlacement, featured: false, showInSoundroom: true, showOnHome: true, archiveSection: "volumes-residents", playerOrder: 20, soundroomOrder: 20, archiveOrder: 20, homeOrder: 20
     },
     {
       _id: "mix-lowkal-fm-vol-02", _type: "mix", title: "Meeting Point", slug: { _type: "slug", current: "lowkal-fm-vol-02" }, series: "Lowkal.fm Vol. 02", format: "volume", artists: [ref("artist-sa-rang", "sarang")],
-      releaseDate: "2026-03-19", duration: 4200, youtubeId: "60O126HehGA", externalUrl: "https://www.youtube.com/watch?v=60O126HehGA", artwork: { _type: "image", asset: { _type: "reference", _ref: sarangArt._id }, alt: "Meeting Point artwork" },
+      releaseDate: "2026-03-19", duration: 4200, externalUrl: "https://www.youtube.com/watch?v=60O126HehGA", artwork: { _type: "image", asset: { _type: "reference", _ref: sarangArt._id }, alt: "Meeting Point artwork" },
       genres: ["Footwork", "Polyrhythmic", "Bass"], description: "A fast-moving meeting point between polyrhythm, bass pressure and wide electronic space.", tracks: tracklists.sarang,
       ...commonPlacement, featured: false, showInSoundroom: true, showOnHome: true, archiveSection: "volumes-guests", playerOrder: 30, soundroomOrder: 30, archiveOrder: 30, homeOrder: 30
     },
     {
       _id: "mix-lowkal-001-takezo", _type: "mix", title: "Featured set", slug: { _type: "slug", current: "lowkal-001-takezo" }, series: "Lowkal 001 | Redline", format: "liveSet", artists: [ref("artist-takezo", "takezo")],
-      releaseDate: "2026-04-13", duration: 3120, youtubeId: "fw2mtwgCeGo", externalUrl: "https://www.youtube.com/watch?v=fw2mtwgCeGo", artwork: { _type: "image", asset: { _type: "reference", _ref: takezoArt._id }, alt: "Takezo at Lowkal 001" },
+      releaseDate: "2026-04-13", duration: 3120, externalUrl: "https://www.youtube.com/watch?v=fw2mtwgCeGo", artwork: { _type: "image", asset: { _type: "reference", _ref: takezoArt._id }, alt: "Takezo at Lowkal 001" },
       genres: ["Drum + bass", "Breaks"], description: "The featured set from Lowkal 001, selected from the full multi-artist programme.", tracks: tracklists.takezo,
       ...commonPlacement, featured: true, showInSoundroom: false, showOnHome: false, archiveSection: "scene-programmes", playerOrder: 40, soundroomOrder: 40, archiveOrder: 40, homeOrder: 40
     },
     {
       _id: "mix-lowkal-001-sarang", _type: "mix", title: "Live set", slug: { _type: "slug", current: "lowkal-001-sarang" }, series: "Lowkal 001 | Redline", format: "liveSet", artists: [ref("artist-sa-rang", "sarang")],
-      releaseDate: "2026-04-13", duration: 4200, youtubeId: "60O126HehGA", externalUrl: "https://www.youtube.com/watch?v=60O126HehGA", artwork: { _type: "image", asset: { _type: "reference", _ref: sarangArt._id }, alt: "sa:rang at Lowkal 001" },
+      releaseDate: "2026-04-13", duration: 4200, externalUrl: "https://www.youtube.com/watch?v=60O126HehGA", artwork: { _type: "image", asset: { _type: "reference", _ref: sarangArt._id }, alt: "sa:rang at Lowkal 001" },
       genres: ["Footwork", "Polyrhythmic"], description: "A set from Lowkal 001, held inside the complete live-program record.", tracks: tracklists.sarang,
       ...commonPlacement, featured: false, showInSoundroom: false, showOnHome: false, archiveSection: "scene-programmes", playerOrder: 50, soundroomOrder: 50, archiveOrder: 50, homeOrder: 50
     }

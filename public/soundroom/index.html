@@ -597,12 +597,10 @@ void main(){
     </div>
   </div>
 
-  <!-- Hidden YouTube Player (1px — needed for IFrame API) -->
-  <div id="yt-player" style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"></div>
+  <audio id="audio-player" preload="metadata" style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"></audio>
 
   <!-- Script Libraries -->
   <script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
-  <script src="https://www.youtube.com/iframe_api"></script>
 
   <!-- Core JavaScript Code -->
   <script>
@@ -620,7 +618,7 @@ void main(){
         dj: 'DJ Void',
         date: '24 Oct 2023',
         genre: 'Garage / Breakbeat',
-        youtubeId: 'fw2mtwgCeGo',
+        audioUrl: null,
         artUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCCrG1DEKigJH48GRUlWYb1VYtxtuP6kq_koycGF3__RW4S0Br82tZ3Dz8NcXBRH-u3cfmQmADJP6RObkX90wPTwgrTvfaRBWbMyXRVhBYlX07VCrD40S_ZxfdfEcezgPYblYwxCSmcOrs6nTe1S6u41TFHLh0TS8VrD8Qf3aicEzhYoUOhmahjAjbnOGLwDLik4FSVmBcFx1uBjYpRDyTdd7LiGmZD-3ouRH2jQ915ghHBT73zlHhNIbBntGzLhSzvxSlo5c4Clda3',
         description: '<em>Kinetic Drift</em> is a deep exploration into the architecture of silence and the weight of sub-bass textures. Curated by <strong>DJ Void</strong>, this hour-long session serves as a sonic bridge between structural industrial design and organic fluid dynamics.<br/><br/>The emotional arc begins with a stark, cavernous opening that slowly fractures into complex glitch sequences. Each transition is meticulously hand-crafted, favoring slow-burn harmonic crossfades that blur the lines between tracks until the individual pieces become a singular, breathing unit.',
         artistBio: '<strong>DJ Void</strong> is a London-based sound designer and visual artist whose work focuses on the intersection of early UK breakbeat culture and modern software synthesis. He has been a resident at Lowkal.fm since its inception, running the weekly Sunday bass transmissions.',
@@ -637,7 +635,7 @@ void main(){
       },
       {
         id: 'industrial_techno',
-        youtubeId: null,
+        audioUrl: null,
         title: 'Kontrol Archive 001',
         dj: 'DJ Oblivion',
         date: '12 Sep 2023',
@@ -659,7 +657,7 @@ void main(){
       },
       {
         id: 'glitch_experimental',
-        youtubeId: null,
+        audioUrl: null,
         title: 'Signal Degradation',
         dj: 'System Fault',
         date: '05 Nov 2023',
@@ -680,7 +678,7 @@ void main(){
       },
       {
         id: 'ambient_monolith',
-        youtubeId: null,
+        audioUrl: null,
         title: 'Subterranean Drones',
         dj: 'Void Dweller',
         date: '02 Dec 2023',
@@ -1095,88 +1093,46 @@ void main(){
     }
 
     // -------------------------------------------------------------
-    // YOUTUBE PLAYER ENGINE
+    // HTML AUDIO PLAYER ENGINE
     // -------------------------------------------------------------
-    class YouTubePlayerEngine {
+    class HtmlAudioPlayerEngine {
       constructor(onEnded) {
-        this.player = null;
-        this.isReady = false;
-        this.pendingLoad = null;
+        this.player = document.getElementById('audio-player');
         this.onEnded = onEnded;
+        this.player.addEventListener('ended', () => { if (this.onEnded) this.onEnded(); });
       }
 
-      onAPIReady() {
-        this.player = new YT.Player('yt-player', {
-          height: '1',
-          width: '1',
-          playerVars: {
-            controls: 0,
-            disablekb: 1,
-            iv_load_policy: 3,
-            modestbranding: 1,
-            rel: 0,
-            playsinline: 1
-          },
-          events: {
-            onReady: () => {
-              this.isReady = true;
-              if (this.pendingLoad) {
-                const { videoId, autoplay } = this.pendingLoad;
-                this.pendingLoad = null;
-                this._doLoad(videoId, autoplay);
-              }
-            },
-            onStateChange: (e) => {
-              if (e.data === YT.PlayerState.ENDED && this.onEnded) {
-                this.onEnded();
-              }
-            }
-          }
-        });
-      }
-
-      _doLoad(videoId, autoplay) {
-        if (autoplay) {
-          this.player.loadVideoById(videoId);
-        } else {
-          this.player.cueVideoById(videoId);
+      load(audioUrl, autoplay = false) {
+        if (!audioUrl) return;
+        if (this.player.src !== new URL(audioUrl, window.location.href).href) {
+          this.player.src = audioUrl;
+          this.player.load();
         }
-      }
-
-      load(videoId, autoplay = false) {
-        if (!videoId) return;
-        if (!this.isReady) {
-          this.pendingLoad = { videoId, autoplay };
-          return;
-        }
-        this._doLoad(videoId, autoplay);
+        if (autoplay) this.play();
       }
 
       play() {
-        try { if (this.player && this.isReady) this.player.playVideo(); } catch(e) {}
+        try { return this.player.play(); } catch(e) { return Promise.reject(e); }
       }
 
       pause() {
-        try { if (this.player && this.isReady) this.player.pauseVideo(); } catch(e) {}
+        try { this.player.pause(); } catch(e) {}
       }
 
       seekTo(seconds) {
-        try { if (this.player && this.isReady) this.player.seekTo(seconds, true); } catch(e) {}
+        try { this.player.currentTime = seconds; } catch(e) {}
       }
 
       setVolume(val) {
-        try { if (this.player && this.isReady) this.player.setVolume(parseInt(val)); } catch(e) {}
+        try { this.player.volume = Math.max(0, Math.min(100, Number(val))) / 100; } catch(e) {}
       }
 
       getCurrentTime() {
-        try { return (this.player && this.isReady) ? (this.player.getCurrentTime() || 0) : 0; } catch(e) { return 0; }
+        try { return this.player.currentTime || 0; } catch(e) { return 0; }
       }
 
       getDuration() {
-        try {
-          const d = (this.player && this.isReady) ? this.player.getDuration() : 0;
-          return d > 0 ? d : 0;
-        } catch(e) { return 0; }
+        try { const d = this.player.duration; return Number.isFinite(d) && d > 0 ? d : 0; } catch(e) { return 0; }
       }
     }
 
@@ -1342,7 +1298,7 @@ void main(){
         
         // Core Engines
         this.audioEngine = new LowkalAudioEngine();
-        this.ytEngine = new YouTubePlayerEngine(() => this.handleMixFinished());
+        this.mediaEngine = new HtmlAudioPlayerEngine(() => this.handleMixFinished());
         this.visualizer = new LowkalVisualizer('visualizer-canvas', this.audioEngine);
         
         // Archive Nodes positioning & drifting physics array
@@ -1354,8 +1310,8 @@ void main(){
 
       getEffectiveDuration() {
         if (IS_EMBEDDED && this.externalDuration > 0) return this.externalDuration;
-        if (this.activeMix && this.activeMix.youtubeId) {
-          const d = this.ytEngine.getDuration();
+        if (this.activeMix && this.activeMix.audioUrl) {
+          const d = this.mediaEngine.getDuration();
           return d > 0 ? d : this.activeMix.duration;
         }
         return this.activeMix ? this.activeMix.duration : 0;
@@ -1370,12 +1326,9 @@ void main(){
         this.bindCatalogSync();
         this.setupArchiveNodes();
         this.loadMixToPlayer(this.activeMix, false);
-        // Pre-cue initial mix — loadMixToPlayer skips ytEngine.load when mix hasn't changed
-        if (!IS_EMBEDDED && this.activeMix.youtubeId) {
-          this.ytEngine.load(this.activeMix.youtubeId, false);
-        }
+        // Pre-cue initial mix — loadMixToPlayer skips mediaEngine.load when mix has not changed.
+        if (!IS_EMBEDDED && this.activeMix.audioUrl) this.mediaEngine.load(this.activeMix.audioUrl, false);
         window._appInstance = this;
-        if (!IS_EMBEDDED && window._ytAPIReady) this.ytEngine.onAPIReady();
         this.sendAudioCommand('request-state');
       }
 
@@ -1419,7 +1372,7 @@ void main(){
           const message = event.data;
           if (!message || message.channel !== CATALOG_CHANNEL || message.type !== 'catalog' || !Array.isArray(message.mixes) || message.mixes.length === 0) return;
           MIXES = message.mixes;
-          const active = MIXES.find((mix) => mix.youtubeId === this.activeMix?.youtubeId) || MIXES[0];
+          const active = MIXES.find((mix) => mix.audioUrl === this.activeMix?.audioUrl) || MIXES[0];
           this.activeMix = active;
           this.syncMixDetails(active, true);
           this.setupArchiveNodes();
@@ -1433,7 +1386,7 @@ void main(){
         if (!state) return;
         this.applyingExternalState = true;
 
-        const matchingMix = MIXES.find((mix) => mix.youtubeId && mix.youtubeId === state.youtubeId);
+        const matchingMix = MIXES.find((mix) => mix.audioUrl && mix.audioUrl === state.audioUrl);
         if (matchingMix && matchingMix.id !== this.activeMix.id) {
           this.activeMix = matchingMix;
           this.syncMixDetails(matchingMix, false);
@@ -1448,7 +1401,7 @@ void main(){
         this.isMuted = this.volumeLevel === 0;
 
         // An embedded Soundroom is a control surface. Only the parent can make sound.
-        this.ytEngine.pause();
+        this.mediaEngine.pause();
         this.audioEngine.stop();
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
@@ -1863,8 +1816,8 @@ void main(){
           this.syncMixDetails(mix, mixChanged);
           this.updatePlayerUI();
           this.updateMiniPlayerUI();
-          if (mixChanged && mix.youtubeId && !this.applyingExternalState) {
-            this.sendAudioCommand('select', { youtubeId: mix.youtubeId, autoplay: startImmediately });
+          if (mixChanged && mix.audioUrl && !this.applyingExternalState) {
+            this.sendAudioCommand('select', { slug: mix.id, autoplay: startImmediately });
           }
           return;
         }
@@ -1873,10 +1826,10 @@ void main(){
           this.playbackTime = 0;
           if (this.isPlaying) {
             this.pausePlaybackEngine();
-            if (mix.youtubeId) this.ytEngine.load(mix.youtubeId, false);
+            if (mix.audioUrl) this.mediaEngine.load(mix.audioUrl, false);
             if (startImmediately) this.startPlaybackEngine();
           } else {
-            if (mix.youtubeId) this.ytEngine.load(mix.youtubeId, false);
+            if (mix.audioUrl) this.mediaEngine.load(mix.audioUrl, false);
           }
         }
 
@@ -1908,25 +1861,23 @@ void main(){
         }
         this.isPlaying = true;
 
+        if (!this.activeMix.audioUrl) {
+          this.isPlaying = false;
+          this.updatePlayerUI();
+          this.updateMiniPlayerUI();
+          return;
+        }
+
         // Always stop both engines first to prevent bleed-over
-        this.ytEngine.pause();
+        this.mediaEngine.pause();
         this.audioEngine.stop();
 
-        if (this.activeMix.youtubeId) {
-          this.ytEngine.play();
-        } else {
-          this.audioEngine.setSynthStyle(this.activeMix.synthStyle);
-          this.audioEngine.start();
-        }
+        this.mediaEngine.play();
 
         this.updateVolumeEngine();
 
         this.timerInterval = setInterval(() => {
-          if (this.activeMix.youtubeId) {
-            this.playbackTime = Math.floor(this.ytEngine.getCurrentTime());
-          } else {
-            this.playbackTime++;
-          }
+          this.playbackTime = Math.floor(this.mediaEngine.getCurrentTime());
 
           const dur = this.getEffectiveDuration();
           if (dur > 0 && this.playbackTime >= dur) {
@@ -1949,7 +1900,7 @@ void main(){
         this.isPlaying = false;
 
         // Always stop both engines — activeMix may have already been updated
-        this.ytEngine.pause();
+        this.mediaEngine.pause();
         this.audioEngine.stop();
 
         if (this.timerInterval) {
@@ -1963,7 +1914,9 @@ void main(){
 
       handleMixFinished() {
         if (this.isRepeat) {
-          this.playbackTime = 0; // loop mix
+          this.playbackTime = 0;
+          this.mediaEngine.seekTo(0);
+          this.mediaEngine.play();
         } else if (this.isShuffled) {
           // Play random index
           let randIdx;
@@ -1994,7 +1947,7 @@ void main(){
           return;
         }
         this.playbackTime = seconds;
-        if (this.activeMix.youtubeId) this.ytEngine.seekTo(seconds);
+        if (this.activeMix.audioUrl) this.mediaEngine.seekTo(seconds);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
@@ -2009,7 +1962,7 @@ void main(){
           return;
         }
         this.playbackTime = newTime;
-        if (this.activeMix.youtubeId) this.ytEngine.seekTo(newTime);
+        if (this.activeMix.audioUrl) this.mediaEngine.seekTo(newTime);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
@@ -2025,7 +1978,7 @@ void main(){
           return;
         }
         this.playbackTime = newTime;
-        if (this.activeMix.youtubeId) this.ytEngine.seekTo(newTime);
+        if (this.activeMix.audioUrl) this.mediaEngine.seekTo(newTime);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
@@ -2104,10 +2057,10 @@ void main(){
       updateVolumeEngine() {
         const vol = this.isMuted ? 0 : this.volumeLevel;
         // Always update both engines — only the active one will be audible
-        this.ytEngine.setVolume(vol);
+        this.mediaEngine.setVolume(vol);
         this.audioEngine.init();
         if (this.audioEngine.masterGain) {
-          const gainVal = this.activeMix && this.activeMix.youtubeId ? 0 : (vol / 100.0) * 0.8;
+          const gainVal = this.activeMix && this.activeMix.audioUrl ? 0 : (vol / 100.0) * 0.8;
           this.audioEngine.masterGain.gain.setValueAtTime(gainVal, this.audioEngine.ctx.currentTime);
         }
       }
@@ -2217,18 +2170,6 @@ void main(){
     }
 
     // -------------------------------------------------------------
-    // YOUTUBE API GLOBAL CALLBACK
-    // -------------------------------------------------------------
-    function onYouTubeIframeAPIReady() {
-      if (IS_EMBEDDED) return;
-      if (window._appInstance) {
-        window._appInstance.ytEngine.onAPIReady();
-      } else {
-        window._ytAPIReady = true;
-      }
-    }
-
-    // -------------------------------------------------------------
     // ENGINE INITIALIZATION
     // Fetches mixes.json (live data); falls back to inline MIXES on failure.
     // Requires HTTP — does not work on file://.
@@ -2242,10 +2183,6 @@ void main(){
       } catch(e) {
         // Silently use inline fallback
       }
-
-      // The parent player can control only published recordings. Do not show
-      // local synthesizer demos when the Soundroom is part of the main site.
-      if (IS_EMBEDDED) MIXES = MIXES.filter((mix) => Boolean(mix.youtubeId));
 
       const app = new LowkalApp();
       app.init();
