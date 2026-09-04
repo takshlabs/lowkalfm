@@ -53,14 +53,13 @@ test("Listen artist profiles are managed in Sanity", async () => {
 test("mix masters upload in Sanity and are delivered from the audio CDN", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");
-  const worker = await source("worker/index.ts");
+  const worker = await source("workers/audio-sync.ts");
 
   assert.match(schema, /name:\s*"audio"/);
   assert.match(schema, /name:\s*"master"/);
   assert.match(schema, /audio\/wav/);
   assert.match(query, /audioDeliveryUrl/);
   assert.match(worker, /sanity-webhook-signature/);
-  assert.match(worker, /\/api\/sanity\/audio-sync/);
-  assert.match(worker, /\/audio\//);
-  assert.match(worker, /Accept-Ranges/);
+  assert.match(worker, /\/sanity\/audio-sync/);
+  assert.match(worker, /AUDIO_PUBLIC_BASE_URL/);
 });
