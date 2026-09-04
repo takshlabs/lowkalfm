@@ -46,7 +46,7 @@ This setup is separate from the Vercel deployment.
 - R2 bucket: `lowkal-audio` (APAC location hint, Standard storage)
 - Worker: `lowkal-audio-sync`
 - Current audio endpoint: `https://lowkal-audio-sync.lowkal-audio-737a.workers.dev`
-- Sanity webhook: `Copy published mixes to Cloudflare R2` (production dataset, update events only)
+- Sanity webhook: `Copy published mixes to Cloudflare R2` (production dataset, create and update events)
 
 The R2 bucket is private. The Worker reads the audio objects and sends them to listeners with byte-range support. This is a Cloudflare CDN endpoint and does not change the Vercel site URL.
 
