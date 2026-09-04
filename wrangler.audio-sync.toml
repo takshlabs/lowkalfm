@@ -1,0 +1,9 @@
+name = "lowkal-audio-sync"
+main = "workers/audio-sync.ts"
+compatibility_date = "2026-09-04"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[[r2_buckets]]
+binding = "AUDIO"
+bucket_name = "lowkal-audio"

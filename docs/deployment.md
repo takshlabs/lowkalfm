@@ -39,13 +39,22 @@ Use `npx vercel env ls production` to check variable names. Do not put secret va
 
 ## Cloudflare R2 audio setup
 
-This setup is required once. It is separate from the Vercel deployment.
+This setup is separate from the Vercel deployment.
+
+### Active services
+
+- R2 bucket: `lowkal-audio` (APAC location hint, Standard storage)
+- Worker: `lowkal-audio-sync`
+- Current audio endpoint: `https://lowkal-audio-sync.lowkal-audio-737a.workers.dev`
+
+The R2 bucket is private. The Worker reads the audio objects and sends them to listeners with byte-range support. This is a Cloudflare CDN endpoint and does not change the Vercel site URL.
+
+The account has no Cloudflare DNS zone yet. Add the `lowkal.fm` zone to Cloudflare later, then change the audio endpoint to a custom Worker route such as `audio.lowkal.fm`.
 
 1. Sign in to the Lowkal Cloudflare account.
-2. Create an R2 bucket named `lowkal-audio`.
-3. Add a custom domain for the bucket, such as `audio.lowkal.fm`. Do not use the temporary `r2.dev` domain for production.
-4. Create an R2 API token with access only to the `lowkal-audio` bucket.
-5. Configure the worker from `workers/audio-sync.ts` with `wrangler.audio-sync.toml.example` as the template.
+2. Keep the Worker configuration in `wrangler.audio-sync.toml` aligned with the bucket name.
+3. Use the Worker endpoint above for `AUDIO_PUBLIC_BASE_URL`.
+4. Do not enable an `r2.dev` URL. It is not needed for this setup.
 6. Add these Cloudflare Worker secrets. Do not store them in Vercel or Git:
 
    - `SANITY_WEBHOOK_SECRET`
@@ -54,7 +63,7 @@ This setup is required once. It is separate from the Vercel deployment.
    - `SANITY_API_WRITE_TOKEN`
    - `AUDIO_PUBLIC_BASE_URL` (for example, `https://audio.lowkal.fm`)
 
-7. Deploy the worker with `npx wrangler deploy --config wrangler.audio-sync.toml`.
+7. Deploy the Worker with `npx wrangler deploy --config wrangler.audio-sync.toml`.
 8. In Sanity Manage, add a webhook for published `mix` documents. Use the Worker URL plus `/sanity/audio-sync`. Do not include drafts. Set its secret to the same value as `SANITY_WEBHOOK_SECRET`.
 9. Use this webhook projection:
 
@@ -71,7 +80,7 @@ This setup is required once. It is separate from the Vercel deployment.
 
 10. Publish a small test mix. Confirm that the mix document receives `audio.deliveryUrl`, then play the mix from `https://lowkalfm.vercel.app`.
 
-The Worker streams the Sanity master to R2 and writes the R2 custom-domain URL back to the mix. The browser plays the R2 URL directly. Vercel does not proxy the large audio file.
+The Worker streams the Sanity master to R2 and writes its Cloudflare CDN URL back to the mix. The browser plays that URL directly. Vercel does not proxy the large audio file.
 
 ## Troubleshooting
 

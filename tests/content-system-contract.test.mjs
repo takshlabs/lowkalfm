@@ -61,5 +61,7 @@ test("mix masters upload in Sanity and are delivered from the audio CDN", async 
   assert.match(query, /audioDeliveryUrl/);
   assert.match(worker, /sanity-webhook-signature/);
   assert.match(worker, /\/sanity\/audio-sync/);
+  assert.match(worker, /\/audio\//);
+  assert.match(worker, /Accept-Ranges/);
   assert.match(worker, /AUDIO_PUBLIC_BASE_URL/);
 });

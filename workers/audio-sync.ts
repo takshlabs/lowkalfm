@@ -1,4 +1,13 @@
+interface AudioObject {
+  body: ReadableStream<Uint8Array>;
+  size: number;
+  etag: string;
+  range?: { offset: number; length: number };
+  httpMetadata?: { contentType?: string };
+}
+
 interface AudioObjectBucket {
+  get(key: string, options?: { range?: Headers }): Promise<AudioObject | null>;
   put(key: string, value: ReadableStream<Uint8Array>, options: { httpMetadata: { contentType: string; cacheControl: string } }): Promise<unknown>;
 }
 
@@ -60,6 +69,29 @@ function audioContentType(source: Response, filename: string) {
   return "audio/wav";
 }
 
+function audioKeyFromRequest(pathname: string) {
+  const parts = pathname.slice("/audio/".length).split("/");
+  if (!parts.length || parts.some((part) => !part || part === "." || part === "..")) return null;
+  try { return parts.map(decodeURIComponent).join("/"); } catch { return null; }
+}
+
+async function serveAudio(request: Request, env: Env) {
+  const objectKey = audioKeyFromRequest(new URL(request.url).pathname);
+  if (!objectKey) return new Response("Not found", { status: 404 });
+  const object = await env.AUDIO.get(objectKey, request.headers.get("range") ? { range: request.headers } : undefined);
+  if (!object) return new Response("Not found", { status: 404 });
+  const headers = new Headers({
+    "Accept-Ranges": "bytes",
+    "Access-Control-Allow-Origin": "https://lowkalfm.vercel.app",
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "Content-Length": String(object.range?.length ?? object.size),
+    "Content-Type": object.httpMetadata?.contentType || "audio/wav",
+    ETag: object.etag
+  });
+  if (object.range) headers.set("Content-Range", `bytes ${object.range.offset}-${object.range.offset + object.range.length - 1}/${object.size}`);
+  return new Response(request.method === "HEAD" ? null : object.body, { status: object.range ? 206 : 200, headers });
+}
+
 async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl: string, env: Env) {
   const response = await fetch(`https://${env.SANITY_API_PROJECT_ID}.api.sanity.io/v2026-08-24/data/mutate/${env.SANITY_API_DATASET}`, {
     method: "POST",
@@ -89,6 +121,7 @@ async function syncAudio(request: Request, env: Env) {
 const worker = {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/audio/") && (request.method === "GET" || request.method === "HEAD")) return serveAudio(request, env);
     if (url.pathname !== "/sanity/audio-sync" || request.method !== "POST") return new Response("Not found", { status: 404 });
     try { return await syncAudio(request, env); } catch (error) { console.error(error); return new Response("Audio sync failed", { status: 500 }); }
   }
