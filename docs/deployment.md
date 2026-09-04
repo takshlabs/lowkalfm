@@ -46,6 +46,7 @@ This setup is separate from the Vercel deployment.
 - R2 bucket: `lowkal-audio` (APAC location hint, Standard storage)
 - Worker: `lowkal-audio-sync`
 - Current audio endpoint: `https://lowkal-audio-sync.lowkal-audio-737a.workers.dev`
+- Sanity webhook: `Copy published mixes to Cloudflare R2` (production dataset, update events only)
 
 The R2 bucket is private. The Worker reads the audio objects and sends them to listeners with byte-range support. This is a Cloudflare CDN endpoint and does not change the Vercel site URL.
 
@@ -64,7 +65,7 @@ The account has no Cloudflare DNS zone yet. Add the `lowkal.fm` zone to Cloudfla
    - `AUDIO_PUBLIC_BASE_URL` (for example, `https://audio.lowkal.fm`)
 
 7. Deploy the Worker with `npx wrangler deploy --config wrangler.audio-sync.toml`.
-8. In Sanity Manage, add a webhook for published `mix` documents. Use the Worker URL plus `/sanity/audio-sync`. Do not include drafts. Set its secret to the same value as `SANITY_WEBHOOK_SECRET`.
+8. In Sanity Manage, keep the `Copy published mixes to Cloudflare R2` webhook enabled. It sends published `mix` updates to the Worker URL plus `/sanity/audio-sync`. Do not include drafts. Its secret must match `SANITY_WEBHOOK_SECRET`.
 9. Use this webhook projection:
 
 ```groq
