@@ -59,6 +59,14 @@ function safeSegment(value: string) {
   return value.replace(/[^A-Za-z0-9._-]/g, "-").replace(/-+/g, "-").replace(/^[-.]+|[-.]+$/g, "").slice(0, 160) || "audio";
 }
 
+function sourceAssetId(sourceUrl: string) {
+  try {
+    const filename = new URL(sourceUrl).pathname.split("/").pop() || "";
+    const match = /^([a-f0-9]+)\.([A-Za-z0-9]+)$/i.exec(filename);
+    return match ? `file-${match[1]}-${match[2].toLowerCase()}` : "";
+  } catch { return ""; }
+}
+
 function audioContentType(source: Response, filename: string) {
   const contentType = source.headers.get("content-type")?.split(";")[0];
   if (contentType?.startsWith("audio/")) return contentType;
@@ -106,15 +114,20 @@ async function syncAudio(request: Request, env: Env) {
   if (!await validSanitySignature(rawBody, request.headers.get("sanity-webhook-signature"), env.SANITY_WEBHOOK_SECRET)) return new Response("Unauthorized", { status: 401 });
   let payload: AudioSyncPayload;
   try { payload = JSON.parse(rawBody) as AudioSyncPayload; } catch { return new Response("Invalid JSON", { status: 400 }); }
-  if (payload._type !== "mix" || !payload._id || !payload.audioMasterUrl || !payload.audioMasterId || payload.audioSourceAssetId === payload.audioMasterId) return new Response(null, { status: 204 });
+  if (payload._type !== "mix" || !payload._id || !payload.audioMasterUrl) return new Response(null, { status: 204 });
+  const audioMasterId = payload.audioMasterId || sourceAssetId(payload.audioMasterUrl);
+  if (!audioMasterId || payload.audioSourceAssetId === audioMasterId) return new Response(null, { status: 204 });
+  const syncPayload = { ...payload, audioMasterId };
 
   const source = await fetch(payload.audioMasterUrl);
   if (!source.ok || !source.body) return new Response("Could not download audio master", { status: 502 });
-  const filename = safeSegment(payload.audioMasterFilename || `${payload.audioMasterId}.wav`);
-  const objectKey = `mixes/${safeSegment(payload._id)}/${safeSegment(payload.audioMasterId)}-${filename}`;
+  const filename = safeSegment(payload.audioMasterFilename || `${audioMasterId}.wav`);
+  const objectKey = `mixes/${safeSegment(payload._id)}/${safeSegment(audioMasterId)}-${filename}`;
   await env.AUDIO.put(objectKey, source.body, { httpMetadata: { contentType: audioContentType(source, filename), cacheControl: "public, max-age=31536000, immutable" } });
-  const deliveryUrl = `${env.AUDIO_PUBLIC_BASE_URL.replace(/\/$/, "")}/${objectKey.split("/").map(encodeURIComponent).join("/")}`;
-  await patchSanityAudio(payload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, env);
+  const configuredBase = env.AUDIO_PUBLIC_BASE_URL.replace(/\/+$/, "");
+  const audioBase = configuredBase.endsWith("/audio") ? configuredBase : `${configuredBase}/audio`;
+  const deliveryUrl = `${audioBase}/${objectKey.split("/").map(encodeURIComponent).join("/")}`;
+  await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, env);
   return Response.json({ deliveryUrl });
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { resolveMixPlayback } from "@/lib/audio-source";
 import { artistProfiles, livePrograms, soundRecords, type ArchiveSection, type ArtistProfile, type LiveProgram, type SoundFormat, type SoundRecord } from "@/lib/content";
 import { isSanityConfigured, listenContentQuery, sanityClient } from "@/lib/sanity";
 
@@ -17,6 +18,7 @@ type SanityMix = {
   audioMasterUrl?: string;
   audioMasterFilename?: string;
   audioDeliveryUrl?: string;
+  externalUrl?: string;
   artwork?: string;
   genres?: string[];
   description?: string;
@@ -58,6 +60,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
   if (!mix.slug || !mix.artwork) return null;
   const artistNames = mix.artists?.map((artist) => artist.name).filter(Boolean) ?? [];
   const format: SoundFormat = mix.format === "volume" ? "weekly" : "live-set";
+  const playback = resolveMixPlayback({ deliveryUrl: mix.audioDeliveryUrl, masterUrl: mix.audioMasterUrl, externalUrl: mix.externalUrl });
   return {
     slug: mix.slug,
     format,
@@ -68,7 +71,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     date: formatDate(mix.releaseDate),
     dateISO: mix.releaseDate,
     duration: mix.duration,
-    audioUrl: mix.audioDeliveryUrl || mix.audioMasterUrl,
+    ...playback,
     artwork: mix.artwork,
     genres: mix.genres ?? [],
     description: mix.description ?? "",

@@ -577,6 +577,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .site-footer nav a { font-family: var(--font-lowkal-body), sans-serif; font-size: 0.65rem; text-transform: uppercase; }
 
 .audio-engine { position: fixed; left: -4px; bottom: -4px; width: 1px; height: 1px; overflow: hidden; opacity: 0.01; pointer-events: none; }
+.youtube-audio-engine,
+.youtube-audio-engine iframe { position: fixed; left: -9999px; bottom: 0; width: 200px; height: 200px; overflow: hidden; opacity: 0.01; pointer-events: none; }
 .lowkal-player {
   position: fixed;
   bottom: 16px;

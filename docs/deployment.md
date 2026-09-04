@@ -74,7 +74,7 @@ The account has no Cloudflare DNS zone yet. Add the `lowkal.fm` zone to Cloudfla
   _type,
   "audioMasterUrl": audio.master.asset->url,
   "audioMasterFilename": audio.master.asset->originalFilename,
-  "audioMasterId": audio.master.asset->_ref,
+  "audioMasterId": audio.master.asset._ref,
   "audioSourceAssetId": audio.sourceAssetId
 }
 ```

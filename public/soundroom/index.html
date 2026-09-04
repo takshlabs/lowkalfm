@@ -1372,7 +1372,7 @@ void main(){
           const message = event.data;
           if (!message || message.channel !== CATALOG_CHANNEL || message.type !== 'catalog' || !Array.isArray(message.mixes) || message.mixes.length === 0) return;
           MIXES = message.mixes;
-          const active = MIXES.find((mix) => mix.audioUrl === this.activeMix?.audioUrl) || MIXES[0];
+          const active = MIXES.find((mix) => mix.id === this.activeMix?.id) || MIXES[0];
           this.activeMix = active;
           this.syncMixDetails(active, true);
           this.setupArchiveNodes();
@@ -1386,7 +1386,7 @@ void main(){
         if (!state) return;
         this.applyingExternalState = true;
 
-        const matchingMix = MIXES.find((mix) => mix.audioUrl && mix.audioUrl === state.audioUrl);
+        const matchingMix = MIXES.find((mix) => mix.id === state.slug);
         if (matchingMix && matchingMix.id !== this.activeMix.id) {
           this.activeMix = matchingMix;
           this.syncMixDetails(matchingMix, false);
@@ -1816,7 +1816,7 @@ void main(){
           this.syncMixDetails(mix, mixChanged);
           this.updatePlayerUI();
           this.updateMiniPlayerUI();
-          if (mixChanged && mix.audioUrl && !this.applyingExternalState) {
+          if (mixChanged && (mix.audioUrl || mix.youtubeId) && !this.applyingExternalState) {
             this.sendAudioCommand('select', { slug: mix.id, autoplay: startImmediately });
           }
           return;

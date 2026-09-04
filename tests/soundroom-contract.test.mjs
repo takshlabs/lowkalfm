@@ -8,13 +8,21 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("the floating player is quiet by default and uses the native audio engine", async () => {
+test("the floating player is quiet by default and supports direct audio with YouTube fallback", async () => {
   const provider = await source("components/AudioProvider.tsx");
+  const content = await source("components/ListenContentProvider.tsx");
+  const query = await source("lib/sanity.ts");
   const player = await source("components/PersistentPlayer.tsx");
 
   assert.match(provider, /HTMLAudioElement/);
   assert.match(provider, /<audio/);
-  assert.match(provider, /audioUrl/);
+  assert.match(provider, /youtube\.com\/iframe_api/);
+  assert.match(provider, /youtubeId/);
+  assert.match(provider, /failedAudioUrl === activeRecord\.audioUrl/);
+  assert.match(provider, /setFailedAudioUrl\(activeRecord\.audioUrl/);
+  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, masterUrl: mix\.audioMasterUrl, externalUrl: mix\.externalUrl \}\)/);
+  assert.match(content, /\.\.\.playback/);
+  assert.match(query, /externalUrl/);
   assert.doesNotMatch(provider, /react-youtube/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
   assert.match(provider, /PLAYBACK_INTENT_KEY/);
@@ -133,6 +141,7 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(provider, /request-state/);
   assert.match(provider, /event\.origin !== window\.location\.origin/);
   assert.match(provider, /audio\?\.currentTime/);
+  assert.match(provider, /youtubePlayerRef\.current\?\.getCurrentTime/);
   assert.match(provider, /action === "select"/);
 
   assert.match(soundroom, /lowkal\.audio\.v1/);
@@ -140,7 +149,8 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(soundroom, /sendAudioCommand\('seek'/);
   assert.match(soundroom, /sendAudioCommand\('volume'/);
   assert.match(soundroom, /applyExternalAudioState/);
+  assert.match(soundroom, /mix\.id === state\.slug/);
+  assert.match(soundroom, /mix\.audioUrl \|\| mix\.youtubeId/);
   assert.match(soundroom, /Only the parent can make sound/);
   assert.match(soundroom, /HtmlAudioPlayerEngine/);
-  assert.doesNotMatch(soundroom, /youtube\.com\/iframe_api/);
 });

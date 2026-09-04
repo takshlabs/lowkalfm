@@ -64,4 +64,10 @@ test("mix masters upload in Sanity and are delivered from the audio CDN", async 
   assert.match(worker, /\/audio\//);
   assert.match(worker, /Accept-Ranges/);
   assert.match(worker, /AUDIO_PUBLIC_BASE_URL/);
+  assert.match(worker, /sourceAssetId/);
+  assert.match(worker, /payload\.audioMasterId \|\| sourceAssetId\(payload\.audioMasterUrl\)/);
+
+  const publishingGuide = await source("docs/deployment.md");
+  assert.match(publishingGuide, /audio\.master\.asset\._ref/);
+  assert.doesNotMatch(publishingGuide, /audio\.master\.asset->_ref/);
 });
