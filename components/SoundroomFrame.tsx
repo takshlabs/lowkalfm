@@ -29,6 +29,7 @@ export function SoundroomFrame() {
       artistBio: artist?.shortBio || "Open the artist page for more information.",
       artistUrl: artist ? sitePath(`/artists/${artist.slug}`) : "",
       duration: record.duration,
+      startOffset: record.startOffset ?? 0,
       synthStyle: "live",
       tracks: record.tracks,
       cloud: {

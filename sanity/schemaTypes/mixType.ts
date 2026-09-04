@@ -50,6 +50,14 @@ export const mixType = defineType({
           description: "Use WAV for the archive master. The site streams this file from the audio CDN after publication."
         }),
         defineField({
+          name: "startOffset",
+          title: "Start playback at (seconds)",
+          type: "number",
+          initialValue: 0,
+          validation: (rule) => rule.min(0),
+          description: "Start playback at this point to skip leading silence. Use 0 to play the complete file."
+        }),
+        defineField({
           name: "deliveryUrl",
           title: "CDN delivery URL",
           type: "url",

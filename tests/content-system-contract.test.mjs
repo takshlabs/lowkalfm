@@ -58,7 +58,10 @@ test("mix masters upload in Sanity and are delivered from the audio CDN", async 
   assert.match(schema, /name:\s*"audio"/);
   assert.match(schema, /name:\s*"master"/);
   assert.match(schema, /audio\/wav/);
+  assert.match(schema, /name:\s*"startOffset"/);
+  assert.match(schema, /Start playback at/);
   assert.match(query, /audioDeliveryUrl/);
+  assert.match(query, /audioStartOffset/);
   assert.match(worker, /sanity-webhook-signature/);
   assert.match(worker, /\/sanity\/audio-sync/);
   assert.match(worker, /\/audio\//);

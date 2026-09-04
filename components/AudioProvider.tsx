@@ -110,7 +110,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const youtubeHostRef = useRef<HTMLDivElement | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
-  const resumeAtRef = useRef(0);
+  const resumeAtRef = useRef(firstRecord.startOffset ?? 0);
   const autoplayRef = useRef(typeof window !== "undefined" && readPlaybackIntent());
   const currentTimeRef = useRef(0);
   const volumeRef = useRef(volume);
@@ -159,7 +159,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const record = getRecord(slug);
     if (!isPlayable(record)) return;
     if (slug === activeRecord.slug) { if (shouldPlay) playMedia(); else pauseMedia(); return; }
-    savePlaybackIntent(shouldPlay); autoplayRef.current = shouldPlay; resumeAtRef.current = 0;
+    savePlaybackIntent(shouldPlay); autoplayRef.current = shouldPlay; resumeAtRef.current = record?.startOffset ?? 0;
     setFailedAudioUrl(null); setCurrentTime(0); setDuration(record?.duration ?? 0); setIsPlaying(false); setIsReady(false); setActiveSlug(slug);
   }, [activeRecord.slug, getRecord, pauseMedia, playMedia]);
 
@@ -175,25 +175,26 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const onEnded = useCallback(() => {
     persist();
     if (isRepeat) {
-      resumeAtRef.current = 0;
-      if (audioRef.current) audioRef.current.currentTime = 0;
-      youtubePlayerRef.current?.seekTo(0, true);
+      resumeAtRef.current = activeRecord.startOffset ?? 0;
+      if (audioRef.current) audioRef.current.currentTime = activeRecord.startOffset ?? 0;
+      youtubePlayerRef.current?.seekTo(activeRecord.startOffset ?? 0, true);
       playMedia();
       return;
     }
     playNext();
-  }, [isRepeat, persist, playMedia, playNext]);
+  }, [activeRecord.startOffset, isRepeat, persist, playMedia, playNext]);
   useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
 
   const onLoadedMetadata = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = volume / 100;
-    if (resumeAtRef.current > 0) audio.currentTime = resumeAtRef.current;
+    const startTime = resumeAtRef.current || activeRecord.startOffset || 0;
+    if (startTime > 0) audio.currentTime = startTime;
     setDuration(Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : activeRecord.duration);
     setIsReady(true);
     if (autoplayRef.current) playMedia();
-  }, [activeRecord.duration, playMedia, volume]);
+  }, [activeRecord.duration, activeRecord.startOffset, playMedia, volume]);
 
   useEffect(() => {
     if (!useYouTube || !activeRecord.youtubeId || !youtubeHostRef.current) return;
@@ -208,7 +209,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           onReady: ({ target }) => {
             if (!active) return;
             target.setVolume(volumeRef.current);
-            if (resumeAtRef.current > 0) target.seekTo(resumeAtRef.current, true);
+            const startTime = resumeAtRef.current || activeRecord.startOffset || 0;
+            if (startTime > 0) target.seekTo(startTime, true);
             const sourceDuration = target.getDuration();
             setDuration(sourceDuration > 0 ? sourceDuration : activeRecord.duration);
             setIsReady(true);
@@ -228,7 +230,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       youtubePlayerRef.current?.destroy();
       youtubePlayerRef.current = null;
     };
-  }, [activeRecord.duration, activeRecord.slug, activeRecord.youtubeId, useYouTube]);
+  }, [activeRecord.duration, activeRecord.slug, activeRecord.startOffset, activeRecord.youtubeId, useYouTube]);
 
   useEffect(() => {
     if (!isPlaying || !useYouTube || !activeRecord.youtubeId) return;

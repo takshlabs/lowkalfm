@@ -18,6 +18,8 @@ export type SoundRecord = {
   date: string;
   dateISO: string;
   duration: number;
+  /** Seconds skipped at the beginning of the source file. */
+  startOffset?: number;
   audioUrl?: string;
   youtubeId?: string;
   artwork: string;

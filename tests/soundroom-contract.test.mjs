@@ -18,6 +18,8 @@ test("the floating player is quiet by default and supports direct audio with You
   assert.match(provider, /<audio/);
   assert.match(provider, /youtube\.com\/iframe_api/);
   assert.match(provider, /youtubeId/);
+  assert.match(provider, /activeRecord\.startOffset/);
+  assert.match(provider, /resumeAtRef\.current = record\?\.startOffset/);
   assert.match(provider, /failedAudioUrl === activeRecord\.audioUrl/);
   assert.match(provider, /setFailedAudioUrl\(activeRecord\.audioUrl/);
   assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, masterUrl: mix\.audioMasterUrl, externalUrl: mix\.externalUrl \}\)/);

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { resolveMixPlayback } from "@/lib/audio-source";
+import { getMixStartOffset, resolveMixPlayback } from "@/lib/audio-source";
 import { artistProfiles, livePrograms, soundRecords, type ArchiveSection, type ArtistProfile, type LiveProgram, type SoundFormat, type SoundRecord } from "@/lib/content";
 import { isSanityConfigured, listenContentQuery, sanityClient } from "@/lib/sanity";
 
@@ -18,6 +18,7 @@ type SanityMix = {
   audioMasterUrl?: string;
   audioMasterFilename?: string;
   audioDeliveryUrl?: string;
+  audioStartOffset?: number;
   externalUrl?: string;
   artwork?: string;
   genres?: string[];
@@ -71,6 +72,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     date: formatDate(mix.releaseDate),
     dateISO: mix.releaseDate,
     duration: mix.duration,
+    startOffset: getMixStartOffset(mix.audioStartOffset),
     ...playback,
     artwork: mix.artwork,
     genres: mix.genres ?? [],

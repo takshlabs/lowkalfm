@@ -39,6 +39,7 @@ export const listenContentQuery = `{
     "audioMasterUrl": audio.master.asset->url,
     "audioMasterFilename": audio.master.asset->originalFilename,
     "audioDeliveryUrl": audio.deliveryUrl,
+    "audioStartOffset": audio.startOffset,
     externalUrl,
     "artwork": coalesce(artwork.asset->url, thumbnail.asset->url),
     genres,

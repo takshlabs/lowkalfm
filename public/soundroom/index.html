@@ -1102,12 +1102,14 @@ void main(){
         this.player.addEventListener('ended', () => { if (this.onEnded) this.onEnded(); });
       }
 
-      load(audioUrl, autoplay = false) {
+      load(audioUrl, autoplay = false, startOffset = 0) {
         if (!audioUrl) return;
+        const startTime = Math.max(0, Number(startOffset) || 0);
         if (this.player.src !== new URL(audioUrl, window.location.href).href) {
           this.player.src = audioUrl;
           this.player.load();
         }
+        this.seekTo(startTime);
         if (autoplay) this.play();
       }
 
@@ -1308,6 +1310,10 @@ void main(){
         this.isTransitioningNode = false;
       }
 
+      getStartOffset(mix = this.activeMix) {
+        return Math.max(0, Number(mix?.startOffset) || 0);
+      }
+
       getEffectiveDuration() {
         if (IS_EMBEDDED && this.externalDuration > 0) return this.externalDuration;
         if (this.activeMix && this.activeMix.audioUrl) {
@@ -1327,7 +1333,7 @@ void main(){
         this.setupArchiveNodes();
         this.loadMixToPlayer(this.activeMix, false);
         // Pre-cue initial mix — loadMixToPlayer skips mediaEngine.load when mix has not changed.
-        if (!IS_EMBEDDED && this.activeMix.audioUrl) this.mediaEngine.load(this.activeMix.audioUrl, false);
+        if (!IS_EMBEDDED && this.activeMix.audioUrl) this.mediaEngine.load(this.activeMix.audioUrl, false, this.getStartOffset());
         window._appInstance = this;
         this.sendAudioCommand('request-state');
       }
@@ -1823,13 +1829,13 @@ void main(){
         }
 
         if (mixChanged) {
-          this.playbackTime = 0;
+          this.playbackTime = this.getStartOffset(mix);
           if (this.isPlaying) {
             this.pausePlaybackEngine();
-            if (mix.audioUrl) this.mediaEngine.load(mix.audioUrl, false);
+            if (mix.audioUrl) this.mediaEngine.load(mix.audioUrl, false, this.getStartOffset(mix));
             if (startImmediately) this.startPlaybackEngine();
           } else {
-            if (mix.audioUrl) this.mediaEngine.load(mix.audioUrl, false);
+            if (mix.audioUrl) this.mediaEngine.load(mix.audioUrl, false, this.getStartOffset(mix));
           }
         }
 
@@ -1872,6 +1878,7 @@ void main(){
         this.mediaEngine.pause();
         this.audioEngine.stop();
 
+        if (this.mediaEngine.getCurrentTime() < this.getStartOffset()) this.mediaEngine.seekTo(this.getStartOffset());
         this.mediaEngine.play();
 
         this.updateVolumeEngine();
@@ -1914,8 +1921,8 @@ void main(){
 
       handleMixFinished() {
         if (this.isRepeat) {
-          this.playbackTime = 0;
-          this.mediaEngine.seekTo(0);
+          this.playbackTime = this.getStartOffset();
+          this.mediaEngine.seekTo(this.getStartOffset());
           this.mediaEngine.play();
         } else if (this.isShuffled) {
           // Play random index
