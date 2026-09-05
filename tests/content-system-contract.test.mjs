@@ -50,6 +50,15 @@ test("Listen artist profiles are managed in Sanity", async () => {
   assert.match(profile, /Open in Go Out/);
 });
 
+test("parked mixes stay in the CMS but are not sent to public listen surfaces", async () => {
+  const schema = await source("sanity/schemaTypes/mixType.ts");
+  const query = await source("lib/sanity.ts");
+
+  assert.match(schema, /name:\s*"parked"/);
+  assert.match(schema, /Park this mix/);
+  assert.match(query, /_type == "mix" && published == true && parked != true/);
+});
+
 test("mix masters upload in Sanity and are delivered from the audio CDN", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");

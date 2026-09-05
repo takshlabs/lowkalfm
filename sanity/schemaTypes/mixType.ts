@@ -91,6 +91,14 @@ export const mixType = defineType({
       validation: (rule) => rule.max(280).warning("Keep the prompt below 280 characters.")
     }),
     defineField({ name: "published", title: "Published", type: "boolean", group: "placement", initialValue: false }),
+    defineField({
+      name: "parked",
+      title: "Park this mix",
+      type: "boolean",
+      group: "placement",
+      initialValue: false,
+      description: "Hide this published mix from all public Lowkal listen surfaces. It stays in the CMS and can be restored at any time."
+    }),
     defineField({ name: "featured", title: "Featured mix", type: "boolean", group: "placement", initialValue: false }),
     defineField({ name: "showInPlayer", title: "Available in player", type: "boolean", group: "placement", initialValue: true }),
     defineField({ name: "playerOrder", title: "Player order", type: "number", group: "placement", initialValue: 100 }),
@@ -136,7 +144,7 @@ export const mixType = defineType({
     { title: "Soundroom order", name: "soundroomOrder", by: [{ field: "soundroomOrder", direction: "asc" }] }
   ],
   preview: {
-    select: { title: "title", series: "series", artist: "artistDisplayName", media: "artwork", published: "published" },
-    prepare: ({ title, series, artist, media, published }) => ({ title, subtitle: `${published ? "Published" : "Draft"} · ${artist || series}`, media })
+    select: { title: "title", series: "series", artist: "artistDisplayName", media: "artwork", published: "published", parked: "parked" },
+    prepare: ({ title, series, artist, media, published, parked }) => ({ title, subtitle: `${parked ? "Parked" : published ? "Published" : "Draft"} · ${artist || series}`, media })
   }
 });

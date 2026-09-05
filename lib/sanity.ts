@@ -27,7 +27,7 @@ export const storiesQuery = `*[_type == "editorialStory" && defined(publishedAt)
 }`;
 
 export const listenContentQuery = `{
-  "mixes": *[_type == "mix" && published == true] | order(playerOrder asc, releaseDate desc) {
+  "mixes": *[_type == "mix" && published == true && parked != true] | order(playerOrder asc, releaseDate desc) {
     "slug": slug.current,
     format,
     series,
