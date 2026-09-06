@@ -9,6 +9,7 @@ const links = [
   { href: "/listen", label: "Soundroom" },
   { href: "/listen/archive", label: "Archive" },
   { href: "/read", label: "Read" },
+  { href: "/artists", label: "Artists" },
   { href: "/go-out", label: "Go out" }
 ];
 

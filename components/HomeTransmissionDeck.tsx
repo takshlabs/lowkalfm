@@ -21,8 +21,8 @@ export function HomeTransmissionDeck() {
     <section className="home-transmissions" aria-labelledby="home-transmissions-title">
       <div className="rinse-section-head">
         <div>
-          <span>Archive</span>
-          <h2 id="home-transmissions-title">Latest</h2>
+          <span>Fresh from the archive</span>
+          <h2 id="home-transmissions-title">On rotation<span className="rotation-dot" aria-hidden="true"> ↗</span></h2>
         </div>
         <SiteLink href={sitePath("/listen/archive")}>All records ↗</SiteLink>
       </div>

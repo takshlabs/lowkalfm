@@ -19,6 +19,7 @@ type AudioContextValue = {
   playRecord: (slug: string, autoplay?: boolean) => void; togglePlayback: () => void; seek: (seconds: number) => void; setVolume: (volume: number) => void;
 };
 type YouTubeStateEvent = { data: number };
+// YouTube adds control methods after the iframe is ready.
 type YouTubePlayer = {
   playVideo: () => void;
   pauseVideo: () => void;
@@ -109,7 +110,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [failedAudioUrl, setFailedAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const youtubeHostRef = useRef<HTMLDivElement | null>(null);
-  const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
+  const youtubePlayerRef = useRef<Partial<YouTubePlayer> | null>(null);
   const resumeAtRef = useRef(firstRecord.startOffset ?? 0);
   const autoplayRef = useRef(typeof window !== "undefined" && readPlaybackIntent());
   const currentTimeRef = useRef(0);
@@ -147,12 +148,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       void audioRef.current.play().catch(() => { setIsPlaying(false); savePlaybackIntent(false); });
       return;
     }
-    youtubePlayerRef.current?.playVideo();
+    youtubePlayerRef.current?.playVideo?.();
   }, [activeRecord, useYouTube]);
   const pauseMedia = useCallback(() => {
     savePlaybackIntent(false); autoplayRef.current = false;
     audioRef.current?.pause();
-    youtubePlayerRef.current?.pauseVideo();
+    youtubePlayerRef.current?.pauseVideo?.();
   }, []);
 
   const playRecord = useCallback((slug: string, shouldPlay = true) => {
@@ -177,7 +178,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (isRepeat) {
       resumeAtRef.current = activeRecord.startOffset ?? 0;
       if (audioRef.current) audioRef.current.currentTime = activeRecord.startOffset ?? 0;
-      youtubePlayerRef.current?.seekTo(activeRecord.startOffset ?? 0, true);
+      youtubePlayerRef.current?.seekTo?.(activeRecord.startOffset ?? 0, true);
       playMedia();
       return;
     }
@@ -227,7 +228,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }).catch(() => { if (active) { setIsReady(false); setIsPlaying(false); } });
     return () => {
       active = false;
-      youtubePlayerRef.current?.destroy();
+      youtubePlayerRef.current?.destroy?.();
       youtubePlayerRef.current = null;
     };
   }, [activeRecord.duration, activeRecord.slug, activeRecord.startOffset, activeRecord.youtubeId, useYouTube]);
@@ -235,8 +236,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isPlaying || !useYouTube || !activeRecord.youtubeId) return;
     const timer = window.setInterval(() => {
-      const nextTime = youtubePlayerRef.current?.getCurrentTime();
-      const nextDuration = youtubePlayerRef.current?.getDuration();
+      const nextTime = youtubePlayerRef.current?.getCurrentTime?.();
+      const nextDuration = youtubePlayerRef.current?.getDuration?.();
       if (Number.isFinite(nextTime)) setCurrentTime(nextTime as number);
       if (Number.isFinite(nextDuration) && (nextDuration as number) > 0) setDuration(nextDuration as number);
     }, 500);
@@ -248,14 +249,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const bounded = Math.min(duration || activeRecord.duration, Math.max(0, seconds));
     setCurrentTime(bounded);
     if (audioRef.current) audioRef.current.currentTime = bounded;
-    youtubePlayerRef.current?.seekTo(bounded, true);
+    youtubePlayerRef.current?.seekTo?.(bounded, true);
     persist(bounded);
   }, [activeRecord.duration, duration, persist]);
   const setVolume = useCallback((nextVolume: number) => {
     const bounded = Math.min(100, Math.max(0, nextVolume));
     setVolumeState(bounded);
     if (audioRef.current) audioRef.current.volume = bounded / 100;
-    youtubePlayerRef.current?.setVolume(bounded);
+    youtubePlayerRef.current?.setVolume?.(bounded);
   }, []);
 
   useEffect(() => {
@@ -271,8 +272,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const snapshot = stateRef.current;
     const audio = audioRef.current;
     const record = getRecord(snapshot.activeSlug) ?? firstRecord;
-    const youtubeTime = youtubePlayerRef.current?.getCurrentTime();
-    const youtubeDuration = youtubePlayerRef.current?.getDuration();
+    const youtubeTime = youtubePlayerRef.current?.getCurrentTime?.();
+    const youtubeDuration = youtubePlayerRef.current?.getDuration?.();
     const message = { channel: AUDIO_SYNC_CHANNEL, type: "state", state: { slug: record.slug, audioUrl: record.audioUrl, currentTime: audio?.currentTime ?? youtubeTime ?? snapshot.currentTime, duration: audio?.duration || youtubeDuration || snapshot.duration || record.duration, isPlaying: useYouTube ? snapshot.isPlaying : Boolean(audio && !audio.paused && !audio.ended), isReady: snapshot.isReady, volume: snapshot.volume, isShuffled: snapshot.isShuffled, isRepeat: snapshot.isRepeat } };
     if (target) { target.postMessage(message, window.location.origin); return; }
     for (let index = 0; index < window.frames.length; index += 1) window.frames[index]?.postMessage(message, window.location.origin);

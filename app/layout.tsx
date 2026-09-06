@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { sitePath } from "@/lib/site-path";
 import "./globals.css";
 import "./reimagined.css";
+import "./new-wave.css";
 
 export const dynamic = "force-static";
 
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0e0e0d"
+  themeColor: "#eeeade"
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

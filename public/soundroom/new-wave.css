@@ -1,0 +1,87 @@
+/* The room uses the same paper and blue identity as the main site. */
+html,
+body {
+  background-color: #202b24;
+}
+.glass-panel {
+  background: rgba(238, 234, 222, 0.96);
+  color: #20231e;
+  border-radius: 3px !important;
+  box-shadow: 10px 12px 0 rgba(0, 0, 0, 0.2);
+}
+.glass-panel .text-white {
+  color: #20231e;
+}
+.glass-panel .text-muted,
+.glass-panel [class*="text-muted/"] {
+  color: #626457;
+}
+.glass-panel .text-primary {
+  color: #2449df;
+}
+.glass-panel .bg-primary {
+  background: #2449df;
+  color: #fff;
+}
+.glass-panel [class*="border-white/"] {
+  border-color: #c2c1b3;
+}
+.glass-panel [class*="bg-[#121226]"] {
+  background: transparent;
+}
+#main-title {
+  font-family: Georgia, serif;
+  font-weight: 400;
+  text-transform: none;
+  font-size: 38px;
+  letter-spacing: -0.04em;
+}
+#screen-home main > div:first-child {
+  border-radius: 2px;
+  transform: rotate(-3deg);
+  box-shadow: 12px 16px 0 rgba(0, 0, 0, 0.25);
+}
+.soundroom-return-nav a {
+  background: #eeeade;
+  color: #20231e;
+  border-radius: 2px;
+}
+.soundroom-return-nav a:first-child {
+  background: #2449df;
+  color: white;
+}
+input[type="range"]::-webkit-slider-thumb {
+  background: #2449df;
+}
+input[type="range"]::-moz-range-thumb {
+  background: #2449df;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid #2449df !important;
+  outline-offset: 4px;
+}
+@media (max-width: 767px) {
+  #main-title {
+    font-size: 30px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+#main-title { font-family: Georgia, serif !important; }
+@media (max-width: 767px) {
+  body > header { top: 18px; left: 18px; right: 18px; gap: 12px; mix-blend-mode: normal; }
+  body > header > div { gap: 12px; }
+  #header-nav-btn { font-size: 10px; gap: 4px; }
+  #header-logo h1 { font-size: 13px; }
+  #header-logo img { width: 24px; height: 24px; }
+  #btn-tracklist-open { padding: 8px; }
+  #btn-tracklist-open > span:last-child { display: none; }
+}

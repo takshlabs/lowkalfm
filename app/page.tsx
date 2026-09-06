@@ -5,60 +5,140 @@ import { sitePath } from "@/lib/site-path";
 
 export const dynamic = "force-static";
 
+const channels = [
+  {
+    number: "01",
+    title: "Listen",
+    text: "Long sessions. Deep selections. Find your next favourite sound.",
+    href: "/listen",
+    label: "Enter soundroom",
+  },
+  {
+    number: "02",
+    title: "Read",
+    text: "People, places, and ideas from our corner of the city.",
+    href: "/read",
+    label: "Open the journal",
+  },
+  {
+    number: "03",
+    title: "Go out",
+    text: "Close the laptop. Find a room. Meet the people behind the music.",
+    href: "/go-out",
+    label: "Explore the city",
+  },
+];
+
 export default function Home() {
   return (
-    <main className="home-shell rinse-home">
-      <div className="home-shader" aria-hidden="true" />
-
-      <section className="rinse-hero" aria-labelledby="rinse-hero-title">
-        <div className="rinse-hero-copy">
-          <span>Lowkal.fm · Bengaluru</span>
-          <h1 id="rinse-hero-title">The city has a frequency.</h1>
-          <p>Independent radio from Bengaluru.</p>
-          <SiteLink href={sitePath("/listen")}>Enter soundroom <span aria-hidden="true">↗</span></SiteLink>
+    <main className="new-wave-home" id="main-content">
+      <section className="wave-hero" aria-labelledby="wave-title">
+        <div className="wave-dateline">
+          <span>Independent radio & culture</span>
+          <span>Bengaluru, India · 12.97° N</span>
         </div>
-        <div className="rinse-hero-art">
-          <MediaFrame variant="hero" frameClassName="rinse-hero-frame" src={sitePath("/art/ember-bloom.jpg")} alt="Red and orange flower emerging from a dark field" fill sizes="100vw" priority />
-          <div className="rinse-hero-wash" aria-hidden="true" />
+        <h1 id="wave-title">
+          Keep it
+          <br />
+          <em>Lowkal.</em>
+          <span className="wave-asterisk" aria-hidden="true">
+            ✳
+          </span>
+        </h1>
+        <div className="wave-hero-bottom">
+          <p>
+            A place for curious ears.
+            <br />
+            Multi-genre. Low-end focused.
+            <br />
+            Always from Bengaluru.
+          </p>
+          <SiteLink className="wave-button" href={sitePath("/listen")}>
+            Enter soundroom <span aria-hidden="true">↗</span>
+          </SiteLink>
+          <span className="wave-edition">
+            SOUND / PEOPLE / PLACE
+            <br />
+            EST. BENGALURU
+          </span>
         </div>
-      </section>
-
-      <nav className="home-channel-row" aria-label="Lowkal channels">
-        <SiteLink href={sitePath("/listen")}><span className="channel-index">01</span><span className="channel-spectrum" aria-hidden="true"><b /></span><strong>Listen</strong><small>Soundroom · 93.5</small><i aria-hidden="true">↗</i></SiteLink>
-        <SiteLink href={sitePath("/read")}><span className="channel-index">02</span><span className="channel-spectrum" aria-hidden="true"><b /></span><strong>Read</strong><small>City journal · BLR</small><i aria-hidden="true">↗</i></SiteLink>
-        <SiteLink href={sitePath("/go-out")}><span className="channel-index">03</span><span className="channel-spectrum" aria-hidden="true"><b /></span><strong>Go out</strong><small>Local signal · Tonight</small><i aria-hidden="true">↗</i></SiteLink>
-        <SiteLink href={sitePath("/listen/archive")}><span className="channel-index">AR</span><span className="channel-spectrum" aria-hidden="true"><b /></span><strong>Archive</strong><small>Recorded in Bengaluru</small><i aria-hidden="true">↗</i></SiteLink>
-      </nav>
-
-      <HomeTransmissionDeck />
-
-      <section className="home-city" aria-labelledby="home-city-title">
-        <div className="rinse-section-head">
-          <div>
-            <span>City notes</span>
-            <h2 id="home-city-title">From the city</h2>
+        <div className="wave-art" aria-hidden="true">
+          <div className="wave-disc">
+            <div className="wave-disc-label">
+              LOWKAL
+              <br />
+              <small>SIDE A · BLR</small>
+            </div>
           </div>
+          <span className="wave-art-caption">
+            Different sounds. Common ground.
+          </span>
         </div>
-        <div className="city-card-row">
-          <SiteLink className="city-card" href={sitePath("/read")}>
-            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/eye-in-hand.jpg")} alt="Green collage of a face, hands, and painted eyes" fill sizes="(max-width: 760px) 88vw, 31vw" />
-            <div><span>Journal · 02</span><h3>Stories behind the signal.</h3><p>Read the room ↗</p></div>
+      </section>
+      <div className="wave-strip" aria-label="Lowkal languages">
+        <span>ಲೋಕಲ್</span>
+        <span>LOCAL ROOTS. OPEN EARS.</span>
+        <span>লোকাল</span>
+        <span>INDEPENDENT BY NATURE.</span>
+        <span>लोकल</span>
+      </div>
+      <HomeTransmissionDeck />
+      <section className="wave-channels" aria-label="Explore Lowkal">
+        {channels.map((channel) => (
+          <SiteLink
+            className="wave-channel"
+            key={channel.number}
+            href={sitePath(channel.href)}
+          >
+            <span className="wave-channel-number">
+              {channel.number} / LOWKAL
+            </span>
+            <h2>
+              {channel.title}
+              <span aria-hidden="true">↗</span>
+            </h2>
+            <p>{channel.text}</p>
+            <span className="wave-channel-link">{channel.label}</span>
           </SiteLink>
-          <SiteLink className="city-card" href={sitePath("/go-out")}>
-            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/ember-bloom.jpg")} alt="Red and orange flower emerging from a dark field" fill sizes="(max-width: 760px) 88vw, 31vw" />
-            <div><span>City guide · 03</span><h3>Bengaluru is better off-screen.</h3><p>Go out ↗</p></div>
-          </SiteLink>
-          <SiteLink className="city-card" href={sitePath("/listen/archive")}>
-            <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/lowkal-002.jpg")} alt="Lowkal 002 archive artwork" fill sizes="(max-width: 760px) 88vw, 31vw" />
-            <div><span>Archive · 01</span><h3>Sessions worth returning to.</h3><p>Browse records ↗</p></div>
+        ))}
+      </section>
+      <section className="wave-people" aria-labelledby="wave-people-title">
+        <div className="wave-people-art">
+          <MediaFrame
+            variant="editorial"
+            src={sitePath("/art/eye-in-hand.jpg")}
+            alt="Green collage of hands and painted eyes"
+            fill
+            sizes="(max-width: 760px) 100vw, 50vw"
+          />
+          <span>THE PEOPLE MAKE THE SOUND.</span>
+        </div>
+        <div className="wave-people-copy">
+          <span className="section-kicker">The Lowkal community</span>
+          <h2 id="wave-people-title">
+            Good music.
+            <br />
+            <em>Real people.</em>
+          </h2>
+          <p>
+            Meet the residents, guests, and friends who bring their own world to
+            every selection.
+          </p>
+          <SiteLink className="wave-button" href={sitePath("/artists")}>
+            Meet the artists <span aria-hidden="true">↗</span>
           </SiteLink>
         </div>
       </section>
-
-      <aside className="home-open-call">
-        <span>Submissions open</span>
-        <p>Send us a sound worth keeping.</p>
-        <a href="mailto:hello@lowkal.fm?subject=Open%20frequency">Write to Lowkal ↗</a>
+      <aside className="wave-open-call">
+        <span>Our ears are open</span>
+        <h2>
+          Got something
+          <br />
+          we should hear?
+        </h2>
+        <a href="mailto:hello@lowkal.fm?subject=Open%20frequency">
+          Send it our way <span aria-hidden="true">↗</span>
+        </a>
       </aside>
     </main>
   );
