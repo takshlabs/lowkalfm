@@ -1,3 +1,5 @@
+import { getYouTubeVideoId } from "./audio-source.ts";
+
 const LOCAL_HOSTS = new Set([
   "lowkal.fm",
   "www.lowkal.fm",
@@ -6,6 +8,8 @@ const LOCAL_HOSTS = new Set([
   "127.0.0.1"
 ]);
 
+const YOUTUBE_THUMB_FILES = ["maxresdefault.jpg", "sddefault.jpg", "hqdefault.jpg"] as const;
+
 export type DeskLink = {
   title: string;
   url: string;
@@ -13,6 +17,7 @@ export type DeskLink = {
   description?: string;
   imageUrl?: string | null;
   imageAlt?: string | null;
+  youtubeId?: string;
 };
 
 export type DeskBoard = {
@@ -35,6 +40,15 @@ export type DeskBoardRecord = {
     imageAlt?: string | null;
   }> | null;
 } | null;
+
+export function deskPreviewSources(link: Pick<DeskLink, "imageUrl" | "youtubeId">) {
+  const sources: string[] = [];
+  if (link.imageUrl) sources.push(link.imageUrl);
+  if (link.youtubeId) {
+    for (const file of YOUTUBE_THUMB_FILES) sources.push(`https://i.ytimg.com/vi/${link.youtubeId}/${file}`);
+  }
+  return sources;
+}
 
 export function isAllowedDeskUrl(url: string) {
   const value = url.trim();
@@ -76,7 +90,8 @@ export function toDeskBoard(board: DeskBoardRecord): DeskBoard {
         label: link.label?.trim() || undefined,
         description: link.description?.trim() || undefined,
         imageUrl: link.imageUrl,
-        imageAlt: link.imageAlt?.trim() || title
+        imageAlt: link.imageAlt?.trim() || title,
+        youtubeId: getYouTubeVideoId(url)
       }];
     })
   };

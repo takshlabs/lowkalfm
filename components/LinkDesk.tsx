@@ -2,11 +2,40 @@
 
 import { useEffect, useState } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
-import { deskLinkHost, toDeskBoard, type DeskBoard } from "@/lib/link-board";
+import { deskLinkHost, deskPreviewSources, toDeskBoard, type DeskBoard, type DeskLink } from "@/lib/link-board";
 import { isSanityConfigured, linkBoardQuery, sanityClient } from "@/lib/sanity";
 import { sitePath } from "@/lib/site-path";
 
 const emptyBoard = toDeskBoard(null);
+
+function DeskPreview({ link }: { link: DeskLink }) {
+  const sources = deskPreviewSources(link);
+  const [index, setIndex] = useState(0);
+  const src = sources[index];
+
+  if (!src) return null;
+
+  const advance = () => {
+    setIndex((current) => (current + 1 < sources.length ? current + 1 : current));
+  };
+
+  return (
+    <MediaFrame
+      variant="editorial"
+      frameClassName="link-desk-preview"
+      src={src}
+      alt={link.imageAlt || `${link.title} preview`}
+      width={1280}
+      height={720}
+      sizes="(max-width: 760px) 100vw, 46vw"
+      unoptimized
+      onError={advance}
+      onLoad={(event) => {
+        if (event.currentTarget.naturalWidth <= 120) advance();
+      }}
+    />
+  );
+}
 
 export function LinkDesk({ fallback = emptyBoard }: { fallback?: DeskBoard }) {
   const [board, setBoard] = useState(fallback);
@@ -49,34 +78,29 @@ export function LinkDesk({ fallback = emptyBoard }: { fallback?: DeskBoard }) {
         </div>
       ) : (
         <section className="link-desk-list" aria-label="Selected destinations">
-          {board.links.map((link, index) => (
-            <a
-              className={`link-desk-item${link.imageUrl ? "" : " link-desk-item--plain"}`}
-              href={link.url}
-              key={`${link.url}-${index}`}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <span className="link-desk-index">{String(index + 1).padStart(2, "0")}</span>
-              {link.imageUrl ? (
-                <MediaFrame
-                  variant="editorial"
-                  frameClassName="link-desk-preview"
-                  src={link.imageUrl}
-                  alt={link.imageAlt || `${link.title} preview`}
-                  width={1400}
-                  height={900}
-                  sizes="(max-width: 760px) 100vw, 46vw"
-                />
-              ) : null}
-              <span className="link-desk-copy">
-                {link.label ? <span>{link.label}</span> : null}
-                <strong>{link.title}</strong>
-                {link.description ? <em>{link.description}</em> : null}
-                <small>{deskLinkHost(link.url)} ↗</small>
-              </span>
-            </a>
-          ))}
+          {board.links.map((link, index) => {
+            const previewSources = deskPreviewSources(link);
+            return (
+              <a
+                className={`link-desk-item${previewSources.length ? "" : " link-desk-item--plain"}`}
+                href={link.url}
+                key={`${link.url}-${index}`}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <span className="link-desk-media">
+                  <span className="link-desk-index">{String(index + 1).padStart(2, "0")}</span>
+                  {previewSources.length ? <DeskPreview key={link.url} link={link} /> : null}
+                </span>
+                <span className="link-desk-copy">
+                  {link.label ? <span>{link.label}</span> : null}
+                  <strong>{link.title}</strong>
+                  {link.description ? <em>{link.description}</em> : null}
+                  <small>{deskLinkHost(link.url)} ↗</small>
+                </span>
+              </a>
+            );
+          })}
         </section>
       )}
     </main>

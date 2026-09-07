@@ -84,6 +84,9 @@ test("private desk links are managed in Sanity and stay off public navigation", 
   assert.match(page, /index:\s*false/);
   assert.match(desk, /target="_blank"/);
   assert.match(filter, /function isAllowedDeskUrl/);
+  assert.match(filter, /deskPreviewSources/);
+  assert.match(filter, /i\.ytimg\.com/);
+  assert.match(desk, /DeskPreview/);
   assert.match(filter, /lowkalfm\.vercel\.app/);
   assert.doesNotMatch(header, /\/desk/);
   assert.doesNotMatch(footer, /\/desk/);
