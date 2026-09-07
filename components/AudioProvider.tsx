@@ -5,7 +5,6 @@ import type { SoundRecord } from "@/lib/content";
 import { useListenContent } from "./ListenContentProvider";
 
 const STORAGE_KEY = "lowkal.player.v1";
-const PLAYBACK_INTENT_KEY = "lowkal.player.playback-intent.v1";
 const AUDIO_SYNC_CHANNEL = "lowkal.audio.v1";
 const YOUTUBE_API_URL = "https://www.youtube.com/iframe_api";
 
@@ -86,14 +85,6 @@ function readSavedState(): SavedPlayerState | null {
   } catch { return null; }
 }
 
-function readPlaybackIntent() {
-  try { return window.sessionStorage.getItem(PLAYBACK_INTENT_KEY) === "playing"; } catch { return false; }
-}
-
-function savePlaybackIntent(shouldPlay: boolean) {
-  try { window.sessionStorage.setItem(PLAYBACK_INTENT_KEY, shouldPlay ? "playing" : "paused"); } catch { /* Playback still works if storage is unavailable. */ }
-}
-
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const { records, getRecord } = useListenContent();
   const playableRecords = useMemo(() => records.filter((record) => record.showInPlayer && isPlayable(record)), [records]);
@@ -111,7 +102,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const youtubeHostRef = useRef<HTMLDivElement | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
   const resumeAtRef = useRef(firstRecord.startOffset ?? 0);
-  const autoplayRef = useRef(typeof window !== "undefined" && readPlaybackIntent());
+  const autoplayRef = useRef(false);
   const currentTimeRef = useRef(0);
   const volumeRef = useRef(volume);
   const onEndedRef = useRef<() => void>(() => undefined);
@@ -142,15 +133,15 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const playMedia = useCallback(() => {
     if (!isPlayable(activeRecord)) return;
-    savePlaybackIntent(true); autoplayRef.current = true;
+    autoplayRef.current = true;
     if (!useYouTube && activeRecord.audioUrl && audioRef.current) {
-      void audioRef.current.play().catch(() => { setIsPlaying(false); savePlaybackIntent(false); });
+      void audioRef.current.play().catch(() => { setIsPlaying(false); autoplayRef.current = false; });
       return;
     }
     youtubePlayerRef.current?.playVideo();
   }, [activeRecord, useYouTube]);
   const pauseMedia = useCallback(() => {
-    savePlaybackIntent(false); autoplayRef.current = false;
+    autoplayRef.current = false;
     audioRef.current?.pause();
     youtubePlayerRef.current?.pauseVideo();
   }, []);
@@ -159,7 +150,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const record = getRecord(slug);
     if (!isPlayable(record)) return;
     if (slug === activeRecord.slug) { if (shouldPlay) playMedia(); else pauseMedia(); return; }
-    savePlaybackIntent(shouldPlay); autoplayRef.current = shouldPlay; resumeAtRef.current = record?.startOffset ?? 0;
+    autoplayRef.current = shouldPlay; resumeAtRef.current = record?.startOffset ?? 0;
     setFailedAudioUrl(null); setCurrentTime(0); setDuration(record?.duration ?? 0); setIsPlaying(false); setIsReady(false); setActiveSlug(slug);
   }, [activeRecord.slug, getRecord, pauseMedia, playMedia]);
 
@@ -221,7 +212,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             setIsPlaying(data === 1);
             if (data === 0) onEndedRef.current();
           },
-          onError: () => { if (active) { setIsReady(false); setIsPlaying(false); savePlaybackIntent(false); } }
+          onError: () => { if (active) { setIsReady(false); setIsPlaying(false); autoplayRef.current = false; } }
         }
       });
     }).catch(() => { if (active) { setIsReady(false); setIsPlaying(false); } });

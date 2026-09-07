@@ -8,7 +8,7 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("the floating player is quiet by default and supports direct audio with YouTube fallback", async () => {
+test("the floating player starts paused after a document navigation and supports direct audio with YouTube fallback", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const content = await source("components/ListenContentProvider.tsx");
   const query = await source("lib/sanity.ts");
@@ -27,9 +27,9 @@ test("the floating player is quiet by default and supports direct audio with You
   assert.match(query, /externalUrl/);
   assert.doesNotMatch(provider, /react-youtube/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
-  assert.match(provider, /PLAYBACK_INTENT_KEY/);
-  assert.match(provider, /window\.sessionStorage\.getItem\(PLAYBACK_INTENT_KEY\) === "playing"/);
-  assert.match(provider, /window\.sessionStorage\.setItem\(PLAYBACK_INTENT_KEY, shouldPlay \? "playing" : "paused"\)/);
+  assert.match(provider, /const autoplayRef = useRef\(false\)/);
+  assert.doesNotMatch(provider, /lowkal\.player\.playback-intent\.v1/);
+  assert.doesNotMatch(provider, /sessionStorage/);
   assert.doesNotMatch(player, /Live signal/i);
   assert.doesNotMatch(player, /player-signal/);
 });
