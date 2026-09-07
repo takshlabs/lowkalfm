@@ -81,3 +81,17 @@ export const listenContentQuery = `{
     fieldNotes[]{placeName, area, note, tags, mapUrl, "goOutSlug": goOutSlug.current}
   }
 }`;
+
+export const linkBoardQuery = `*[_id == "linkBoard" && published == true][0]{
+  title,
+  kicker,
+  intro,
+  "links": links[parked != true]{
+    title,
+    url,
+    label,
+    description,
+    "imageUrl": preview.asset->url,
+    "imageAlt": coalesce(preview.alt, title)
+  }
+}`;

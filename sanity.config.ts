@@ -23,6 +23,7 @@ const structure: StructureResolver = (S) => S.list()
       S.documentTypeListItem("topic").title("Topics")
     ])),
     S.divider(),
+    S.listItem().title("Private links").id("linkBoard").child(S.document().schemaType("linkBoard").documentId("linkBoard")),
     S.documentTypeListItem("siteSettings").title("Site settings")
   ]);
 

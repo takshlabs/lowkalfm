@@ -43,6 +43,24 @@ for (const [pathname, expectedText] of routes) {
   });
 }
 
+test("unlisted desk page stays off public navigation", async () => {
+  const response = await render("/desk");
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+
+  const html = await response.text();
+  assert.match(html, /noindex/i);
+  assert.match(html, /LOWKAL\.FM/i);
+  assert.match(html, /link-desk/);
+  assert.doesNotMatch(html, /class="header-nav"/);
+  assert.doesNotMatch(html, /class="site-footer"/);
+  assert.doesNotMatch(html, /class="lowkal-player/);
+  assert.doesNotMatch(html, /href="\/listen"/);
+  assert.doesNotMatch(html, /href="\/read"/);
+  assert.doesNotMatch(html, /href="\/go-out"/);
+  assert.doesNotMatch(html, /href="\/"/);
+});
+
 test("keeps the original Soundroom as a standalone archive asset", async () => {
   const soundroom = await readFile(new URL("../public/soundroom/index.html", import.meta.url), "utf8");
   const mixes = JSON.parse(await readFile(new URL("../public/soundroom/mixes.json", import.meta.url), "utf8"));

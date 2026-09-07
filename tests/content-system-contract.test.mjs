@@ -59,6 +59,40 @@ test("parked mixes stay in the CMS but are not sent to public listen surfaces", 
   assert.match(query, /_type == "mix" && published == true && parked != true/);
 });
 
+test("private desk links are managed in Sanity and stay off public navigation", async () => {
+  const schema = await source("sanity/schemaTypes/linkBoardType.ts");
+  const index = await source("sanity/schemaTypes/index.ts");
+  const studio = await source("sanity.config.ts");
+  const query = await source("lib/sanity.ts");
+  const header = await source("components/SiteHeader.tsx");
+  const footer = await source("components/SiteFooter.tsx");
+  const player = await source("components/PersistentPlayer.tsx");
+  const page = await source("app/desk/page.tsx");
+  const desk = await source("components/LinkDesk.tsx");
+  const filter = await source("lib/link-board.ts");
+
+  assert.match(index, /linkBoardType/);
+  assert.match(studio, /Private links/);
+  assert.match(studio, /documentId\("linkBoard"\)/);
+  assert.match(schema, /name:\s*"linkBoard"/);
+  assert.match(schema, /Share the \/desk link/);
+  assert.match(schema, /name:\s*"parked"/);
+  assert.match(schema, /Park this link/);
+  assert.match(query, /_id == "linkBoard" && published == true/);
+  assert.match(query, /links\[parked != true\]/);
+  assert.match(page, /robots/);
+  assert.match(page, /index:\s*false/);
+  assert.match(desk, /target="_blank"/);
+  assert.match(filter, /function isAllowedDeskUrl/);
+  assert.match(filter, /lowkalfm\.vercel\.app/);
+  assert.doesNotMatch(header, /\/desk/);
+  assert.doesNotMatch(footer, /\/desk/);
+  assert.match(header, /isUnlistedPath/);
+  assert.match(footer, /isUnlistedPath/);
+  assert.match(player, /isUnlistedPath/);
+  assert.doesNotMatch(desk, /SiteLink/);
+});
+
 test("mix masters upload in Sanity and are delivered from the audio CDN", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");

@@ -3,6 +3,7 @@
 import type { CSSProperties } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
+import { isUnlistedPath } from "@/lib/site-chrome";
 import { sitePath } from "@/lib/site-path";
 import { ArrowUpRight, Pause, Play, Volume2 } from "lucide-react";
 import { formatTime } from "@/lib/content";
@@ -18,7 +19,7 @@ export function PersistentPlayer() {
   const volumeStyle = { "--deck-volume": `${volume}%` } as CSSProperties;
   const volumeLabel = Math.round(volume).toString().padStart(2, "0");
 
-  if (pathname.startsWith(sitePath("/studio"))) return null;
+  if (isUnlistedPath(pathname)) return null;
 
   return (
     <aside className={`lowkal-player lowkal-player--compact${isPlaying ? " is-playing" : ""}`} aria-label="Lowkal audio player">

@@ -2,6 +2,7 @@
 
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
+import { isUnlistedPath } from "@/lib/site-chrome";
 import { sitePath } from "@/lib/site-path";
 import { usePathname } from "next/navigation";
 
@@ -15,7 +16,7 @@ const links = [
 export function SiteHeader() {
   const pathname = usePathname();
 
-  if (pathname.startsWith(sitePath("/studio"))) return null;
+  if (isUnlistedPath(pathname)) return null;
 
   return (
     <header className="site-header">
