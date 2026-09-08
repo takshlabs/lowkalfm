@@ -1375,7 +1375,7 @@
         const newTime = Math.max(0, this.playbackTime - seconds);
         if (IS_EMBEDDED) {
           this.playbackTime = newTime;
-          this.sendAudioCommand('seek', { seconds: newTime });
+          this.sendAudioCommand('seek-by', { seconds: -seconds });
           this.updatePlayerUI();
           this.updateMiniPlayerUI();
           return;
@@ -1391,7 +1391,7 @@
         const newTime = Math.min(dur, this.playbackTime + seconds);
         if (IS_EMBEDDED) {
           this.playbackTime = newTime;
-          this.sendAudioCommand('seek', { seconds: newTime });
+          this.sendAudioCommand('seek-by', { seconds });
           this.updatePlayerUI();
           this.updateMiniPlayerUI();
           return;

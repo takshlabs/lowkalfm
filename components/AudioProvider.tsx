@@ -13,7 +13,7 @@ const YOUTUBE_API_URL = "https://www.youtube.com/iframe_api";
 type SavedPlayerState = { slug: string; currentTime: number; volume: number; savedAt: number };
 type AudioCommand =
   | { action: "request-state" } | { action: "toggle" } | { action: "play" } | { action: "pause" }
-  | { action: "seek"; seconds: number } | { action: "volume"; volume: number }
+  | { action: "seek"; seconds: number } | { action: "seek-by"; seconds: number } | { action: "volume"; volume: number }
   | { action: "shuffle" } | { action: "repeat" } | { action: "select"; slug: string; autoplay: boolean };
 type AudioContextValue = {
   activeRecord: SoundRecord; currentTime: number; duration: number; isPlaying: boolean; isReady: boolean; volume: number;
@@ -303,6 +303,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     youtubePlayerRef.current?.seekTo?.(bounded, true);
     persist(bounded);
   }, [activeRecord.duration, duration, persist]);
+  const seekBy = useCallback((seconds: number) => {
+    const mediaTime = audioRef.current?.currentTime ?? youtubePlayerRef.current?.getCurrentTime?.() ?? currentTimeRef.current;
+    seek(mediaTime + seconds);
+  }, [seek]);
   const setVolume = useCallback((nextVolume: number) => {
     const bounded = Math.min(100, Math.max(0, nextVolume));
     setVolumeState(bounded);
@@ -326,8 +330,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       stop: () => { pauseMedia(); seek(activeRecord.startOffset ?? 0); },
       previoustrack: playPrevious,
       nexttrack: playNext,
-      seekbackward: (details) => seek(currentTimeRef.current - (details.seekOffset ?? 10)),
-      seekforward: (details) => seek(currentTimeRef.current + (details.seekOffset ?? 30)),
+      seekbackward: (details) => seekBy(-(details.seekOffset ?? 10)),
+      seekforward: (details) => seekBy(details.seekOffset ?? 30),
       seekto: (details) => { if (details.seekTime != null) seek(details.seekTime); }
     };
     for (const [action, handler] of Object.entries(handlers)) {
@@ -340,7 +344,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         catch { /* Ignore unsupported actions during cleanup. */ }
       }
     };
-  }, [activeRecord.artist, activeRecord.artwork, activeRecord.series, activeRecord.startOffset, activeRecord.title, pauseMedia, playMedia, playNext, playPrevious, seek]);
+  }, [activeRecord.artist, activeRecord.artwork, activeRecord.series, activeRecord.startOffset, activeRecord.title, pauseMedia, playMedia, playNext, playPrevious, seek, seekBy]);
 
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
@@ -386,6 +390,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       if (command.action === "play") playMedia();
       if (command.action === "pause") pauseMedia();
       if (command.action === "seek" && Number.isFinite(command.seconds)) seek(command.seconds);
+      if (command.action === "seek-by" && Number.isFinite(command.seconds)) seekBy(command.seconds);
       if (command.action === "volume" && Number.isFinite(command.volume)) setVolume(command.volume);
       if (command.action === "shuffle") setIsShuffled((value) => !value);
       if (command.action === "repeat") setIsRepeat((value) => !value);
@@ -393,7 +398,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [pauseMedia, playMedia, playRecord, postState, seek, setVolume, togglePlayback]);
+  }, [pauseMedia, playMedia, playRecord, postState, seek, seekBy, setVolume, togglePlayback]);
 
   const value = useMemo<AudioContextValue>(() => ({ activeRecord, currentTime, duration, isPlaying, isReady, volume, playRecord, togglePlayback, seek, setVolume }), [activeRecord, currentTime, duration, isPlaying, isReady, volume, playRecord, togglePlayback, seek, setVolume]);
   return (

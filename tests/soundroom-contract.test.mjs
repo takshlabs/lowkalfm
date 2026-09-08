@@ -28,6 +28,7 @@ test("the floating player preserves its live state during client navigation and 
   assert.doesNotMatch(provider, /react-youtube/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
   assert.match(provider, /const autoplayRef = useRef\(false\)/);
+  assert.match(player, /onInput=\{\(event\) => seek\(Number\(event\.currentTarget\.value\)\)\}/);
   assert.doesNotMatch(provider, /lowkal\.player\.playback-intent\.v1/);
   assert.doesNotMatch(provider, /sessionStorage/);
   assert.doesNotMatch(player, /Live signal/i);
@@ -171,10 +172,13 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(provider, /audio\?\.currentTime/);
   assert.match(provider, /youtubePlayerRef\.current\?\.getCurrentTime/);
   assert.match(provider, /action === "select"/);
+  assert.match(provider, /action === "seek-by"/);
+  assert.match(provider, /audioRef\.current\?\.currentTime/);
 
   assert.match(soundroom, /lowkal\.audio\.v1/);
   assert.match(soundroom, /IS_EMBEDDED = window\.parent !== window/);
   assert.match(soundroom, /sendAudioCommand\('seek'/);
+  assert.match(soundroom, /sendAudioCommand\('seek-by', \{ seconds \}\)/);
   assert.match(soundroom, /sendAudioCommand\('volume'/);
   assert.match(soundroom, /applyExternalAudioState/);
   assert.match(soundroom, /mix\.id === state\.slug/);

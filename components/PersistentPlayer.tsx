@@ -77,7 +77,7 @@ export function PersistentPlayer() {
             step={1}
             value={Math.min(currentTime, Math.max(1, total))}
             style={progressStyle}
-            onChange={(event) => seek(Number(event.target.value))}
+            onInput={(event) => seek(Number(event.currentTarget.value))}
           />
           <i aria-hidden="true" />
         </span>
