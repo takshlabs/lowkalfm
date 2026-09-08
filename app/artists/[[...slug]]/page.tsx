@@ -6,11 +6,10 @@ export const metadata: Metadata = {
   description: "Lowkal residents, guests, and collaborators."
 };
 
-type ArtistsPageProps = {
-  params: Promise<{ slug?: string[] }>;
-};
+export function generateStaticParams() {
+  return [{ slug: [] }];
+}
 
-export default async function ArtistsPage({ params }: ArtistsPageProps) {
-  const { slug = [] } = await params;
-  return <ArtistsDirectory artistSlug={slug[0] ?? ""} />;
+export default function ArtistsPage() {
+  return <ArtistsDirectory />;
 }
