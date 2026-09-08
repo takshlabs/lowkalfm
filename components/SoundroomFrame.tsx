@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { sitePath } from "@/lib/site-path";
 import { useListenContent } from "./ListenContentProvider";
 
@@ -9,6 +10,7 @@ const CATALOG_CHANNEL = "lowkal.catalog.v1";
 
 export function SoundroomFrame() {
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const router = useRouter();
   const { records, getArtist } = useListenContent();
   const mixes = useMemo(() => records.map((record, index) => {
     const artist = record.artistSlugs[0] ? getArtist(record.artistSlugs[0]) : undefined;
@@ -56,14 +58,14 @@ export function SoundroomFrame() {
 
       const destination = new URL(message.href, window.location.origin);
       if (destination.origin !== window.location.origin) return;
-      // The isolated Soundroom uses document navigation to leave its iframe safely.
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.assign(`${destination.pathname}${destination.search}${destination.hash}`);
+      // Keep the root audio provider mounted, so the current playback state
+      // continues unchanged when Soundroom opens another Lowkal page.
+      router.push(`${destination.pathname}${destination.search}${destination.hash}`);
     };
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     sendCatalog();

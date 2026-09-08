@@ -8,7 +8,7 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("the floating player starts paused after a document navigation and supports direct audio with YouTube fallback", async () => {
+test("the floating player preserves its live state during client navigation and supports direct audio with YouTube fallback", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const content = await source("components/ListenContentProvider.tsx");
   const query = await source("lib/sanity.ts");
@@ -34,18 +34,20 @@ test("the floating player starts paused after a document navigation and supports
   assert.doesNotMatch(player, /player-signal/);
 });
 
-test("internal navigation uses stable document links", async () => {
+test("internal navigation keeps the root audio provider mounted", async () => {
   const link = await source("components/SiteLink.tsx");
   const layout = await source("app/layout.tsx");
   const readFeed = await source("components/ReadFeed.tsx");
   const soundroomFrame = await source("components/SoundroomFrame.tsx");
   const soundroom = await source("public/soundroom/index.html");
 
-  assert.doesNotMatch(link, /next\/link/);
-  assert.match(link, /<a href=\{href\}/);
+  assert.match(link, /from "next\/link"/);
+  assert.match(link, /<Link href=\{href\}/);
   assert.match(layout, /<AudioProvider>[\s\S]*?\{children\}[\s\S]*?<PersistentPlayer/);
   assert.match(readFeed, /<SiteLink href=\{`\/read\/\$\{story\.slug\}`\}/);
-  assert.match(soundroomFrame, /window\.location\.assign/);
+  assert.match(soundroomFrame, /useRouter/);
+  assert.match(soundroomFrame, /router\.push/);
+  assert.doesNotMatch(soundroomFrame, /window\.location\.assign/);
   assert.match(soundroomFrame, /event\.source !== frameRef\.current\?\.contentWindow/);
   assert.match(soundroom, /bindNavigationBridge/);
   assert.match(soundroom, /lowkal\.navigation\.v1/);
