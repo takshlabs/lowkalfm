@@ -371,8 +371,8 @@ test("AudioProvider owns the bridge, sets CORS before src and resumes during pla
   assert.match(provider, /startAnalysisBridge\(window/);
   assert.match(provider, /isAnalysisSource\(activeRecord\.audioUrl, window\.location\.origin\)/);
   assert.match(provider, /audio\.crossOrigin = "anonymous"[\s\S]*audio\.removeAttribute\("crossorigin"\)[\s\S]*audio\.src = activeRecord\.audioUrl/);
-  assert.match(provider, /getAnalysis\(\)\.activate\(\);\s*void audioRef\.current\.play\(\)/);
-  assert.match(provider, /shouldPlay && record\?\.audioUrl\) getAnalysis\(\)\.activate\(record\.audioUrl\)/);
+  assert.match(provider, /if \(!needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(\);\s*void audioRef\.current\.play\(\)/);
+  assert.match(provider, /shouldPlay && record\?\.audioUrl && !needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(record\.audioUrl\)/);
   assert.match(provider, /key=\{`\$\{activeRecord\.slug\}:\$\{activeRecord\.audioUrl\}`\} ref=\{bindAudio\}/);
   assert.match(provider, /queueMicrotask[\s\S]*\.dispose\(\)/);
   assert.doesNotMatch(provider, /getUserMedia|captureStream/);

@@ -181,6 +181,21 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(soundroom, /HtmlAudioPlayerEngine/);
 });
 
+test("phone playback stays on the native media path and exposes system controls", async () => {
+  const provider = await source("components/AudioProvider.tsx");
+
+  assert.match(provider, /needsNativeBackgroundAudio/);
+  assert.match(provider, /pointer: coarse/);
+  assert.match(provider, /if \(!needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(\)/);
+  assert.match(provider, /previoustrack/);
+  assert.match(provider, /nexttrack/);
+  assert.match(provider, /seekbackward/);
+  assert.match(provider, /seekforward/);
+  assert.match(provider, /setPositionState/);
+  assert.match(provider, /session\.playbackState = isPlaying \? "playing" : "paused"/);
+  assert.match(provider, /preload="auto"/);
+});
+
 
 async function settingsHarness() {
   const { runInNewContext } = await import('node:vm');

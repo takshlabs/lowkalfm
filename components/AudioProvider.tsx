@@ -77,6 +77,13 @@ function isPlayable(record?: SoundRecord) {
   return Boolean(record?.audioUrl || record?.youtubeId);
 }
 
+function needsNativeBackgroundAudio() {
+  const hasTouchScreen = navigator.maxTouchPoints > 0;
+  const hasCoarsePointer = window.matchMedia?.("(pointer: coarse)").matches ?? false;
+  const shortestScreenEdge = Math.min(window.screen.width, window.screen.height);
+  return hasCoarsePointer || (hasTouchScreen && shortestScreenEdge <= 1024);
+}
+
 function readSavedState(): SavedPlayerState | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -177,7 +184,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (!isPlayable(activeRecord)) return;
     autoplayRef.current = true;
     if (!useYouTube && activeRecord.audioUrl && audioRef.current) {
-      getAnalysis().activate();
+      // A MediaElementAudioSourceNode can be suspended with its AudioContext
+      // when a phone backgrounds the browser. Keep the native media path on
+      // touch devices so playback and system media controls remain available.
+      if (!needsNativeBackgroundAudio()) getAnalysis().activate();
       void audioRef.current.play().catch(() => { setIsPlaying(false); autoplayRef.current = false; });
       return;
     }
@@ -193,7 +203,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const record = getRecord(slug);
     if (!isPlayable(record)) return;
     if (slug === activeRecord.slug) { if (shouldPlay) playMedia(); else pauseMedia(); return; }
-    if (shouldPlay && record?.audioUrl) getAnalysis().activate(record.audioUrl);
+    if (shouldPlay && record?.audioUrl && !needsNativeBackgroundAudio()) getAnalysis().activate(record.audioUrl);
     autoplayRef.current = shouldPlay; resumeAtRef.current = record?.startOffset ?? 0;
     setFailedAudioUrl(null); setCurrentTime(0); setDuration(record?.duration ?? 0); setIsPlaying(false); setIsReady(false); setActiveSlug(slug);
   }, [activeRecord.slug, getAnalysis, getRecord, pauseMedia, playMedia]);
@@ -206,6 +216,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (isShuffled && available.length > 1) do { nextIndex = Math.floor(Math.random() * available.length); } while (nextIndex === currentIndex);
     playRecord(available[nextIndex].slug, true);
   }, [activeRecord.slug, isShuffled, playRecord, playableRecords]);
+
+  const playPrevious = useCallback(() => {
+    const available = playableRecords.filter((record, index, items) => items.findIndex((item) => item.slug === record.slug) === index);
+    if (!available.length) return;
+    const currentIndex = Math.max(0, available.findIndex((record) => record.slug === activeRecord.slug));
+    playRecord(available[(currentIndex - 1 + available.length) % available.length].slug, true);
+  }, [activeRecord.slug, playRecord, playableRecords]);
 
   const onEnded = useCallback(() => {
     persist();
@@ -295,12 +312,56 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
-    navigator.mediaSession.metadata = new MediaMetadata({ title: `${activeRecord.series} — ${activeRecord.title}`, artist: activeRecord.artist, album: "Lowkal Soundroom", artwork: [{ src: activeRecord.artwork, sizes: "512x512", type: "image/png" }] });
-    navigator.mediaSession.setActionHandler("play", playMedia);
-    navigator.mediaSession.setActionHandler("pause", pauseMedia);
-    navigator.mediaSession.setActionHandler("seekto", (details) => { if (details.seekTime != null) seek(details.seekTime); });
-    return () => { navigator.mediaSession.setActionHandler("play", null); navigator.mediaSession.setActionHandler("pause", null); navigator.mediaSession.setActionHandler("seekto", null); };
-  }, [activeRecord, pauseMedia, playMedia, seek]);
+    const session = navigator.mediaSession;
+    const artwork = new URL(activeRecord.artwork, window.location.origin).href;
+    session.metadata = new MediaMetadata({
+      title: activeRecord.title,
+      artist: activeRecord.artist,
+      album: `${activeRecord.series} · Lowkal Soundroom`,
+      artwork: [{ src: artwork, sizes: "512x512" }]
+    });
+    const handlers: Partial<Record<MediaSessionAction, MediaSessionActionHandler>> = {
+      play: playMedia,
+      pause: pauseMedia,
+      stop: () => { pauseMedia(); seek(activeRecord.startOffset ?? 0); },
+      previoustrack: playPrevious,
+      nexttrack: playNext,
+      seekbackward: (details) => seek(currentTimeRef.current - (details.seekOffset ?? 10)),
+      seekforward: (details) => seek(currentTimeRef.current + (details.seekOffset ?? 30)),
+      seekto: (details) => { if (details.seekTime != null) seek(details.seekTime); }
+    };
+    for (const [action, handler] of Object.entries(handlers)) {
+      try { session.setActionHandler(action as MediaSessionAction, handler); }
+      catch { /* Each phone exposes a different subset of media actions. */ }
+    }
+    return () => {
+      for (const action of Object.keys(handlers)) {
+        try { session.setActionHandler(action as MediaSessionAction, null); }
+        catch { /* Ignore unsupported actions during cleanup. */ }
+      }
+    };
+  }, [activeRecord.artist, activeRecord.artwork, activeRecord.series, activeRecord.startOffset, activeRecord.title, pauseMedia, playMedia, playNext, playPrevious, seek]);
+
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    const session = navigator.mediaSession;
+    session.playbackState = isPlaying ? "playing" : "paused";
+    const total = duration || activeRecord.duration;
+    if (!(total > 0) || !Number.isFinite(total)) return;
+    try {
+      session.setPositionState({ duration: total, playbackRate: 1, position: Math.min(total, Math.max(0, currentTime)) });
+    } catch { /* Position state is optional on older mobile browsers. */ }
+  }, [activeRecord.duration, currentTime, duration, isPlaying]);
+
+  useEffect(() => {
+    const preserveBackgroundPlayback = () => {
+      if (!document.hidden || !isPlaying) return;
+      persist();
+      if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
+    };
+    document.addEventListener("visibilitychange", preserveBackgroundPlayback);
+    return () => document.removeEventListener("visibilitychange", preserveBackgroundPlayback);
+  }, [isPlaying, persist]);
 
   const postState = useCallback((target?: Window) => {
     const snapshot = stateRef.current;
@@ -339,7 +400,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     <AudioContext.Provider value={value}>
       {children}
       {!useYouTube && activeRecord.audioUrl ? (
-        <audio key={`${activeRecord.slug}:${activeRecord.audioUrl}`} ref={bindAudio} className="audio-engine" preload="metadata" onLoadedMetadata={onLoadedMetadata} onTimeUpdate={(event) => { setCurrentTime(event.currentTarget.currentTime); persist(event.currentTarget.currentTime); }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={onEnded} onError={() => { setIsReady(false); setIsPlaying(false); if (activeRecord.youtubeId) setFailedAudioUrl(activeRecord.audioUrl ?? null); }}>
+        <audio key={`${activeRecord.slug}:${activeRecord.audioUrl}`} ref={bindAudio} className="audio-engine" preload="auto" onLoadedMetadata={onLoadedMetadata} onTimeUpdate={(event) => { setCurrentTime(event.currentTarget.currentTime); persist(event.currentTarget.currentTime); }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={onEnded} onError={() => { setIsReady(false); setIsPlaying(false); if (activeRecord.youtubeId) setFailedAudioUrl(activeRecord.audioUrl ?? null); }}>
           <track kind="captions" srcLang="en" label="No spoken content" src="data:text/vtt,WEBVTT" />
         </audio>
       ) : useYouTube && activeRecord.youtubeId ? (
