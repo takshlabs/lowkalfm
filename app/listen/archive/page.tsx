@@ -4,8 +4,7 @@ import { SoundroomCatalog } from "@/components/SoundroomCatalog";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Lowkal Archive",
-  description: "Browse Lowkal programmes, resident volumes, and guest mixes in the Lowkal Archive Room."
+  title: "Lowkal Archive"
 };
 
 export default function ArchivePage() {

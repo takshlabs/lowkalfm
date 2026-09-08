@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { ArtistsDirectory } from "@/components/ArtistsDirectory";
 
 export const metadata: Metadata = {
-  title: "Artists",
-  description: "Lowkal residents, guests, and collaborators."
+  title: "Artists"
 };
 
 export function generateStaticParams() {

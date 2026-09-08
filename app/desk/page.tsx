@@ -5,7 +5,6 @@ export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Lowkal",
-  description: "Selected destinations from Lowkal.",
   robots: {
     index: false,
     follow: false,

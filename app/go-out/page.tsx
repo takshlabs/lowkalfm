@@ -6,8 +6,7 @@ import { sitePath } from "@/lib/site-path";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Go out",
-  description: "Lowkal's considered guide to listening sessions, workshops, nights and independent spaces in Bengaluru."
+  title: "Go out"
 };
 
 export default function GoOutPage() {

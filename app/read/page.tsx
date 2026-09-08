@@ -7,8 +7,7 @@ import { sitePath } from "@/lib/site-path";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Read",
-  description: "Artist conversations, field notes, photo essays and reported stories from Lowkal."
+  title: "Read"
 };
 
 export default function ReadPage() {

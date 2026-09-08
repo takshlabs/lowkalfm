@@ -12,23 +12,17 @@ export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://lowkalfm.in"),
-  title: {
-    default: "Lowkal.fm — Multi-genre. Low-end focused. From Bengaluru.",
-    template: "%s · Lowkal.fm"
-  },
-  description: "Multi-genre, low-end-focused sessions and programmes from Bengaluru.",
+  title: "Lowkal.fm",
   openGraph: {
     type: "website",
     siteName: "Lowkal.fm",
-    title: "Lowkal.fm — Multi-genre. Low-end focused.",
-    description: "Sessions, programmes, and gatherings from Bengaluru.",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Lowkal.fm — Multi-genre. Low-end focused. From Bengaluru." }]
+    title: "Lowkal.fm",
+    images: [{ url: "/lowkal-logo.jpg", width: 1000, height: 1000, alt: "Lowkal.fm" }]
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Lowkal.fm — Multi-genre. Low-end focused.",
-    description: "Sessions, programmes, and gatherings from Bengaluru.",
-    images: ["/og.png"]
+    card: "summary",
+    title: "Lowkal.fm",
+    images: ["/lowkal-logo.jpg"]
   },
   icons: {
     icon: sitePath("/lowkal-logo.jpg"),

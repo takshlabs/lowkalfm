@@ -4,8 +4,7 @@ import { SoundroomFrame } from "@/components/SoundroomFrame";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Lowkal Soundroom",
-  description: "The original Lowkal.fm listening room and archive player."
+  title: "Lowkal Soundroom"
 };
 
 export default function ListenPage() {
