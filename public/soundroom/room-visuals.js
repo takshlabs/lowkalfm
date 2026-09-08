@@ -2,97 +2,78 @@ import { readSpectrum, visualFrame } from './visual-state.js';
 
 const canvas = document.getElementById('shader-canvas-ANIMATION_5');
 const motion = document.getElementById('visual-motion');
-const scene = document.getElementById('visual-scene');
 const intensity = document.getElementById('visual-intensity');
-const focus = document.getElementById('visual-focus');
 const status = document.getElementById('visual-status');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let still = reducedMotion.matches;
 let signal = readSpectrum(null);
 let receivedAt = -Infinity;
+let meterTimeout;
 let playing = false;
 let raf = 0;
 let lastFrame = 0;
 let elapsed = 0;
 let renderer = null;
 let current = [0, 0, 0, 0];
-let palette = [[0.015, 0.025, 0.065], [0.1, 0.2, 0.6], [0.48, 0.66, 1]];
+let palette = [[0.01, 0.02, 0.05], [0.30, 0.04, 0.28], [0.94, 0.14, 0.32]];
 let targetPalette = palette.map((color) => [...color]);
-const pointer = [0, 0];
+const pointer = [.5, .5];
 const vertexShaderSource = `attribute vec2 a_position;
 varying vec2 v_uv;
 void main() { v_uv = a_position * .5 + .5; gl_Position = vec4(a_position, 0., 1.); }`;
-const fragmentShaderSource = `precision mediump float;
+const fragmentShaderSource = `precision highp float;
 varying vec2 v_uv;
 uniform vec2 u_resolution;
 uniform float u_time;
 uniform vec4 u_audio;
 uniform float u_intensity;
-uniform float u_scene;
+uniform float u_pointerWeight;
 uniform vec2 u_pointer;
 uniform vec3 u_paletteBase;
 uniform vec3 u_paletteMid;
 uniform vec3 u_paletteAccent;
-float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float noise(vec2 p) {
-  vec2 i = floor(p), f = fract(p); f = f*f*(3.-2.*f);
-  return mix(mix(hash(i), hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
+vec3 permute(vec3 x){return mod(((x*34.0)+1.0)*x,289.0);}
+float snoise(vec2 v){
+  const vec4 C=vec4(0.211324865405187,0.366025403784439,-0.577350269189626,0.024390243902439);
+  vec2 i=floor(v+dot(v,C.yy));
+  vec2 x0=v-i+dot(i,C.xx);
+  vec2 i1;
+  i1=(x0.x>x0.y)?vec2(1.0,0.0):vec2(0.0,1.0);
+  vec4 x12=x0.xyxy+C.xxzz;
+  x12.xy-=i1;
+  i=mod(i,289.0);
+  vec3 p=permute(permute(i.y+vec3(0.0,i1.y,1.0))+i.x+vec3(0.0,i1.x,1.0));
+  vec3 m=max(0.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.0);
+  m=m*m;m=m*m;
+  vec3 x=2.0*fract(p*C.www)-1.0;
+  vec3 h=abs(x)-0.5;
+  vec3 ox=floor(x+0.5);
+  vec3 a0=x-ox;
+  m*=1.79284291400159-0.85373472095314*(a0*a0+h*h);
+  vec3 g;
+  g.x=a0.x*x0.x+h.x*x0.y;
+  g.yz=a0.yz*x12.xz+h.yz*x12.yw;
+  return 130.0*dot(m,g);
 }
-float fbm(vec2 p) {
-  float value=0., amplitude=.5;
-  for(int i=0; i<4; i++) { value+=amplitude*noise(p); p=mat2(.8,-.6,.6,.8)*p*2.03+3.4; amplitude*=.5; }
-  return value;
-}
-void main() {
-  vec2 uv = v_uv;
-  vec2 p = (uv-.5)*vec2(u_resolution.x/u_resolution.y,1.);
-  p += u_pointer*.015;
-  float t=u_time*.11;
-  float bass=u_audio.x, mid=u_audio.y, high=u_audio.z;
-  float light=0., haze=0.;
-  if(u_scene < .5) {
-    // Folded light curtains: bass opens the folds, mids bend the field.
-    vec2 q=p*2.;
-    float flow=fbm(q+vec2(t*.32,-t*.23));
-    float warp=fbm(q*1.3+flow*2.5+vec2(-t*.18,t*.32));
-    float folds=q.x*1.5+q.y*.65+warp*(2.8+bass*.55)+t*.16;
-    float ribbon=abs(sin(folds*3.6));
-    float fine=pow(1.-ribbon,16.);
-    light=fine*.48+pow(1.-ribbon,3.)*.22;
-    light*=smoothstep(-.8,.6,p.y+flow)*(.6+mid*.3);
-    haze=warp*.18+flow*.08;
-    light+=pow(1.-abs(sin(folds*3.6+.13)),35.)*.16;
-  } else if(u_scene < 1.5) {
-    // A fluid topographic surface, with measured audio displacing contours.
-    float field=fbm(p*2.+vec2(t*.16,t*.09));
-    field+=sin(p.x*2.5+t*.4)*.14+cos(p.y*2.-t*.3)*.13;
-    float bands=field*(17.+bass*1.2)+mid*.22;
-    float line=abs(fract(bands)-.5);
-    light=(1.-smoothstep(.012,.046,line))*.42;
-    light+=(1.-smoothstep(.04,.22,line))*.08;
-    haze=field*.18;
-  } else {
-    // Interference rings: no beat is invented when the audio is unavailable.
-    vec2 q=p-vec2(-.15,.08);
-    q=mat2(.94,-.34,.34,.94)*q;
-    q.y*=1.4;
-    float r=length(q), a=atan(q.y,q.x);
-    float ripple=sin(a*3.+t*.5)*.02+sin(a*5.-t*.4)*.014;
-    float ring=r+ripple*(1.+bass*2.);
-    float envelope=exp(-pow((r-.38-bass*.035)*3.2,2.));
-    float bands=abs(sin(ring*65.-t*.8-mid*.5));
-    light=pow(1.-bands,12.)*envelope*.63;
-    light+=exp(-abs(ring-.38-bass*.035)*80.)*.28;
-    haze=envelope*.17;
-  }
-  vec3 cobalt=mix(vec3(.11,.23,.7),u_paletteMid,.36);
-  vec3 ice=mix(vec3(.48,.66,1.),u_paletteAccent,.3);
-  vec3 color=mix(vec3(.014,.024,.057),u_paletteBase,.25);
-  color+=cobalt*(haze+light*1.6)*(.45+u_intensity);
-  color+=ice*pow(light,2.)*(1.8+high*.65)*u_intensity;
-  float vignette=1.-smoothstep(.25,1.2,length((uv-.5)*vec2(1.,.85)));
-  color*=.45+.55*vignette;
-  gl_FragColor=vec4(color,1.);
+void main(){
+  // Keep the original liquid field and palette. Audio only modulates it.
+  vec2 uv=v_uv;
+  vec4 audio=u_audio*u_intensity;
+  vec2 flow=uv+vec2(sin(uv.y*6.28),cos(uv.x*6.28))*audio.x*0.08;
+  float noise1=snoise(flow*2.0+u_time*0.1);
+  float noise2=snoise(flow*(4.0+audio.y*0.5)-u_time*0.2+noise1);
+  float dist=distance(uv,u_pointer);
+  float mouseEffect=(1.0-smoothstep(0.0,0.5,dist))*0.5*u_pointerWeight;
+  float pulse=sin(u_time*0.5)*0.5+0.5;
+  float signal=noise2+mouseEffect+(pulse*0.1)*u_pointerWeight;
+  signal+=audio.x*0.55+audio.y*noise1*0.2+audio.w*0.35;
+  float body=smoothstep(-0.35,0.72,signal);
+  float highlight=smoothstep(0.30,1.10,signal+noise1*0.18+audio.z*0.3);
+  vec3 color=mix(u_paletteBase,u_paletteMid,body*0.72);
+  color=mix(color,u_paletteAccent,highlight*0.52);
+  float grain=fract(sin(dot(uv,vec2(12.9898,78.233)))*43758.5453);
+  color+=(grain-0.5)*0.05;
+  gl_FragColor=vec4(color,1.0);
 }`;
 
 window.setSoundroomShaderPalette = (next) => {
@@ -128,7 +109,7 @@ function createRenderer() {
     const position = gl.getAttribLocation(program, 'a_position');
     gl.enableVertexAttribArray(position);
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-    const uniforms = Object.fromEntries(['resolution','time','audio','intensity','scene','pointer','paletteBase','paletteMid','paletteAccent'].map((name) => [name, gl.getUniformLocation(program, `u_${name}`)]));
+    const uniforms = Object.fromEntries(['resolution','time','audio','intensity','pointerWeight','pointer','paletteBase','paletteMid','paletteAccent'].map((name) => [name, gl.getUniformLocation(program, `u_${name}`)]));
     return { gl, program, buffer, shaders, uniforms };
   } catch (error) {
     shaders.forEach((shader) => gl.deleteShader(shader));
@@ -163,24 +144,21 @@ function draw(now, force = false) {
   gl.uniform1f(u.time, elapsed);
   gl.uniform4fv(u.audio, current);
   gl.uniform1f(u.intensity, Number(intensity.value) / 100);
-  gl.uniform1f(u.scene, Number(scene.value));
+  gl.uniform1f(u.pointerWeight, frame.pointerWeight);
   gl.uniform2fv(u.pointer, pointer);
   gl.uniform3fv(u.paletteBase, palette[0]);
   gl.uniform3fv(u.paletteMid, palette[1]);
   gl.uniform3fv(u.paletteAccent, palette[2]);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  // The meters report measured bands only, never procedural animation.
-  ['bass','mid','treble'].forEach((band, index) => {
-    document.getElementById(`signal-${band}`).style.transform = `scaleX(${Math.max(.025, current[index])})`;
-  });
+
   document.documentElement.style.setProperty('--bass', current[0].toFixed(3));
   canvas.dataset.energy = current[3].toFixed(3);
-  canvas.dataset.scene = scene.options[scene.selectedIndex].text;
+  canvas.dataset.pointerActive = String(frame.pointerWeight === 1);
   const mode = frame.mode;
   if (document.body.dataset.visualMode !== mode) {
     document.body.dataset.visualMode = mode;
     status.textContent = mode === 'reactive' ? 'Audio reactive' : mode === 'still' ? 'Still frame' : 'Ambient motion';
-    status.title = mode === 'ambient' ? 'The light field moves freely while measured audio data is unavailable.' : 'Measured bass, mid and high frequencies shape the light field.';
+    status.title = mode === 'ambient' ? 'Original liquid motion and pointer response. No measured audio is available.' : 'Measured bass, mid and high frequencies control the liquid shader. Pointer influence is paused.';
   }
 }
 
@@ -205,38 +183,37 @@ function setStill(value) {
   start();
 }
 
+function paintMeters(data) {
+  // The mixer remains live when motion is paused or WebGL is unavailable.
+  ['bass', 'mid', 'treble'].forEach((band) => {
+    document.getElementById(`signal-${band}`).style.transform = `scaleY(${data[band]})`;
+  });
+}
+
 window.addEventListener('message', (event) => {
   if (event.origin !== window.location.origin || event.source !== window.parent || window.parent === window) return;
   const message = event.data;
   if (message?.channel === 'lowkal.analysis.v1' && message.type === 'spectrum') {
     signal = readSpectrum(message.data);
     receivedAt = performance.now();
+    paintMeters(signal);
+    clearTimeout(meterTimeout);
+    meterTimeout = setTimeout(() => paintMeters(readSpectrum(null)), 1000);
   }
   if (message?.channel === 'lowkal.audio.v1' && message.type === 'state') {
     playing = Boolean(message.state?.isPlaying);
-    if (!playing) signal = readSpectrum(null);
+    if (!playing) {
+      signal = readSpectrum(null);
+      paintMeters(signal);
+    }
   }
 });
 motion.addEventListener('click', () => setStill(!still));
-scene.addEventListener('change', () => draw(performance.now(), true));
 intensity.addEventListener('input', () => draw(performance.now(), true));
-focus.addEventListener('click', () => {
-  const active = document.body.classList.toggle('room-focus');
-  focus.setAttribute('aria-pressed', String(active));
-  focus.textContent = active ? 'Exit focus' : 'Focus view';
-});
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && document.body.classList.contains('room-focus')) {
-    document.body.classList.remove('room-focus');
-    focus.setAttribute('aria-pressed', 'false');
-    focus.textContent = 'Focus view';
-    focus.focus();
-  }
-});
 window.addEventListener('pointermove', (event) => {
-  if (still || event.pointerType === 'touch') return;
-  pointer[0] = event.clientX / innerWidth - .5;
-  pointer[1] = .5 - event.clientY / innerHeight;
+  if (event.pointerType === 'touch' || !visualFrame(signal, { playing, age: performance.now() - receivedAt, still }).pointerWeight) return;
+  pointer[0] = event.clientX / innerWidth;
+  pointer[1] = 1 - event.clientY / innerHeight;
 }, { passive: true });
 reducedMotion.addEventListener('change', (event) => setStill(event.matches));
 document.addEventListener('visibilitychange', start);

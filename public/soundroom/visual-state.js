@@ -8,5 +8,5 @@ export function readSpectrum(value) {
 
 export function visualFrame(signal, { playing = false, age = Infinity, still = false } = {}) {
   const frame = readSpectrum(playing && age < 1000 && !still ? signal : null);
-  return { ...frame, mode: still ? 'still' : frame.available ? 'reactive' : 'ambient' };
+  return { ...frame, pointerWeight: frame.available || still ? 0 : 1, mode: still ? 'still' : frame.available ? 'reactive' : 'ambient' };
 }

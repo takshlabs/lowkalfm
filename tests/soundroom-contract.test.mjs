@@ -156,3 +156,87 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(soundroom, /Only the parent can make sound/);
   assert.match(soundroom, /HtmlAudioPlayerEngine/);
 });
+
+
+async function settingsHarness() {
+  const { runInNewContext } = await import('node:vm');
+  const elements = new Map();
+  const documentEvents = {};
+  const windowEvents = {};
+  const messages = [];
+  const document = {
+    activeElement: null,
+    getElementById(id) {
+      if (!elements.has(id)) elements.set(id, {
+        id, hidden: id === 'modal-settings', inert: false, disabled: false, value: '0', textContent: '', isConnected: true, events: {}, attrs: {},
+        addEventListener(type, fn) { this.events[type] = fn; },
+        setAttribute(key, value) { this.attrs[key] = value; },
+        focus() { document.activeElement = this; },
+        getClientRects() { return [1]; },
+        contains(element) { return element?.id !== 'btn-settings-open'; },
+        querySelectorAll() { return [...elements.values()].filter(e => (e.id === 'btn-settings-close' || e.id === 'mixer-master') && !e.disabled); }
+      });
+      return elements.get(id);
+    },
+    querySelectorAll() { return [this.getElementById('background')]; },
+    addEventListener(type, fn) { documentEvents[type] = fn; }
+  };
+  const parent = { postMessage: (message, origin) => messages.push({ message: JSON.parse(JSON.stringify(message)), origin }) };
+  const window = { parent, location: { origin: 'https://example.com' }, addEventListener: (type, fn) => { windowEvents[type] = fn; } };
+  runInNewContext(await source('public/soundroom/room-settings.js'), { window, document, console });
+  const get = id => document.getElementById(id);
+  const send = (channel, state, overrides = {}) => windowEvents.message({ source: parent, origin: window.location.origin, data: { channel, type: 'state', state }, ...overrides });
+  return { get, send, messages, document, documentEvents };
+}
+
+test('settings uses the parent mixer protocol and keeps master available without EQ', async () => {
+  const { get, send, messages } = await settingsHarness();
+  assert.ok(messages.some(({message, origin}) => message.channel === 'lowkal.mixer.v1' && message.command.action === 'request-state' && origin === 'https://example.com'));
+  assert.equal(get('mixer-bass').disabled, true);
+  assert.equal(get('mixer-master').disabled, false);
+  send('lowkal.mixer.v1', { available: true, enabled: true, bass: 3, mid: -2, treble: 1 }, { origin: 'https://evil.test' });
+  assert.equal(get('mixer-bass').disabled, true);
+  send('lowkal.mixer.v1', { available: true, enabled: true, bass: 3, mid: -2, treble: 1 }, { source: {} });
+  assert.equal(get('mixer-bass').disabled, true);
+  send('lowkal.mixer.v1', { available: true, enabled: true, bass: 3, mid: -2, treble: 1 });
+  assert.equal(get('mixer-bass').disabled, false);
+  assert.equal(Number(get('mixer-bass').value), 3);
+  get('mixer-mid').value = '-5';
+  get('mixer-mid').events.input({ target: get('mixer-mid') });
+  assert.deepEqual(messages.at(-1).message, { channel: 'lowkal.mixer.v1', type: 'command', command: { action: 'set', settings: { bass: 3, mid: -5, treble: 1, enabled: true } } });
+  get('mixer-bypass').events.click();
+  assert.equal(messages.at(-1).message.command.settings.enabled, false);
+  get('mixer-reset').events.click();
+  assert.deepEqual(messages.at(-1).message.command.settings, { bass: 0, mid: 0, treble: 0, enabled: true });
+  send('lowkal.mixer.v1', { available: false, enabled: true, bass: 0, mid: 0, treble: 0 });
+  assert.equal(get('mixer-bass').disabled, true);
+  assert.match(get('mixer-status').textContent, /unavailable/i);
+  send('lowkal.audio.v1', { volume: 37 });
+  assert.equal(Number(get('mixer-master').value), 37);
+  get('mixer-master').value = '42';
+  get('mixer-master').events.input({ target: get('mixer-master') });
+  assert.deepEqual(messages.at(-1).message, { channel: 'lowkal.audio.v1', type: 'command', command: { action: 'volume', volume: 42 } });
+});
+
+test('settings opens, traps keyboard focus, closes and restores focus', async () => {
+  const { get, document, documentEvents } = await settingsHarness();
+  get('btn-settings-open').focus();
+  get('btn-settings-open').events.click();
+  assert.equal(get('modal-settings').hidden, false);
+  assert.equal(get('background').inert, true);
+  assert.equal(document.activeElement.id, 'btn-settings-close');
+  let prevented = false;
+  documentEvents.keydown({ key: 'Tab', shiftKey: true, preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
+  assert.equal(document.activeElement.id, 'mixer-master');
+  documentEvents.keydown({ key: 'Escape', preventDefault() {} });
+  assert.equal(get('modal-settings').hidden, true);
+  assert.equal(document.activeElement.id, 'btn-settings-open');
+  assert.equal(get('background').inert, false);
+  get('btn-settings-open').events.click();
+  get('modal-settings').events.click({ target: get('modal-settings') });
+  assert.equal(get('modal-settings').hidden, true);
+  get('btn-settings-open').events.click();
+  get('btn-settings-close').events.click();
+  assert.equal(get('modal-settings').hidden, true);
+});

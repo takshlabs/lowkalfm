@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { SoundRecord } from "@/lib/content";
-import { createAudioAnalysis, isAnalysisSource, startAnalysisBridge } from "@/lib/audio-analysis";
+import { createAudioAnalysis, isAnalysisSource, startAnalysisBridge, startMixerBridge } from "@/lib/audio-analysis";
 import { sitePath } from "@/lib/site-path";
 import { useListenContent } from "./ListenContentProvider";
 
@@ -128,8 +128,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       const audio = audioRef.current;
       return Boolean(audio && !audio.paused && !audio.ended && audio.readyState >= 2);
     }, sitePath("/soundroom/index.html"));
+    const stopMixer = startMixerBridge(window, getAnalysis(), sitePath("/soundroom/index.html"));
     return () => {
       stop();
+      stopMixer();
       analysisMounted.current = false;
       // React Strict Mode replays effects and refs. Do not close its live graph.
       queueMicrotask(() => {

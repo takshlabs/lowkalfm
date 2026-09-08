@@ -36,13 +36,19 @@ test('room assets resolve after clean-URL redirects and under a site prefix', as
   }
 });
 
-test('the room keeps a split player with accessible scene and motion controls', async () => {
+test('the room restores the original split player and moves controls into settings', async () => {
   const html = await readFile(new URL('../public/soundroom/index.html', import.meta.url), 'utf8');
-  for (const id of ['artwork-stage', 'player-panel', 'visual-scene', 'visual-motion', 'visual-intensity', 'visual-focus', 'signal-bass', 'signal-mid', 'signal-treble']) {
+  assert.match(html, /max-w-5xl mx-auto flex flex-col md:flex-row/);
+  assert.match(html, /md:w-\[380px\] md:h-\[380px\] rounded-2xl/);
+  assert.match(html, /md:w-\[460px\] h-\[55vh\] md:h-\[72vh\] glass-panel/);
+  assert.equal((html.match(/<canvas\b/g) || []).length, 1);
+  assert.doesNotMatch(html, /visual-dock|visual-scene|visual-focus|Soundroom\.<\/h1>|room-layout/);
+  for (const id of ['btn-settings-open', 'modal-settings', 'visual-motion', 'visual-intensity', 'signal-bass', 'signal-mid', 'signal-treble']) {
     assert.ok(html.includes(`id="${id}"`), `Missing ${id}`);
   }
   assert.match(html, /aria-label="Playback position"/);
   assert.match(html, /aria-label="Volume"/);
   assert.match(html, /room-visuals\.js/);
-  assert.doesNotMatch(html, /cdn\.tailwindcss\.com|three\.min\.js|class LowkalVisualizer|DJ Void/);
+  assert.match(html, /cdn\.tailwindcss\.com/);
+  assert.doesNotMatch(html, /three\.min\.js|class LowkalVisualizer|DJ Void|createOscillator/);
 });

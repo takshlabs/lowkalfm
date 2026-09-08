@@ -29,191 +29,492 @@
   <meta property="twitter:description" content="Lowkal.fm is an art-forward, distraction-free digital canvas dedicated to underground electronic music." />
   <meta property="twitter:image" content="https://lowkalfm.vercel.app/og.png" />
   
+  <!-- CSS & Fonts -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com" rel="preconnect"/>
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="room.css"/>
-  <script>
-    if (window.parent === window) window.location.replace('../listen');
+  
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#55e93b",        // Acid Green
+            "background-base": "#131313", // Deep Obsidian
+            "surface": "rgba(255, 255, 255, 0.03)", // Glass
+            "text-main": "#e5e2e1",
+            "muted": "#87957e",           // Outline / muted
+            "secondary": "#b9c3ff",       // Cobalt Blue
+            "accent": "#ff8eb6",          // Tertiary Pink
+          },
+          fontFamily: {
+            "display": ["Arial Black", "Arial", "sans-serif"],
+            "ui": ["Arial", "Helvetica", "sans-serif"],
+            "mono": ["Arial", "Helvetica", "sans-serif"],
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "sm": "0.125rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          boxShadow: {
+            "float": "0 16px 48px rgba(0,0,0,0.8)",
+          }
+        },
+      },
+    }
   </script>
+
+  <style>
+    /* Prevent default scrollbars on full-viewport app */
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #131313;
+      color: #e5e2e1;
+      font-family: Arial, Helvetica, sans-serif;
+      cursor: none !important;
+    }
+
+    h1, h2, h3, .font-display {
+      font-family: "Arial Black", Arial, sans-serif;
+    }
+
+    /* Keep this standalone room on the Lowkal font system. Tailwind utility
+       classes and injected catalogue content must not restore its old suite. */
+    body,
+    button,
+    input,
+    select,
+    textarea,
+    .font-ui,
+    .font-mono,
+    .font-sans {
+      font-family: Arial, Helvetica, sans-serif !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    .font-display {
+      font-family: "Arial Black", Arial, sans-serif !important;
+    }
+
+    .material-symbols-outlined {
+      font-family: "Material Symbols Outlined" !important;
+    }
+
+    /* Force cursor none for interactive elements */
+    a, button, input, select, textarea, [role="button"], img {
+      cursor: none !important;
+    }
+
+    /* Custom Cursor */
+    .custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 16px;
+      height: 16px;
+      background-color: #55e93b;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      mix-blend-mode: difference;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background-color 0.2s;
+    }
+    .custom-cursor.hover {
+      width: 36px;
+      height: 36px;
+      background-color: #b9c3ff;
+    }
+
+    /* Glassmorphism styling — Obsidian Flux spec */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+    }
+
+    /* Scrollbar customization */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(135, 149, 126, 0.4);
+      border-radius: 99px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #55e93b;
+    }
+
+    /* Custom range input — industrial seeker style */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 14px;
+      width: 3px;
+      border-radius: 1px;
+      background: #55e93b;
+      box-shadow: 0 0 6px rgba(85, 233, 59, 0.7);
+      cursor: pointer;
+      margin-top: -5px;
+      transition: box-shadow 0.1s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 10px rgba(85, 233, 59, 1);
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 2px;
+      cursor: pointer;
+      background: #3d4a37;
+      border-radius: 1px;
+    }
+
+    /* Rotate animation for vinyl thumbnail in mini player */
+    @keyframes rotate-slow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-rotate {
+      animation: rotate-slow 15s linear infinite;
+    }
+
+    /* Kinetic Archive Node transitions */
+    .node-transition {
+      transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+    }
+
+    /* Active page wrapper transitions */
+    .screen-fade {
+      transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    }
+
+    .soundroom-art-field {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(90deg, rgba(19,19,19,0.96) 0%, rgba(19,19,19,0.2) 44%, rgba(19,19,19,0.9) 100%),
+        url("../art/signal-bloom-pattern.jpg") center / cover;
+      mix-blend-mode: screen;
+      opacity: 0.09;
+      pointer-events: none;
+    }
+
+    .soundroom-return-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.3rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(19,19,19,0.68);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .soundroom-return-nav a {
+      padding: 0.44rem 0.58rem;
+      color: rgba(229,226,225,0.84);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      text-transform: uppercase;
+      cursor: pointer !important;
+    }
+    .soundroom-return-nav a:first-child { color: #131313; background: #55e93b; }
+    .soundroom-return-nav a:hover, .soundroom-return-nav a:focus-visible { color: #55e93b; outline: 1px solid #55e93b; outline-offset: -1px; }
+    .soundroom-return-nav a:first-child:hover, .soundroom-return-nav a:first-child:focus-visible { color: #131313; }
+    @media (max-width: 760px) {
+      .soundroom-return-nav { position: fixed; top: auto; bottom: 0.8rem; left: 50%; transform: translateX(-50%); z-index: 80; width: max-content; max-width: calc(100vw - 1.5rem); overflow-x: auto; }
+      .soundroom-return-nav a { white-space: nowrap; }
+    }
+  </style>
+  <link rel="stylesheet" href="room.css"/>
+  <script>if (window.parent === window) window.location.replace('../listen');</script>
 </head>
-<body data-playing="false">
-  <!-- room-visuals.js owns u_paletteBase, u_paletteMid and u_paletteAccent. -->
-  <canvas id="shader-canvas-ANIMATION_5" aria-hidden="true"></canvas>
+<body data-playing="false" class="bg-background-dark text-white select-none relative w-full h-screen overflow-hidden antialiased">
+
+  <!-- Custom Cursor -->
+  <div class="custom-cursor" id="custom-cursor"></div>
+
+  <!-- WebGL Liquid Shader Background -->
+  <div class="absolute inset-0 z-0 pointer-events-none" style="display:block;">
+    <canvas id="shader-canvas-ANIMATION_5" style="display:block;width:100%;height:100%"></canvas>
+
+  </div>
+
   <div class="soundroom-art-field" aria-hidden="true"></div>
 
-  <header class="room-header">
-    <a class="archive-link" id="header-nav-btn" href="../listen/archive" target="_top">
-      <span class="material-symbols-outlined" id="header-nav-icon" aria-hidden="true">arrow_forward</span>
-      <span id="header-nav-text">Enter Archive</span>
-    </a>
+<!-- Global Header (Logo, Navigation & Manifesto Trigger) -->
+  <header class="absolute top-8 left-8 right-8 z-40 flex justify-between items-center mix-blend-difference">
+    <!-- Left Navigation Arrow (Symmetric page swap) -->
+    <div class="flex items-center gap-6">
+      <a class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-all duration-300 focus:outline-none" id="header-nav-btn" href="../listen/archive" target="_top">
+        <span class="material-symbols-outlined text-xl" id="header-nav-icon">arrow_forward</span>
+        <span id="header-nav-text">Enter Archive</span>
+      </a>
+    </div>
+
     <nav class="soundroom-return-nav" aria-label="Return to Lowkal">
       <a href="../" target="_top">Back to home</a>
       <a href="../read" target="_top">Read</a>
       <a href="../go-out" target="_top">Go out</a>
     </nav>
-    <div class="header-actions">
-      <button class="room-logo" id="header-logo" type="button" aria-label="Return to player">
-        <img src="../lowkal-logo.jpg" alt="" width="32" height="32"/>
-        <span>LOWKAL.FM</span>
+
+    <!-- Right elements: Station tag & tracklist button -->
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3 cursor-pointer group" id="header-logo">
+        <img src="../lowkal-logo.jpg" class="w-8 h-8 rounded-md border border-white/10 group-hover:border-primary/30 transition-all duration-300" alt="Lowkal.fm Logo" />
+        <h1 class="font-display font-extrabold text-lg tracking-tighter group-hover:text-primary transition-colors duration-300">
+          LOWKAL.FM
+        </h1>
+      </div>
+      <button class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-colors py-2 px-4 rounded-full border border-white/10 hover:border-primary/30 bg-surface/30 backdrop-blur-md" id="btn-tracklist-open" aria-label="Tracklist" aria-controls="modal-tracklist" aria-expanded="false">
+        <span class="material-symbols-outlined text-lg">format_list_numbered</span>
+        <span>tracklist</span>
       </button>
-      <button class="tracklist-trigger" id="btn-tracklist-open" type="button" aria-controls="modal-tracklist" aria-expanded="false">
-        <span class="material-symbols-outlined" aria-hidden="true">format_list_numbered</span>
-        <span>Tracklist</span>
-      </button>
+      <button id="btn-settings-open" type="button" aria-label="Open settings" aria-controls="modal-settings" aria-expanded="false" aria-haspopup="dialog"><span class="material-symbols-outlined" aria-hidden="true">settings</span></button>
     </div>
   </header>
 
-  <div id="screen-home">
-    <main class="room-layout">
-    <section id="artwork-stage" class="artwork-stage" aria-label="Selected mix artwork">
-      <div class="stage-heading">
-        <p class="room-eyebrow">LOWKAL / LISTENING SPACE</p>
-        <h1 class="room-title">Soundroom.</h1>
-      </div>
-      <div class="cover-frame">
-        <img id="main-cover-img" src="../lowkal-logo.jpg" alt="Lowkal artwork"/>
-        <div class="artwork-overlay">
-          <button class="artwork-play" id="btn-main-play-art" type="button" aria-label="Play" disabled>
-            <span class="material-symbols-outlined" id="icon-main-play-art" aria-hidden="true">play_arrow</span>
+  <!-- SCREEN 1: HOMEPAGE (COMPREHENSIVE SPLIT PLAYER) -->
+  <div class="absolute inset-0 z-20 flex flex-col justify-between p-8 screen-fade opacity-100 pointer-events-auto transform scale-100" id="screen-home">
+    <main class="w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-center gap-12 md:gap-16 lg:gap-20 h-full pt-20">
+      <!-- Left: Cover Art Panel -->
+      <div class="flex-shrink-0 w-[260px] h-[260px] md:w-[380px] md:h-[380px] rounded-2xl shadow-float overflow-hidden relative group border border-white/5">
+        <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" id="main-cover-img" src="" alt="Mix Artwork"/>
+        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-background-base hover:scale-110 transition-transform shadow-lg" id="btn-main-play-art">
+            <span class="material-symbols-outlined text-4xl" id="icon-main-play-art" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
           </button>
         </div>
       </div>
-      <div class="artwork-caption">
-        <span>Selected transmission</span>
-        <span>Headphones recommended</span>
-      </div>
-    </section>
 
-    <section id="player-panel" class="player-panel" aria-label="Mix player">
-      <div class="player-top">
-        <div class="mix-heading">
-          <div class="mix-meta">
-            <p id="main-genre"></p>
-            <div class="playback-status">
-              <span id="main-status-dot" aria-hidden="true"></span>
-              <span id="main-status-text" aria-live="polite">Ready</span>
+      <!-- Right: Detailed Player Card (matching reference design layout) -->
+      <div class="w-full md:w-[460px] h-[55vh] md:h-[72vh] glass-panel rounded-xl shadow-float flex flex-col overflow-hidden relative border border-white/10">
+        
+        <!-- TOP STICKY AREA: Music controls and timers -->
+        <div class="p-6 md:p-8 pb-5 border-b border-white/10 shrink-0 bg-[#121226]/20">
+          <div class="flex items-center justify-between mb-1">
+            <p class="text-primary font-display font-bold text-xs tracking-widest uppercase" id="main-genre">GENRE</p>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-muted" id="main-status-dot"></span>
+              <span class="text-[9px] font-bold tracking-widest text-muted uppercase font-ui" id="main-status-text">OFFLINE</span>
             </div>
           </div>
-          <h2 id="main-title">Select a mix</h2>
-          <p id="main-host-date"></p>
-        </div>
-        <div class="scrubber-section">
-          <div class="time-row">
-            <span id="main-time-current">00:00</span>
-            <span id="main-time-total">00:00</span>
+          <!-- Title text matching double-line block from reference -->
+          <h2 class="font-display font-extrabold text-3xl md:text-[36px] leading-[1.1] text-white mb-2 tracking-tight uppercase max-h-[80px] overflow-hidden" id="main-title">
+            Mix Title
+          </h2>
+          <p class="text-muted text-sm truncate font-ui" id="main-host-date">Hosted by DJ Name • Date</p>
+          
+          <!-- Scrubber section -->
+          <div class="w-full mt-6">
+            <div class="flex items-center justify-between text-[11px] font-mono text-muted/80 mb-2">
+              <span id="main-time-current">45:12</span>
+              <span id="main-time-total">1:00:00</span>
+            </div>
+            <input class="w-full mb-5" id="main-scrubber" aria-label="Playback position" max="100" min="0" type="range" value="0"/>
+            
+            <!-- Dynamic Controls Strip -->
+            <div class="flex items-center justify-between px-2 mb-6">
+              <!-- Shuffle -->
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-shuffle" title="Shuffle Mixes">
+                <span class="material-symbols-outlined text-xl">shuffle</span>
+              </button>
+              
+              <!-- Replay 10s -->
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-replay-10" title="Rewind 10s">
+                <span class="material-symbols-outlined text-2xl">replay_10</span>
+              </button>
+              
+              <!-- Skip Previous -->
+              <button class="text-white hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-prev" title="Previous Mix">
+                <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+              </button>
+              
+              <!-- Circular Play / Pause (Massive center) -->
+              <button class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-background-base hover:scale-105 active:scale-95 transition-transform shadow-lg focus:outline-none" id="btn-main-play" aria-label="Play / Pause">
+                <span class="material-symbols-outlined text-3.5xl" id="icon-main-play" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+              </button>
+              
+              <!-- Skip Next -->
+              <button class="text-white hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-next" title="Next Mix">
+                <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+              </button>
+              
+              <!-- Forward 30s -->
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-forward-30" title="Forward 30s">
+                <span class="material-symbols-outlined text-2xl">forward_30</span>
+              </button>
+              
+              <!-- Repeat Loop -->
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-repeat" title="Repeat Mix">
+                <span class="material-symbols-outlined text-xl">repeat</span>
+              </button>
+            </div>
+
+            <!-- Volume Control Bar -->
+            <div class="flex items-center gap-3 w-[90%] mx-auto text-muted">
+              <button class="focus:outline-none hover:text-primary" id="btn-volume-mute" title="Mute/Unmute">
+                <span class="material-symbols-outlined text-lg" id="icon-volume-low">volume_mute</span>
+              </button>
+              <input class="w-full" id="main-volume-slider" aria-label="Volume" max="100" min="0" type="range" value="60"/>
+              <span class="material-symbols-outlined text-lg">volume_up</span>
+            </div>
           </div>
-          <input id="main-scrubber" aria-label="Playback position" max="100" min="0" type="range" value="0" disabled/>
         </div>
-        <div class="transport" role="group" aria-label="Playback controls">
-          <button id="btn-main-shuffle" type="button" aria-label="Shuffle mixes" aria-pressed="false">
-            <span class="material-symbols-outlined" aria-hidden="true">shuffle</span>
-          </button>
-          <button id="btn-main-replay-10" type="button" aria-label="Rewind 10 seconds">
-            <span class="material-symbols-outlined" aria-hidden="true">replay_10</span>
-          </button>
-          <button id="btn-main-prev" type="button" aria-label="Previous mix">
-            <span class="material-symbols-outlined" aria-hidden="true">skip_previous</span>
-          </button>
-          <button class="primary-play" id="btn-main-play" type="button" aria-label="Play" disabled>
-            <span class="material-symbols-outlined" id="icon-main-play" aria-hidden="true">play_arrow</span>
-          </button>
-          <button id="btn-main-next" type="button" aria-label="Next mix">
-            <span class="material-symbols-outlined" aria-hidden="true">skip_next</span>
-          </button>
-          <button id="btn-main-forward-30" type="button" aria-label="Forward 30 seconds">
-            <span class="material-symbols-outlined" aria-hidden="true">forward_30</span>
-          </button>
-          <button id="btn-main-repeat" type="button" aria-label="Repeat mix" aria-pressed="false">
-            <span class="material-symbols-outlined" aria-hidden="true">repeat</span>
-          </button>
-        </div>
-        <div class="volume-control">
-          <button id="btn-volume-mute" type="button" aria-label="Mute">
-            <span class="material-symbols-outlined" id="icon-volume-low" aria-hidden="true">volume_down</span>
-          </button>
-          <input id="main-volume-slider" aria-label="Volume" max="100" min="0" type="range" value="60"/>
-          <span class="material-symbols-outlined" aria-hidden="true">volume_up</span>
+
+        <!-- BOTTOM SCROLLABLE AREA: Mix Description and Artist Details -->
+        <div class="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6 bg-transparent" id="main-details-scroll">
+          
+          <!-- Mix Description -->
+          <div class="space-y-2" id="detail-mix-description">
+            <h3 class="font-display font-extrabold text-[12px] tracking-widest text-white uppercase">Mix Description</h3>
+            <p class="text-white/70 text-sm leading-relaxed font-ui whitespace-pre-line" id="detail-mix-desc">
+              Mix description copy goes here.
+            </p>
+          </div>
+          
+          <!-- Artist Details -->
+          <div class="space-y-2 pt-2 border-t border-white/5" id="detail-artist-profile">
+            <h3 class="font-display font-extrabold text-[12px] tracking-widest text-white uppercase">Artist Profile</h3>
+            <p class="text-white/60 text-sm leading-relaxed font-ui" id="detail-artist-bio">
+              Artist bio copy goes here.
+            </p>
+            <a id="detail-artist-link" target="_top" class="inline-block text-primary text-xs font-bold uppercase tracking-widest hover:underline" hidden>Open artist page ↗</a>
+          </div>
         </div>
       </div>
-      <div class="player-details" id="main-details-scroll" tabindex="0" aria-label="Mix details">
-        <section id="detail-mix-description" hidden>
-          <h3>About this mix</h3>
-          <p id="detail-mix-desc"></p>
-        </section>
-        <section id="detail-artist-profile" hidden>
-          <h3>Artist profile</h3>
-          <p id="detail-artist-bio"></p>
-          <a id="detail-artist-link" target="_top" hidden>Open artist page ↗</a>
-        </section>
-      </div>
-    </section>
     </main>
   </div>
 
-  <footer class="visual-dock" aria-label="Visual settings">
-    <div class="visual-controls">
-      <label class="scene-control" for="visual-scene">Scene
-        <select id="visual-scene">
-          <option value="0">Aurora</option>
-          <option value="1">Contour</option>
-          <option value="2">Orbital</option>
-        </select>
-      </label>
-      <label class="intensity-control" for="visual-intensity">Intensity
-        <input id="visual-intensity" type="range" min="0" max="100" value="65"/>
-      </label>
-      <button id="visual-motion" type="button" aria-pressed="false">Pause visuals</button>
-      <button id="visual-focus" type="button" aria-pressed="false">Focus view</button>
+  <!-- SCREEN 2: ARCHIVE (DRIFTING CLOUD) -->
+  <div class="absolute inset-0 z-20 overflow-hidden screen-fade opacity-0 pointer-events-none transform scale-95" id="screen-archive">
+    <!-- Drifting Archive Cloud Canvas -->
+    <div class="absolute inset-0 w-full h-full" id="archive-canvas">
+      <!-- Nodes will be inserted dynamically in JS to track physics states correctly -->
     </div>
-    <div class="signal-monitor" aria-label="Audio signal">
-      <div class="signal-band"><span class="signal-label">Bass</span><span class="signal-track"><span id="signal-bass"></span></span></div>
-      <div class="signal-band"><span class="signal-label">Mid</span><span class="signal-track"><span id="signal-mid"></span></span></div>
-      <div class="signal-band"><span class="signal-label">High</span><span class="signal-track"><span id="signal-treble"></span></span></div>
-      <span id="visual-status" aria-live="polite">Ambient motion</span>
-    </div>
-  </footer>
 
-  <!-- Retained for the controller's legacy archive navigation. -->
-  <section id="screen-archive" hidden inert aria-label="Mix archive">
-    <div id="archive-canvas"></div>
-    <div id="archive-mini-player">
-      <div id="mini-progress-fill" style="width:0%"></div>
-      <button id="mini-player-info-click" type="button" aria-label="Open main player">
-        <img id="mini-art-img" src="../lowkal-logo.jpg" alt=""/>
-        <span id="mini-title">Select a mix</span>
-        <span id="mini-subtext"></span>
-      </button>
-      <button id="btn-mini-play" type="button" aria-label="Play" disabled>
-        <span class="material-symbols-outlined" id="icon-mini-play" aria-hidden="true">play_arrow</span>
-      </button>
-      <button id="btn-mini-maximize" type="button" aria-label="Open main player">
-        <span class="material-symbols-outlined" aria-hidden="true">open_in_full</span>
-      </button>
-    </div>
-  </section>
-
-  <div class="tracklist-modal" id="modal-tracklist" role="dialog" aria-modal="true" aria-labelledby="tracklist-title" hidden inert>
-    <div class="tracklist-card">
-      <div class="tracklist-header">
-        <div>
-          <p class="room-eyebrow">Current mix</p>
-          <h2 id="tracklist-title">Tracklist</h2>
-          <p id="tracklist-mix-meta">Select a mix to see its tracklist.</p>
+    <!-- Floating Mini-Player Pill -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-xl z-40 transition-all duration-500 transform translate-y-2 opacity-0 pointer-events-none" id="archive-mini-player">
+      <div class="glass-panel w-full h-18 px-5 py-3 rounded-full flex items-center justify-between shadow-float relative overflow-hidden">
+        <!-- Progress Fill along bottom edge -->
+        <div class="absolute bottom-0 left-6 right-6 h-[2.5px] bg-white/10 rounded-full overflow-hidden">
+          <div class="h-full bg-primary transition-all duration-300" id="mini-progress-fill" style="width: 0%;"></div>
         </div>
-        <button id="btn-tracklist-close" type="button" aria-label="Close tracklist">
-          <span class="material-symbols-outlined" aria-hidden="true">close</span>
-        </button>
-      </div>
-      <div class="tracklist-body">
-        <ol id="tracklist-entries" hidden></ol>
-        <p id="tracklist-empty">No tracklist has been added for this mix yet.</p>
+
+        <!-- Left metadata (click redirects to home player) -->
+        <div class="flex items-center min-w-0 flex-1 hover:opacity-90 active:scale-98 transition-all cursor-none" id="mini-player-info-click">
+          <!-- Thumbnail cover -->
+          <div class="w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0 relative bg-black/40">
+            <img class="w-full h-full object-cover" id="mini-art-img" src="" alt="Thumbnail"/>
+          </div>
+          <!-- Title details -->
+          <div class="flex flex-col ml-4 min-w-0">
+            <span class="text-white font-display font-extrabold text-sm truncate" id="mini-title">Mix Title</span>
+            <span class="text-muted font-ui text-xs truncate" id="mini-subtext">DJ Name • Track title</span>
+          </div>
+        </div>
+
+        <!-- Right Controls -->
+        <div class="flex items-center gap-3 shrink-0 ml-4">
+          <!-- Play / Pause -->
+          <button class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-background-base hover:scale-105 active:scale-95 transition-transform focus:outline-none" id="btn-mini-play" aria-label="Play/Pause">
+            <span class="material-symbols-outlined text-2.5xl" id="icon-mini-play" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+          </button>
+          <!-- Maximize -->
+          <button class="w-10 h-10 bg-surface border border-white/10 hover:border-primary/30 rounded-full flex items-center justify-center text-white hover:text-primary hover:scale-105 active:scale-95 transition-all focus:outline-none" id="btn-mini-maximize" aria-label="Maximize Player" title="Back to Main Player">
+            <span class="material-symbols-outlined text-2xl">open_in_full</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- TRACKLIST MODAL -->
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-6 md:p-12 opacity-0 pointer-events-none transition-all duration-500 ease-out" id="modal-tracklist" hidden inert role="dialog" aria-modal="true" aria-labelledby="tracklist-title"
+    style="backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px); background: rgba(10,10,10,0.6);">
+
+    <!-- Close Button -->
+    <button class="absolute top-6 right-6 w-11 h-11 flex items-center justify-center text-white/50 hover:text-primary focus:outline-none transition-colors duration-200"
+      id="btn-tracklist-close"
+      aria-label="Close tracklist"
+      style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; backdrop-filter: blur(12px);">
+      <span class="material-symbols-outlined text-xl">close</span>
+    </button>
+
+    <!-- Outer liquid glass shell -->
+    <div class="w-full max-w-2xl flex flex-col max-h-[88vh]"
+      style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 32px 80px rgba(0,0,0,0.7);">
+
+      <!-- Header panel — slightly more opaque inner glass layer -->
+      <div class="shrink-0 flex items-center gap-5 p-6 md:p-8"
+        style="border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); border-radius: 16px 16px 0 0;">
+        <img src="../lowkal-logo.jpg" class="w-14 h-14 shrink-0" alt="Lowkal.fm"
+          style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 0 20px rgba(85,233,59,0.08);"/>
+        <div>
+          <div class="font-mono text-xs tracking-widest uppercase mb-1" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">CURRENT MIX</div>
+          <h2 class="font-display font-bold uppercase leading-none" id="tracklist-title" style="font-size: clamp(1.6rem, 4vw, 2.5rem); letter-spacing: -0.01em;">TRACKLIST</h2>
+          <p class="font-ui text-sm mt-2 text-white/60" id="tracklist-mix-meta">Select a mix to see its tracklist.</p>
+        </div>
+      </div>
+
+      <!-- Scrollable body -->
+      <div class="overflow-y-auto custom-scrollbar flex-1 p-6 md:p-8 flex flex-col gap-7">
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <span class="font-mono text-xs tracking-widest uppercase" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">Tracklist</span>
+            <div class="flex-1" style="height:1px; background: linear-gradient(to right, rgba(85,233,59,0.3), transparent);"></div>
+          </div>
+          <ol class="flex flex-col gap-1" id="tracklist-entries"></ol>
+          <p class="font-ui text-sm leading-7" id="tracklist-empty" style="color: rgba(229,226,225,0.65);" hidden>No tracklist has been added for this mix yet.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden inert>
+    <div class="settings-card">
+      <div class="settings-heading"><h2 id="settings-title">Room settings</h2><button id="btn-settings-close" type="button" aria-label="Close settings">×</button></div>
+      <section aria-labelledby="mixer-title"><h3 id="mixer-title">Mixer</h3>
+        <p id="mixer-status" role="status">EQ unavailable for this source. Master volume is available.</p>
+        <div class="mixer-strips">
+          <div class="mixer-strip"><label for="mixer-bass">Bass</label><output id="mixer-bass-value" for="mixer-bass">0 dB</output><div class="mixer-fader-well"><span class="mixer-scale" aria-hidden="true">+6<br>—<br>0<br>—<br>-12</span><input id="mixer-bass" class="mixer-fader" type="range" min="-12" max="6" step="1" value="0" aria-orientation="vertical" disabled/><span class="mixer-meter" aria-hidden="true"><span id="signal-bass"></span></span></div></div>
+          <div class="mixer-strip"><label for="mixer-mid">Mid</label><output id="mixer-mid-value" for="mixer-mid">0 dB</output><div class="mixer-fader-well"><span class="mixer-scale" aria-hidden="true">+6<br>—<br>0<br>—<br>-12</span><input id="mixer-mid" class="mixer-fader" type="range" min="-12" max="6" step="1" value="0" aria-orientation="vertical" disabled/><span class="mixer-meter" aria-hidden="true"><span id="signal-mid"></span></span></div></div>
+          <div class="mixer-strip"><label for="mixer-treble">Treble</label><output id="mixer-treble-value" for="mixer-treble">0 dB</output><div class="mixer-fader-well"><span class="mixer-scale" aria-hidden="true">+6<br>—<br>0<br>—<br>-12</span><input id="mixer-treble" class="mixer-fader" type="range" min="-12" max="6" step="1" value="0" aria-orientation="vertical" disabled/><span class="mixer-meter" aria-hidden="true"><span id="signal-treble"></span></span></div></div>
+          <div class="mixer-strip"><label for="mixer-master">Master</label><output id="mixer-master-value" for="mixer-master">60%</output><div class="mixer-fader-well"><span class="mixer-scale" aria-hidden="true">100<br>—<br>50<br>—<br>0</span><input id="mixer-master" class="mixer-fader" type="range" min="0" max="100" step="1" value="60" aria-orientation="vertical"/></div></div>
+        </div>
+        <div class="settings-actions"><button id="mixer-bypass" type="button" aria-pressed="false" disabled>Bypass EQ</button><button id="mixer-reset" type="button" disabled>Reset EQ</button></div>
+      </section>
+      <section class="settings-visuals" aria-labelledby="visual-title"><h3 id="visual-title">Visuals</h3><label for="visual-intensity">Intensity</label><input id="visual-intensity" type="range" min="0" max="100" value="65"/><button id="visual-motion" type="button" aria-pressed="false">Pause visuals</button><p id="visual-status" aria-live="polite">Ambient motion</p></section>
+    </div>
+  </div>
   <audio id="audio-player" preload="none" hidden></audio>
+  <!-- room-visuals.js owns u_paletteBase, u_paletteMid and u_paletteAccent. -->
   <script type="module" src="room-visuals.js"></script>
+  <script type="module" src="room-settings.js"></script>
 
   <!-- Playback and same-origin parent bridges. -->
   <script>
@@ -386,6 +687,7 @@
       }
 
       init() {
+        this.setupCursor();
         this.bindEvents();
         this.bindNavigationBridge();
         this.bindAudioSync();
@@ -482,6 +784,28 @@
         this.updateMiniPlayerUI();
         this.renderPlaybackModes();
         this.applyingExternalState = false;
+      }
+
+      // Cursor tracking and hovers
+      setupCursor() {
+        const cursor = document.getElementById('custom-cursor');
+        
+        document.addEventListener('mousemove', (e) => {
+          cursor.style.left = e.clientX + 'px';
+          cursor.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('mouseleave', () => cursor.style.opacity = 0);
+        document.addEventListener('mouseenter', () => cursor.style.opacity = 1);
+
+        const addHoverEvents = (el) => {
+          el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+          el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        };
+
+        const hoverSelectors = 'button, a, input[type=range], #header-logo, #mini-player-info-click';
+        document.querySelectorAll(hoverSelectors).forEach(addHoverEvents);
+        this.bindHoverCursor = addHoverEvents;
       }
 
       // Setup DOM elements for Archive nodes
@@ -795,10 +1119,12 @@
       showTracklist(show) {
         const modal = document.getElementById('modal-tracklist');
         if (show === !modal.hidden) return;
-        const background = document.querySelectorAll('.room-header, #screen-home, .visual-dock');
+        const background = document.querySelectorAll('body > header, #screen-home, #screen-archive');
         if (show) {
           this.tracklistReturnFocus = document.activeElement;
           modal.hidden = false;
+          modal.style.opacity = 1;
+          modal.style.pointerEvents = 'auto';
           modal.inert = false;
           background.forEach((element) => { element.inert = true; });
           document.getElementById('btn-tracklist-close').focus();
@@ -826,7 +1152,7 @@
 
         tracks.forEach((track, index) => {
           const row = document.createElement('li');
-          row.className = 'tracklist-row';
+          row.className = 'grid grid-cols-[auto_1fr] gap-4 items-start px-4 py-3 rounded';
           row.style.background = index % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.015)';
           row.style.border = `1px solid ${index % 2 === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.04)'}`;
 
@@ -1203,16 +1529,16 @@
           mainPlayBtn.textContent = 'pause';
           mainArtPlayBtn.textContent = 'pause';
           
-          statusDot.className = "status-dot is-playing";
+          statusDot.className = "w-2.5 h-2.5 rounded-full bg-accent animate-pulse-dot";
           statusText.textContent = "Playing";
-          statusText.className = "status-text is-playing";
+          statusText.className = "text-[9px] font-bold tracking-widest text-accent uppercase font-ui";
         } else {
           mainPlayBtn.textContent = 'play_arrow';
           mainArtPlayBtn.textContent = 'play_arrow';
           
-          statusDot.className = "status-dot";
+          statusDot.className = "w-2.5 h-2.5 rounded-full bg-muted";
           statusText.textContent = "Ready";
-          statusText.className = "status-text";
+          statusText.className = "text-[9px] font-bold tracking-widest text-muted uppercase font-ui";
         }
 
         // Time updates
