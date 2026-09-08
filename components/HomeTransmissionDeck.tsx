@@ -10,7 +10,7 @@ import { useListenContent } from "./ListenContentProvider";
 export function HomeTransmissionDeck() {
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
   const { records } = useListenContent();
-  const homeRecords = records.filter((record) => record.showOnHome);
+  const homeRecords = records;
 
   const toggleRecord = (slug: string) => {
     if (activeRecord.slug === slug) togglePlayback();

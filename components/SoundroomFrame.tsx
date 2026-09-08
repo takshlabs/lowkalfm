@@ -10,7 +10,7 @@ const CATALOG_CHANNEL = "lowkal.catalog.v1";
 export function SoundroomFrame() {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const { records, getArtist } = useListenContent();
-  const mixes = useMemo(() => records.filter((record) => record.showInSoundroom).map((record, index) => {
+  const mixes = useMemo(() => records.map((record, index) => {
     const artist = record.artistSlugs[0] ? getArtist(record.artistSlugs[0]) : undefined;
     const positions = [{ top: 20, left: 15 }, { top: 50, left: 60 }, { top: 14, left: 76 }, { top: 68, left: 30 }];
     const basePos = positions[index % positions.length];

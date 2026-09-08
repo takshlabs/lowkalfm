@@ -26,10 +26,6 @@ type SanityMix = {
   shaderMoodPrompt?: string;
   featured?: boolean;
   archiveSection?: ArchiveSection;
-  showInPlayer?: boolean;
-  showInSoundroom?: boolean;
-  showInArchive?: boolean;
-  showOnHome?: boolean;
   tracks?: SoundRecord["tracks"];
   programmeSlug?: string;
 };
@@ -81,10 +77,10 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     featured: Boolean(mix.featured),
     programSlug: mix.programmeSlug,
     archiveSection: mix.archiveSection ?? "volumes-guests",
-    showInPlayer: mix.showInPlayer !== false,
-    showInSoundroom: mix.showInSoundroom !== false,
-    showInArchive: mix.showInArchive !== false,
-    showOnHome: mix.showOnHome !== false,
+    showInPlayer: true,
+    showInSoundroom: true,
+    showInArchive: true,
+    showOnHome: true,
     tracks: mix.tracks ?? []
   };
 }

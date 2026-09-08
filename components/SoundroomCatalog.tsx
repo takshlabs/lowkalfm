@@ -51,7 +51,7 @@ function getGroup(record: SoundRecord) {
 
 export function SoundroomCatalog() {
   const { records } = useListenContent();
-  const archiveRecords = useMemo(() => records.filter((record) => record.showInArchive), [records]);
+  const archiveRecords = records;
   const [selectedSlug, setSelectedSlug] = useState(archiveRecords[0].slug);
   const recordRefs = useRef(new Map<string, HTMLButtonElement>());
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();

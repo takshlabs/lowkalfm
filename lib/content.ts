@@ -167,9 +167,9 @@ export const soundRecords: SoundRecord[] = [
     artistSlugs: ["takezo"],
     archiveSection: "scene-programmes",
     showInPlayer: true,
-    showInSoundroom: false,
+    showInSoundroom: true,
     showInArchive: true,
-    showOnHome: false,
+    showOnHome: true,
     tracks: [
       { time: 0, title: "Intro (Atmosphere)", artist: "Unknown" },
       { time: 255, title: "Sub-bass Frequency", artist: "Autechre" },
@@ -194,9 +194,9 @@ export const soundRecords: SoundRecord[] = [
     artistSlugs: ["sa-rang"],
     archiveSection: "scene-programmes",
     showInPlayer: true,
-    showInSoundroom: false,
+    showInSoundroom: true,
     showInArchive: true,
-    showOnHome: false,
+    showOnHome: true,
     tracks: [
       { time: 0, title: "La Real", artist: "Surgeon" },
       { time: 270, title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },

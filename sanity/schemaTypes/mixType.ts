@@ -100,11 +100,11 @@ export const mixType = defineType({
       description: "Hide this published mix from all public Lowkal listen surfaces. It stays in the CMS and can be restored at any time."
     }),
     defineField({ name: "featured", title: "Featured mix", type: "boolean", group: "placement", initialValue: false }),
-    defineField({ name: "showInPlayer", title: "Available in player", type: "boolean", group: "placement", initialValue: true }),
+    defineField({ name: "showInPlayer", title: "Available in player", type: "boolean", group: "placement", initialValue: true, hidden: true }),
     defineField({ name: "playerOrder", title: "Player order", type: "number", group: "placement", initialValue: 100 }),
-    defineField({ name: "showInSoundroom", title: "Show in Soundroom", type: "boolean", group: "placement", initialValue: true }),
+    defineField({ name: "showInSoundroom", title: "Show in Soundroom", type: "boolean", group: "placement", initialValue: true, hidden: true }),
     defineField({ name: "soundroomOrder", title: "Soundroom order", type: "number", group: "placement", initialValue: 100 }),
-    defineField({ name: "showInArchive", title: "Show in Archive", type: "boolean", group: "placement", initialValue: true }),
+    defineField({ name: "showInArchive", title: "Show in Archive", type: "boolean", group: "placement", initialValue: true, hidden: true }),
     defineField({
       name: "archiveSection",
       title: "Archive section",
@@ -118,7 +118,7 @@ export const mixType = defineType({
       initialValue: "volumes-guests"
     }),
     defineField({ name: "archiveOrder", title: "Archive order", type: "number", group: "placement", initialValue: 100 }),
-    defineField({ name: "showOnHome", title: "Show on home", type: "boolean", group: "placement", initialValue: true }),
+    defineField({ name: "showOnHome", title: "Show on home", type: "boolean", group: "placement", initialValue: true, hidden: true }),
     defineField({ name: "homeOrder", title: "Home order", type: "number", group: "placement", initialValue: 100 }),
     defineField({
       name: "tracks",

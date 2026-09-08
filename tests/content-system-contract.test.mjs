@@ -59,6 +59,27 @@ test("parked mixes stay in the CMS but are not sent to public listen surfaces", 
   assert.match(query, /_type == "mix" && published == true && parked != true/);
 });
 
+test("published non-parked mixes appear on archive, soundroom, home, and the player", async () => {
+  const schema = await source("sanity/schemaTypes/mixType.ts");
+  const query = await source("lib/sanity.ts");
+  const provider = await source("components/ListenContentProvider.tsx");
+  const archive = await source("components/SoundroomCatalog.tsx");
+  const soundroom = await source("components/SoundroomFrame.tsx");
+  const home = await source("components/HomeTransmissionDeck.tsx");
+  const player = await source("components/AudioProvider.tsx");
+
+  assert.match(query, /_type == "mix" && published == true && parked != true/);
+  assert.match(schema, /Hide this published mix from all public Lowkal listen surfaces/);
+  assert.match(provider, /showInPlayer:\s*true/);
+  assert.match(provider, /showInSoundroom:\s*true/);
+  assert.match(provider, /showInArchive:\s*true/);
+  assert.match(provider, /showOnHome:\s*true/);
+  assert.doesNotMatch(archive, /showInArchive/);
+  assert.doesNotMatch(soundroom, /showInSoundroom/);
+  assert.doesNotMatch(home, /showOnHome/);
+  assert.doesNotMatch(player, /showInPlayer &&/);
+});
+
 test("private desk links are managed in Sanity and stay off public navigation", async () => {
   const schema = await source("sanity/schemaTypes/linkBoardType.ts");
   const index = await source("sanity/schemaTypes/index.ts");

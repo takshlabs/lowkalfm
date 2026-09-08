@@ -89,7 +89,7 @@ function readSavedState(): SavedPlayerState | null {
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const { records, getRecord } = useListenContent();
-  const playableRecords = useMemo(() => records.filter((record) => record.showInPlayer && isPlayable(record)), [records]);
+  const playableRecords = useMemo(() => records.filter((record) => isPlayable(record)), [records]);
   const firstRecord = playableRecords[0] ?? records[0];
   const [activeSlug, setActiveSlug] = useState(firstRecord.slug);
   const [currentTime, setCurrentTime] = useState(0);
