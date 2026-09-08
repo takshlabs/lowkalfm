@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
 
 const moduleUrl = new URL('../public/soundroom/visual-state.js', import.meta.url);
 
@@ -22,6 +23,17 @@ test('stale, paused and reduced-motion frames never simulate an audio signal', a
     assert.equal(frame.mode, 'ambient');
   }
   assert.equal(visualFrame(signal, { playing: true, age: 0, still: true }).mode, 'still');
+});
+
+test('room assets resolve after clean-URL redirects and under a site prefix', async () => {
+  const html = await readFile(new URL('../public/soundroom/index.html', import.meta.url), 'utf8');
+  const script = html.match(/<script id="soundroom-base">([\s\S]*?)<\/script>/)?.[1];
+  assert.ok(script, 'Missing clean-URL base resolution');
+  for (const pathname of ['/soundroom', '/soundroom/', '/soundroom/index.html', '/lowkalfm/soundroom/index.html']) {
+    let base;
+    runInNewContext(script, { window: { location: { origin: 'https://example.com', pathname } }, document: { createElement: () => ({}), head: { append: (element) => { base = element.href; } } } });
+    assert.equal(new URL('room.css', base).pathname, pathname.startsWith('/lowkalfm/') ? '/lowkalfm/soundroom/room.css' : '/soundroom/room.css');
+  }
 });
 
 test('the room keeps a split player with accessible scene and motion controls', async () => {

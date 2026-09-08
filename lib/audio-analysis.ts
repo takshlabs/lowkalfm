@@ -94,6 +94,8 @@ export function createAudioAnalysis(createContext: () => AudioContext, origin: s
 }
 
 export function startAnalysisBridge(scope: Window, read: () => AudioSpectrum, isPlaying: () => boolean, roomPath = "/soundroom/index.html") {
+  const documentPath = (path: string) => path.replace(/\/index(?:\.html)?$/, "").replace(/\/$/, "");
+  const expectedPath = documentPath(roomPath);
   const document = scope.document;
   const origin = scope.location.origin;
   const lastAvailable = new WeakMap<Window, boolean>();
@@ -106,9 +108,9 @@ export function startAnalysisBridge(scope: Window, read: () => AudioSpectrum, is
       try {
         const url = new URL(frame.src, origin);
         const target = frame.contentWindow;
-        if (!frame.isConnected || url.origin !== origin || url.pathname !== roomPath || !target) continue;
+        if (!frame.isConnected || url.origin !== origin || documentPath(url.pathname) !== expectedPath || !target) continue;
         // Check the current document too: an iframe can navigate after src was set.
-        if (target.location.origin !== origin || target.location.pathname !== roomPath) continue;
+        if (target.location.origin !== origin || documentPath(target.location.pathname) !== expectedPath) continue;
         const style = scope.getComputedStyle(frame);
         const rect = frame.getBoundingClientRect();
         if (style.display === "none" || style.visibility !== "visible" || style.opacity === "0"

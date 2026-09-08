@@ -2,6 +2,12 @@
 <html class="dark" lang="en">
 <head>
   <meta charset="utf-8"/>
+  <script id="soundroom-base">
+    const roomPath = window.location.pathname.replace(/\/index(?:\.html)?$/, '').replace(/\/$/, '');
+    const roomBase = document.createElement('base');
+    roomBase.href = window.location.origin + roomPath + '/';
+    document.head.append(roomBase);
+  </script>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>Lowkal Soundroom</title>
   

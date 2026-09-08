@@ -221,6 +221,19 @@ test("bridge sends the exact spectrum contract at 30 Hz only to a visible same-o
   assert.equal(room.listeners.size, 0);
 });
 
+test("bridge accepts Vercel clean URLs without accepting unrelated paths", () => {
+  const room = roomHarness();
+  const valid = room.addFrame();
+  valid.frame.contentWindow.location = new URL(`${origin}/soundroom`);
+  const data = { bass: 0.2, mid: 0.4, treble: 0.6, level: 0.8, available: true };
+  const stop = analysis.startAnalysisBridge(room.scope, () => data, () => true);
+  assert.equal(valid.messages.length, 1);
+  valid.frame.contentWindow.location = new URL(`${origin}/soundroom-other`);
+  room.tick();
+  assert.equal(valid.messages.length, 1);
+  stop();
+});
+
 test("YouTube calls are safe while its iframe API is still loading", async () => {
   const provider = await readFile(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
   assert.doesNotMatch(provider, /youtubePlayerRef\.current\?\.\w+\(/);
