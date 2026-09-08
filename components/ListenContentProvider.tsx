@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getMixStartOffset, resolveMixPlayback } from "@/lib/audio-source";
 import { artistProfiles, livePrograms, soundRecords, type ArchiveSection, type ArtistProfile, type LiveProgram, type SoundFormat, type SoundRecord } from "@/lib/content";
+import { sortMixesByLatest } from "@/lib/listen-order";
 import { isSanityConfigured, listenContentQuery, sanityClient } from "@/lib/sanity";
 
 type SanityArtist = ArtistProfile;
@@ -99,7 +100,7 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
 
   const value = useMemo<ListenContentValue>(() => {
     const fetchedRecords = content?.mixes?.map(mapMix).filter((record): record is SoundRecord => Boolean(record)) ?? [];
-    const records = fetchedRecords.length > 0 ? fetchedRecords : soundRecords;
+    const records = sortMixesByLatest(fetchedRecords.length > 0 ? fetchedRecords : soundRecords);
     const programmes = content?.programmes?.length
       ? content.programmes.map((programme) => ({
           slug: programme.slug,
