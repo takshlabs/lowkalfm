@@ -8,7 +8,7 @@
     roomBase.href = window.location.origin + roomPath + '/';
     document.head.append(roomBase);
   </script>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
   <title>Lowkal Soundroom</title>
   
   <!-- SEO & Social Sharing Meta Tags -->
@@ -342,17 +342,17 @@
             <!-- Dynamic Controls Strip -->
             <div class="flex items-center justify-between px-2 mb-6">
               <!-- Shuffle -->
-              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-shuffle" title="Shuffle Mixes">
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-shuffle" title="Shuffle Mixes" aria-label="Shuffle mixes">
                 <span class="material-symbols-outlined text-xl">shuffle</span>
               </button>
               
               <!-- Replay 10s -->
-              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-replay-10" title="Rewind 10s">
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-replay-10" title="Rewind 10s" aria-label="Rewind 10 seconds">
                 <span class="material-symbols-outlined text-2xl">replay_10</span>
               </button>
               
               <!-- Skip Previous -->
-              <button class="text-white hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-prev" title="Previous Mix">
+              <button class="text-white hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-prev" title="Previous Mix" aria-label="Previous mix">
                 <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
               </button>
               
@@ -362,24 +362,24 @@
               </button>
               
               <!-- Skip Next -->
-              <button class="text-white hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-next" title="Next Mix">
+              <button class="text-white hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-next" title="Next Mix" aria-label="Next mix">
                 <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">skip_next</span>
               </button>
               
               <!-- Forward 30s -->
-              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-forward-30" title="Forward 30s">
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-forward-30" title="Forward 30s" aria-label="Forward 30 seconds">
                 <span class="material-symbols-outlined text-2xl">forward_30</span>
               </button>
               
               <!-- Repeat Loop -->
-              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-repeat" title="Repeat Mix">
+              <button class="text-muted hover:text-primary transition-colors focus:outline-none flex items-center justify-center" id="btn-main-repeat" title="Repeat Mix" aria-label="Repeat mix">
                 <span class="material-symbols-outlined text-xl">repeat</span>
               </button>
             </div>
 
             <!-- Volume Control Bar -->
             <div class="flex items-center gap-3 w-[90%] mx-auto text-muted">
-              <button class="focus:outline-none hover:text-primary" id="btn-volume-mute" title="Mute/Unmute">
+              <button class="focus:outline-none hover:text-primary" id="btn-volume-mute" title="Mute/Unmute" aria-label="Mute">
                 <span class="material-symbols-outlined text-lg" id="icon-volume-low">volume_mute</span>
               </button>
               <input class="w-full" id="main-volume-slider" aria-label="Volume" max="100" min="0" type="range" value="60"/>

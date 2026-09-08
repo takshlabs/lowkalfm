@@ -1336,3 +1336,138 @@ body:has(.link-desk) {
   .link-desk-preview .media-frame-image { transition: none; }
   .link-desk-item:hover .link-desk-preview .media-frame-image { transform: none; }
 }
+
+/* Mobile finish: safe areas, reliable touch targets, and unclipped content. */
+@media (max-width: 680px) {
+  html { scroll-padding-top: calc(104px + env(safe-area-inset-top)); }
+  body { padding-bottom: calc(108px + env(safe-area-inset-bottom)); overflow-x: hidden; }
+  button, a, summary, input[type="range"] { touch-action: manipulation; }
+
+  .site-header {
+    min-height: calc(62px + env(safe-area-inset-top));
+    padding: calc(8px + env(safe-area-inset-top)) 12px 8px;
+  }
+  .site-header > * { min-width: 0; }
+  .brand-lockup { position: relative; z-index: 2; }
+  .header-nav {
+    min-width: 0;
+    justify-content: flex-start;
+    gap: 4px;
+    padding-left: 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .header-nav::-webkit-scrollbar { display: none; }
+  .header-nav a {
+    display: inline-flex;
+    min-height: 40px;
+    padding: 0 8px;
+    align-items: center;
+    font-size: .61rem;
+    white-space: nowrap;
+  }
+
+  .rinse-hero { height: min(540px, calc(100svh - 62px)); min-height: 430px; }
+  .rinse-hero-copy { min-height: inherit; padding: 30px 18px 34px; }
+  .rinse-hero-copy h1 { max-width: 8ch; font-size: clamp(3.45rem, 18.2vw, 5.1rem); line-height: .78; overflow-wrap: normal; }
+  .rinse-hero-copy a { min-height: 48px; padding: 0 18px; }
+
+  .home-channel-row { gap: 0; padding: 0; }
+  .home-channel-row a { min-height: 132px; padding: 16px 14px; }
+  .home-channel-row a:nth-child(odd) { border-right: 1px solid rgba(245, 241, 232, .16); }
+  .home-channel-row a > .channel-index { width: auto; height: auto; }
+  .home-channel-row small { display: block; }
+
+  .transmission-row,
+  .city-card-row,
+  .home-programme-rail,
+  .home-session-shelf,
+  .archive-track {
+    overscroll-behavior-x: contain;
+    scroll-snap-stop: always;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .transmission-row::-webkit-scrollbar,
+  .city-card-row::-webkit-scrollbar,
+  .home-programme-rail::-webkit-scrollbar,
+  .home-session-shelf::-webkit-scrollbar { display: none; }
+  .transmission-media > button { width: 52px; height: 52px; }
+  .transmission-card,
+  .city-card { flex-basis: min(86vw, 350px); }
+
+  .lowkal-player.lowkal-player--compact {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    grid-template-columns: 50px 46px minmax(0, 1fr) 44px;
+    grid-template-rows: 54px 28px;
+    gap: 5px;
+    width: calc(100vw - 16px);
+    padding: 7px;
+    border-color: rgba(241, 234, 219, .32);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .52);
+  }
+  .lowkal-player--compact .lowkal-player-art { width: 50px; height: 54px; border-radius: 5px; overflow: hidden; }
+  .lowkal-player--compact .lowkal-player-transport,
+  .lowkal-player--compact .lowkal-player-room { min-width: 44px; min-height: 44px; }
+  .lowkal-player--compact .lowkal-player-transport-icon { width: 42px; height: 42px; }
+  .lowkal-player--compact .lowkal-player-program { min-width: 0; padding-left: 2px; }
+  .lowkal-player--compact .lowkal-player-title-row,
+  .lowkal-player--compact .lowkal-player-title,
+  .lowkal-player--compact .lowkal-player-record { min-width: 0; }
+  .lowkal-player--compact .lowkal-player-title,
+  .lowkal-player--compact .lowkal-player-record {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .lowkal-player--compact .lowkal-player-title { font-size: 1rem; }
+  .lowkal-player--compact .lowkal-player-timeline { min-height: 28px; }
+  .lowkal-player--compact .lowkal-player-track { display: block; height: 28px; }
+  .lowkal-player--compact .lowkal-player-track input { height: 28px; }
+  .lowkal-player--compact .lowkal-player-room { border-left: 1px solid rgba(241, 234, 219, .16); border-radius: 5px; }
+
+  .archive-room-heading { padding-top: 24px; }
+  .archive-group-index button { min-height: 44px; padding: 4px; }
+  .archive-track { padding-right: 14vw; padding-left: 14vw; }
+  .archive-record { flex-basis: 72vw; max-width: 280px; }
+  .archive-controls button { width: 44px; height: 44px; }
+  .archive-desk { padding-bottom: 48px; }
+  .archive-selection { grid-template-columns: 1fr; gap: 12px; min-width: 0; }
+  .archive-selection-index { display: flex; gap: 10px; }
+  .archive-selection-title { min-width: 0; }
+  .archive-selection-title h2 { max-width: 100%; font-size: clamp(2.45rem, 12.5vw, 3.6rem); line-height: .82; overflow-wrap: anywhere; }
+  .archive-selection-title p { line-height: 1.35; overflow-wrap: anywhere; }
+  .archive-play { grid-column: 1; width: 100%; min-height: 48px; justify-content: center; }
+
+  .section-page-hero { min-height: min(620px, calc(100svh - 62px)); }
+  .section-page-hero h1 { max-width: 100%; font-size: clamp(3.8rem, 19vw, 5.8rem); line-height: .78; overflow-wrap: anywhere; }
+  .read-story { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; padding: 22px 0; }
+  .read-story-media { grid-column: 2; min-height: 0; }
+  .read-story-copy { grid-column: 2; padding-right: 0; }
+  .read-story-copy h2 { font-size: clamp(2rem, 10vw, 3rem); overflow-wrap: anywhere; }
+  .reader-page { padding: 28px 16px 120px; }
+  .reader-back { min-height: 44px; margin-bottom: 44px; }
+  .reader-article h1 { font-size: clamp(3.4rem, 17vw, 5.2rem); overflow-wrap: anywhere; }
+  .reader-media { margin: 34px 0; }
+  .reader-body p { font-size: 1.14rem; line-height: 1.58; }
+
+  .artist-directory { padding-right: 14px; padding-left: 14px; }
+  .artist-directory > header h1 { font-size: clamp(3.7rem, 18vw, 5.8rem); overflow-wrap: anywhere; }
+  .artist-directory-card { min-height: 0; padding: 12px; }
+  .artist-directory-image,
+  .artist-directory-monogram { aspect-ratio: 4 / 3; min-height: 0; }
+  .artist-directory-card strong { font-size: clamp(2rem, 11vw, 3.1rem); overflow-wrap: anywhere; }
+}
+
+@media (max-width: 360px) {
+  .header-nav a { padding-right: 6px; padding-left: 6px; font-size: .56rem; }
+  .rinse-hero-copy h1 { font-size: clamp(3.15rem, 17.6vw, 4.3rem); }
+  .lowkal-player.lowkal-player--compact { grid-template-columns: 44px 44px minmax(0, 1fr) 42px; width: calc(100vw - 10px); }
+  .lowkal-player--compact .lowkal-player-art { width: 44px; }
+  .lowkal-player--compact .lowkal-player-title { font-size: .9rem; }
+  .lowkal-player--compact .lowkal-player-video { display: none; }
+}

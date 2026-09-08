@@ -37,3 +37,116 @@
   #btn-tracklist-open { width: 38px; height: 38px; padding: 0; justify-content: center; gap: 0; }
   #btn-tracklist-open > span:last-child { display: none; }
 }
+
+/* The phone layout is a scrollable listening surface, not a compressed desktop card. */
+@media (max-width: 760px) {
+  html, body { height: 100%; height: 100dvh; overscroll-behavior: none; }
+  html, body, body *, a, button, input, select, textarea, [role="button"], img { cursor: auto !important; }
+  button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .custom-cursor { display: none !important; }
+
+  body > header {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    min-height: calc(64px + env(safe-area-inset-top));
+    padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+    gap: 10px;
+    mix-blend-mode: normal !important;
+    background: linear-gradient(180deg, rgba(10, 10, 10, .92), rgba(10, 10, 10, .5), transparent);
+  }
+  #header-nav-btn { min-width: 44px; min-height: 44px; gap: 6px; font-size: 10px; line-height: 1.05; }
+  #header-nav-text { max-width: 58px; }
+  body > header > div:last-child { gap: 8px !important; }
+  #header-logo { gap: 0 !important; }
+  #header-logo h1 { display: none; }
+  #header-logo img { width: 38px !important; height: 38px !important; }
+  #btn-tracklist-open, #btn-settings-open { width: 44px; height: 44px; min-width: 44px; }
+
+  .soundroom-return-nav {
+    right: 10px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 10px;
+    width: auto;
+    max-width: none;
+    min-height: 48px;
+    transform: none;
+    justify-content: stretch;
+    overflow: hidden;
+    border-color: rgba(255, 255, 255, .18);
+    border-radius: 12px;
+    background: rgba(12, 12, 12, .94);
+    box-shadow: 0 14px 42px rgba(0, 0, 0, .48);
+  }
+  .soundroom-return-nav a { display: grid; flex: 1 1 0; min-height: 40px; padding: 0 8px; place-items: center; font-size: 9px; text-align: center; }
+
+  #screen-home {
+    display: block !important;
+    padding: calc(72px + env(safe-area-inset-top)) 14px calc(76px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    scrollbar-width: none;
+  }
+  #screen-home::-webkit-scrollbar { display: none; }
+  #screen-home > main { display: grid !important; width: 100% !important; height: auto !important; padding-top: 0 !important; gap: 14px !important; }
+  #screen-home > main > div:first-child {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 16 / 10;
+    border-radius: 14px !important;
+    box-shadow: 0 18px 54px rgba(0, 0, 0, .36);
+  }
+  #screen-home > main > div:first-child > div { opacity: 1; background: linear-gradient(0deg, rgba(0, 0, 0, .36), transparent 48%); }
+  #btn-main-play-art { width: 54px !important; height: 54px !important; transform: translateY(52px); }
+
+  #screen-home > main > div:nth-child(2) {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0;
+    overflow: visible !important;
+    border-radius: 14px !important;
+    box-shadow: 0 18px 54px rgba(0, 0, 0, .34);
+  }
+  #screen-home > main > div:nth-child(2) > div:first-child { padding: 20px 18px 16px !important; }
+  #main-title { max-height: none !important; font-size: clamp(28px, 9vw, 38px) !important; line-height: .98 !important; overflow-wrap: anywhere; }
+  #main-host-date { font-size: 12px !important; }
+  #main-scrubber, #main-volume-slider { min-height: 28px; margin-top: -8px; margin-bottom: 8px !important; touch-action: pan-x; }
+  input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; margin-top: -8px; border: 6px solid #55e93b; border-radius: 50%; background: #131313; box-shadow: 0 0 0 4px rgba(85, 233, 59, .16); }
+  #btn-main-shuffle, #btn-main-replay-10, #btn-main-prev, #btn-main-next, #btn-main-forward-30, #btn-main-repeat, #btn-volume-mute {
+    width: 40px;
+    height: 44px;
+    min-width: 40px;
+  }
+  #btn-main-play { width: 58px !important; height: 58px !important; min-width: 58px; }
+  #screen-home > main > div:nth-child(2) > div:first-child .justify-between.px-2 { margin-right: -8px; margin-left: -8px; padding: 0 !important; }
+  #main-details-scroll { flex: none !important; max-height: none; padding: 18px !important; overflow: visible !important; }
+
+  #modal-tracklist { align-items: flex-end !important; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) !important; }
+  #modal-tracklist > div { max-height: 82dvh !important; border-radius: 18px !important; }
+  #btn-tracklist-close { top: max(12px, env(safe-area-inset-top)) !important; right: 12px !important; }
+  #modal-settings { align-items: flex-end; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+  #modal-settings .settings-card { max-height: 88dvh; border-radius: 18px; }
+
+  #archive-canvas { bottom: 70px !important; height: auto !important; }
+  #archive-mini-player { bottom: calc(64px + env(safe-area-inset-bottom)) !important; width: calc(100% - 20px) !important; }
+  #archive-mini-player > div { min-height: 72px; padding: 10px 12px !important; border-radius: 14px !important; }
+  #mini-player-info-click > div:first-child { width: 44px !important; height: 44px !important; }
+  #mini-player-info-click > div:last-child { margin-left: 10px !important; }
+  #archive-mini-player > div > div:last-child { gap: 6px !important; margin-left: 6px !important; }
+  #mini-youtube-video, #btn-mini-play, #btn-mini-maximize { width: 42px !important; height: 42px !important; min-width: 42px; }
+}
+
+@media (max-width: 380px) {
+  #header-nav-text { display: none; }
+  #header-nav-btn { width: 44px; }
+  #screen-home { padding-right: 10px !important; padding-left: 10px !important; }
+  #btn-main-shuffle, #btn-main-repeat { display: none; }
+  #main-details-scroll { padding: 16px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rotate { animation: none !important; }
+  .node-transition, .screen-fade { transition: none !important; }
+}
