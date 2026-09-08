@@ -2,10 +2,11 @@
 
 ## Production service
 
-- Production site and CMS: `https://lowkalfm.vercel.app`
+- Production site and CMS: `https://lowkalfm.in`
 - Vercel project: `lowkalfm`
 - Vercel team: `takshlabs-projects`
-- CMS: `https://lowkalfm.vercel.app/studio`
+- CMS: `https://lowkalfm.in/studio`
+- Redirects: `https://www.lowkalfm.in` and `https://lowkalfm.vercel.app` redirect to `https://lowkalfm.in`
 - Audio delivery: Cloudflare R2 with a Cloudflare custom domain
 
 Do not use OpenAI Sites or a `chatgpt.site` URL for Lowkal. They are not Lowkal production services.
@@ -18,7 +19,8 @@ Do not use OpenAI Sites or a `chatgpt.site` URL for Lowkal. They are not Lowkal 
 4. Commit the completed change on `main`.
 5. Push with `git push origin main`.
 6. Deploy the same commit with `npx vercel --prod --yes` when a manual production deployment is required.
-7. Confirm the `lowkalfm.vercel.app` alias points to the new ready deployment with `npx vercel inspect <deployment-url>`.
+7. Confirm the `lowkalfm.in` alias points to the new ready deployment with `npx vercel inspect <deployment-url>`.
+8. Confirm that `www.lowkalfm.in` and `lowkalfm.vercel.app` redirect to `https://lowkalfm.in`.
 
 Never run a production deployment command that targets OpenAI Sites.
 
@@ -50,7 +52,7 @@ This setup is separate from the Vercel deployment.
 
 The R2 bucket is private. The Worker reads the audio objects and sends them to listeners with byte-range support. This is a Cloudflare CDN endpoint and does not change the Vercel site URL.
 
-The account has no Cloudflare DNS zone yet. Add the `lowkal.fm` zone to Cloudflare later, then change the audio endpoint to a custom Worker route such as `audio.lowkal.fm`.
+The account has no Cloudflare DNS zone for `lowkalfm.in`. Keep the current Worker endpoint until a separate audio subdomain is configured, then use a custom Worker route such as `audio.lowkalfm.in`.
 
 1. Sign in to the Lowkal Cloudflare account.
 2. Keep the Worker configuration in `wrangler.audio-sync.toml` aligned with the bucket name.
@@ -62,7 +64,7 @@ The account has no Cloudflare DNS zone yet. Add the `lowkal.fm` zone to Cloudfla
    - `SANITY_API_PROJECT_ID`
    - `SANITY_API_DATASET`
    - `SANITY_API_WRITE_TOKEN`
-   - `AUDIO_PUBLIC_BASE_URL` (for example, `https://audio.lowkal.fm`)
+   - `AUDIO_PUBLIC_BASE_URL` (for example, `https://audio.lowkalfm.in`)
 
 7. Deploy the Worker with `npx wrangler deploy --config wrangler.audio-sync.toml`.
 8. In Sanity Manage, keep the `Copy published mixes to Cloudflare R2` webhook enabled. It sends published `mix` updates to the Worker URL plus `/sanity/audio-sync`. Do not include drafts. Its secret must match `SANITY_WEBHOOK_SECRET`.
@@ -79,7 +81,7 @@ The account has no Cloudflare DNS zone yet. Add the `lowkal.fm` zone to Cloudfla
 }
 ```
 
-10. Publish a small test mix. Confirm that the mix document receives `audio.deliveryUrl`, then play the mix from `https://lowkalfm.vercel.app`.
+10. Publish a small test mix. Confirm that the mix document receives `audio.deliveryUrl`, then play the mix from `https://lowkalfm.in`.
 
 The Worker streams the Sanity master to R2, reads duration from the WAV header, and writes the Cloudflare CDN URL and duration back to the mix. The browser plays that URL directly. Vercel does not proxy the large audio file.
 

@@ -3,6 +3,8 @@ import { getYouTubeVideoId } from "./audio-source.ts";
 const LOCAL_HOSTS = new Set([
   "lowkal.fm",
   "www.lowkal.fm",
+  "lowkalfm.in",
+  "www.lowkalfm.in",
   "lowkalfm.vercel.app",
   "localhost",
   "127.0.0.1"

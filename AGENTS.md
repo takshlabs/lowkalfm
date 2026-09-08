@@ -8,7 +8,8 @@
 
 ## Production deployment
 
-- The only production site URL is `https://lowkalfm.vercel.app`.
+- The only production site URL is `https://lowkalfm.in`.
+- Redirect `www.lowkalfm.in` and `lowkalfm.vercel.app` to the production site URL.
 - Do not deploy Lowkal through OpenAI Sites or ChatGPT Sites. Do not use or share a `chatgpt.site` URL for Lowkal.
 - The Vercel project is `lowkalfm` in the `takshlabs-projects` team.
 - Cloudflare R2 is only the audio delivery service. It does not host the Lowkal site or CMS.

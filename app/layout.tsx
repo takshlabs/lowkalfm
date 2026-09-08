@@ -11,7 +11,7 @@ import "./reimagined.css";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lowkal.fm"),
+  metadataBase: new URL("https://lowkalfm.in"),
   title: {
     default: "Lowkal.fm — Multi-genre. Low-end focused. From Bengaluru.",
     template: "%s · Lowkal.fm"

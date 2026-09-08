@@ -32,6 +32,16 @@ type AudioSyncPayload = {
 };
 
 const encoder = new TextEncoder();
+const AUDIO_ORIGINS = new Set([
+  "https://lowkalfm.in",
+  "https://www.lowkalfm.in",
+  "https://lowkalfm.vercel.app"
+]);
+
+function audioCorsOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  return origin && AUDIO_ORIGINS.has(origin) ? origin : "https://lowkalfm.in";
+}
 
 function base64Url(bytes: ArrayBuffer) {
   let binary = "";
@@ -92,12 +102,13 @@ async function serveAudio(request: Request, env: Env) {
   if (!object) return new Response("Not found", { status: 404 });
   const headers = new Headers({
     "Accept-Ranges": "bytes",
-    "Access-Control-Allow-Origin": "https://lowkalfm.vercel.app",
+    "Access-Control-Allow-Origin": audioCorsOrigin(request),
     "Cache-Control": "public, max-age=31536000, immutable",
     "Content-Length": String(object.range?.length ?? object.size),
     "Content-Type": object.httpMetadata?.contentType || "audio/wav",
     ETag: object.etag
   });
+  headers.append("Vary", "Origin");
   if (object.range) headers.set("Content-Range", `bytes ${object.range.offset}-${object.range.offset + object.range.length - 1}/${object.size}`);
   return new Response(request.method === "HEAD" ? null : object.body, { status: object.range ? 206 : 200, headers });
 }

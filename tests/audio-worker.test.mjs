@@ -6,6 +6,25 @@ function base64Url(bytes) {
   return Buffer.from(bytes).toString("base64url");
 }
 
+test("audio delivery allows the production site origin", async () => {
+  const response = await worker.fetch(new Request("https://worker.example/audio/mix.wav", {
+    headers: { origin: "https://lowkalfm.in" }
+  }), {
+    AUDIO: {
+      get: async () => ({
+        body: new Blob(["audio"]).stream(),
+        size: 5,
+        etag: "test-etag",
+        httpMetadata: { contentType: "audio/wav" }
+      })
+    }
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("access-control-allow-origin"), "https://lowkalfm.in");
+  assert.equal(response.headers.get("vary"), "Origin");
+});
+
 async function signature(body, secret) {
   const timestamp = Math.floor(Date.now() / 1000);
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);

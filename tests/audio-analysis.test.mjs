@@ -6,14 +6,14 @@ const analysis = await import("../lib/audio-analysis.ts").catch((error) => {
   if (error.code === "ERR_MODULE_NOT_FOUND") return {};
   throw error;
 });
-const origin = "https://lowkalfm.vercel.app";
+const origin = "https://lowkalfm.in";
 
 test("analysis permits only same-origin and exact trusted HTTPS audio origins", () => {
   assert.equal(typeof analysis.isAnalysisSource, "function");
   for (const url of ["/audio/mix.wav", `${origin}/mix.mp3`, "https://cdn.sanity.io/files/project/mix.wav", "https://lowkal-audio-sync.lowkal-audio-737a.workers.dev/audio/mix.wav"]) {
     assert.equal(analysis.isAnalysisSource(url, origin), true, url);
   }
-  for (const url of [undefined, "", "https://external.example/mix.mp3", "https://cdn.sanity.io.evil.example/mix.wav", "https://cdn.sanity.io:444/mix.wav", "http://cdn.sanity.io/mix.wav", "https://user:pass@cdn.sanity.io/mix.wav", "data:audio/wav;base64,AAAA", "blob:https://lowkalfm.vercel.app/id", "https://[bad"]) {
+  for (const url of [undefined, "", "https://external.example/mix.mp3", "https://cdn.sanity.io.evil.example/mix.wav", "https://cdn.sanity.io:444/mix.wav", "http://cdn.sanity.io/mix.wav", "https://user:pass@cdn.sanity.io/mix.wav", "data:audio/wav;base64,AAAA", "blob:https://lowkalfm.in/id", "https://[bad"]) {
     assert.equal(analysis.isAnalysisSource(url, origin), false, String(url));
   }
 });

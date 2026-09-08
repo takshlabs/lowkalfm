@@ -1,6 +1,6 @@
 # Audio publishing
 
-The Lowkal site and CMS run at `https://lowkalfm.vercel.app`. Cloudflare R2 stores and delivers published audio. It does not host the site.
+The Lowkal site and CMS run at `https://lowkalfm.in`. Cloudflare R2 stores and delivers published audio. It does not host the site.
 
 ## Current status
 
@@ -8,7 +8,7 @@ The CMS has the WAV master upload field. The automatic R2 copy starts only after
 
 ## Editor workflow
 
-1. Open the mix in Lowkal CMS at `https://lowkalfm.vercel.app/studio`.
+1. Open the mix in Lowkal CMS at `https://lowkalfm.in/studio`.
 2. Open **Playback**, then **Audio**.
 3. Upload the lossless master to **WAV master**.
 4. Set **Start playback at (seconds)** only when the file has leading silence. Use `0` for no skip.
