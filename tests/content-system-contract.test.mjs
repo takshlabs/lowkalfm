@@ -56,7 +56,8 @@ test("artist profile routes use the catch-all route parameter", async () => {
 
   assert.match(page, /params:\s*Promise<\{ slug\?: string\[\] \}>/);
   assert.match(page, /<ArtistsDirectory artistSlug=\{slug\[0\] \?\? ""\} \/>/);
-  assert.doesNotMatch(page, /generateStaticParams/);
+  assert.match(page, /generateStaticParams/);
+  assert.match(page, /_type == "artist" && published == true/);
   assert.match(profile, /artistSlug = ""/);
   assert.doesNotMatch(profile, /usePathname/);
 });
