@@ -1,4 +1,5 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
+import { MixDurationInput } from "@/sanity/components/MixDurationInput";
 
 export const mixType = defineType({
   name: "mix",
@@ -47,7 +48,7 @@ export const mixType = defineType({
           title: "WAV master",
           type: "file",
           options: { accept: "audio/wav,audio/x-wav,audio/flac,audio/mpeg,audio/mp4,audio/aac" },
-          description: "Use WAV for the archive master. The site streams this file from the audio CDN after publication."
+          description: "Use WAV for the archive master. Duration is read from this file. The site streams it from the audio CDN after publication."
         }),
         defineField({
           name: "startOffset",
@@ -80,7 +81,16 @@ export const mixType = defineType({
       ]
     }),
     defineField({ name: "externalUrl", title: "Original mix link", type: "url", group: "playback" }),
-    defineField({ name: "duration", title: "Duration in seconds", type: "number", group: "playback", validation: (rule) => rule.required().integer().positive() }),
+    defineField({
+      name: "duration",
+      title: "Duration in seconds",
+      type: "number",
+      group: "playback",
+      readOnly: true,
+      description: "Taken from the uploaded audio master. You do not enter this value.",
+      validation: (rule) => rule.integer().positive(),
+      components: { input: MixDurationInput }
+    }),
     defineField({
       name: "shaderMoodPrompt",
       title: "Shader mood prompt",

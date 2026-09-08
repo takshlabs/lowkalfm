@@ -81,7 +81,7 @@ The account has no Cloudflare DNS zone yet. Add the `lowkal.fm` zone to Cloudfla
 
 10. Publish a small test mix. Confirm that the mix document receives `audio.deliveryUrl`, then play the mix from `https://lowkalfm.vercel.app`.
 
-The Worker streams the Sanity master to R2 and writes its Cloudflare CDN URL back to the mix. The browser plays that URL directly. Vercel does not proxy the large audio file.
+The Worker streams the Sanity master to R2, reads duration from the WAV header, and writes the Cloudflare CDN URL and duration back to the mix. The browser plays that URL directly. Vercel does not proxy the large audio file.
 
 ## Troubleshooting
 

@@ -14,7 +14,7 @@ type SanityMix = {
   artistDisplayName?: string;
   artists?: Array<{ name: string; slug: string }>;
   releaseDate: string;
-  duration: number;
+  duration?: number;
   audioMasterUrl?: string;
   audioMasterFilename?: string;
   audioDeliveryUrl?: string;
@@ -67,7 +67,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     artistSlugs: mix.artists?.map((artist) => artist.slug).filter(Boolean) ?? [],
     date: formatDate(mix.releaseDate),
     dateISO: mix.releaseDate,
-    duration: mix.duration,
+    duration: mix.duration ?? 0,
     startOffset: getMixStartOffset(mix.audioStartOffset),
     ...playback,
     artwork: mix.artwork,

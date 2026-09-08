@@ -127,6 +127,9 @@ test("mix masters upload in Sanity and are delivered from the audio CDN", async 
   assert.match(schema, /audio\/wav/);
   assert.match(schema, /name:\s*"startOffset"/);
   assert.match(schema, /Start playback at/);
+  assert.match(schema, /MixDurationInput/);
+  assert.match(schema, /Taken from the uploaded audio master/);
+  assert.doesNotMatch(schema, /rule\.required\(\)\.integer\(\)\.positive\(\)/);
   assert.match(query, /audioDeliveryUrl/);
   assert.match(query, /audioStartOffset/);
   assert.match(worker, /sanity-webhook-signature/);
@@ -136,6 +139,8 @@ test("mix masters upload in Sanity and are delivered from the audio CDN", async 
   assert.match(worker, /AUDIO_PUBLIC_BASE_URL/);
   assert.match(worker, /sourceAssetId/);
   assert.match(worker, /payload\.audioMasterId \|\| sourceAssetId\(payload\.audioMasterUrl\)/);
+  assert.match(worker, /durationSecondsFromWav/);
+  assert.match(worker, /set\.duration/);
 
   const publishingGuide = await source("docs/deployment.md");
   assert.match(publishingGuide, /audio\.master\.asset\._ref/);

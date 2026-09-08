@@ -1,3 +1,5 @@
+import { durationSecondsFromWav, readStreamPrefix } from "../lib/audio-duration.ts";
+
 interface AudioObject {
   body: ReadableStream<Uint8Array>;
   size: number;
@@ -100,11 +102,17 @@ async function serveAudio(request: Request, env: Env) {
   return new Response(request.method === "HEAD" ? null : object.body, { status: object.range ? 206 : 200, headers });
 }
 
-async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl: string, env: Env) {
+async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl: string, env: Env, duration?: number) {
+  const set: Record<string, string | number> = {
+    "audio.deliveryUrl": deliveryUrl,
+    "audio.sourceAssetId": payload.audioMasterId || "",
+    "audio.syncedAt": new Date().toISOString()
+  };
+  if (duration) set.duration = duration;
   const response = await fetch(`https://${env.SANITY_API_PROJECT_ID}.api.sanity.io/v2026-08-24/data/mutate/${env.SANITY_API_DATASET}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${env.SANITY_API_WRITE_TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ mutations: [{ patch: { id: payload._id, set: { "audio.deliveryUrl": deliveryUrl, "audio.sourceAssetId": payload.audioMasterId || "", "audio.syncedAt": new Date().toISOString() } } }] })
+    body: JSON.stringify({ mutations: [{ patch: { id: payload._id, set } }] })
   });
   if (!response.ok) throw new Error(`Sanity patch failed with ${response.status}`);
 }
@@ -123,11 +131,15 @@ async function syncAudio(request: Request, env: Env) {
   if (!source.ok || !source.body) return new Response("Could not download audio master", { status: 502 });
   const filename = safeSegment(payload.audioMasterFilename || `${audioMasterId}.wav`);
   const objectKey = `mixes/${safeSegment(payload._id)}/${safeSegment(audioMasterId)}-${filename}`;
-  await env.AUDIO.put(objectKey, source.body, { httpMetadata: { contentType: audioContentType(source, filename), cacheControl: "public, max-age=31536000, immutable" } });
+  const [headerStream, bodyStream] = source.body.tee();
+  const headerBytes = await readStreamPrefix(headerStream, 131072);
+  const fileSize = Number(source.headers.get("content-length")) || undefined;
+  const duration = durationSecondsFromWav(headerBytes, fileSize);
+  await env.AUDIO.put(objectKey, bodyStream, { httpMetadata: { contentType: audioContentType(source, filename), cacheControl: "public, max-age=31536000, immutable" } });
   const configuredBase = env.AUDIO_PUBLIC_BASE_URL.replace(/\/+$/, "");
   const audioBase = configuredBase.endsWith("/audio") ? configuredBase : `${configuredBase}/audio`;
   const deliveryUrl = `${audioBase}/${objectKey.split("/").map(encodeURIComponent).join("/")}`;
-  await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, env);
+  await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, env, duration);
   return Response.json({ deliveryUrl });
 }
 

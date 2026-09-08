@@ -65,6 +65,75 @@ test("audio sync derives a missing asset ID and returns a playable delivery URL"
     assert.equal(mutations.length, 1);
     assert.equal(mutations[0].mutations[0].patch.set["audio.sourceAssetId"], "file-aabbcc-wav");
     assert.equal(mutations[0].mutations[0].patch.set["audio.deliveryUrl"], result.deliveryUrl);
+    assert.equal(mutations[0].mutations[0].patch.set.duration, undefined);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+function wavHeader(seconds = 2) {
+  const byteRate = 176400;
+  const dataBytes = byteRate * seconds;
+  const bytes = new Uint8Array(44);
+  const view = new DataView(bytes.buffer);
+  const write = (offset, text) => {
+    for (let index = 0; index < text.length; index += 1) bytes[offset + index] = text.charCodeAt(index);
+  };
+  write(0, "RIFF");
+  view.setUint32(4, 36 + dataBytes, true);
+  write(8, "WAVE");
+  write(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 2, true);
+  view.setUint32(24, 44100, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, 4, true);
+  view.setUint16(34, 16, true);
+  write(36, "data");
+  view.setUint32(40, dataBytes, true);
+  return bytes;
+}
+
+test("audio sync writes mix duration from the uploaded WAV master", async () => {
+  const secret = "test-webhook-secret";
+  const sourceUrl = "https://cdn.sanity.io/files/project/production/aabbcc.wav";
+  const payload = JSON.stringify({
+    _id: "mix-test",
+    _type: "mix",
+    audioMasterUrl: sourceUrl,
+    audioMasterFilename: "Live.wav",
+    audioMasterId: "file-aabbcc-wav",
+    audioSourceAssetId: null,
+  });
+  const mutations = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    if (url === sourceUrl) return new Response(wavHeader(90), { status: 200, headers: { "content-type": "audio/wav", "content-length": "15876440" } });
+    if (url.includes("api.sanity.io") && init?.method === "POST") {
+      mutations.push(JSON.parse(String(init.body)));
+      return new Response("{}", { status: 200 });
+    }
+    throw new Error(`Unexpected fetch: ${url}`);
+  };
+
+  try {
+    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", {
+      method: "POST",
+      headers: { "sanity-webhook-signature": await signature(payload, secret) },
+      body: payload,
+    }), {
+      AUDIO: { get: async () => null, put: async () => ({}) },
+      SANITY_WEBHOOK_SECRET: secret,
+      SANITY_API_PROJECT_ID: "project",
+      SANITY_API_DATASET: "production",
+      SANITY_API_WRITE_TOKEN: "token",
+      AUDIO_PUBLIC_BASE_URL: "https://worker.example/",
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(mutations[0].mutations[0].patch.set.duration, 90);
   } finally {
     globalThis.fetch = originalFetch;
   }
