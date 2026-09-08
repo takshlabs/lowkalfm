@@ -1,0 +1,6 @@
+/* Phone Latest canvases: keep the play control large on a smaller frame. */
+@media (max-width: 680px) {
+  .transmission-media > button { width: 56px; height: 56px; }
+  .transmission-media > button svg { width: 20px; height: 20px; }
+  .transmission-card { flex-basis: min(72vw, 268px); }
+}
