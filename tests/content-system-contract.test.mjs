@@ -50,6 +50,17 @@ test("Listen artist profiles are managed in Sanity", async () => {
   assert.match(profile, /Open in Go Out/);
 });
 
+test("artist profile routes use the catch-all route parameter", async () => {
+  const page = await source("app/artists/[[...slug]]/page.tsx");
+  const profile = await source("components/ArtistsDirectory.tsx");
+
+  assert.match(page, /params:\s*Promise<\{ slug\?: string\[\] \}>/);
+  assert.match(page, /<ArtistsDirectory artistSlug=\{slug\[0\] \?\? ""\} \/>/);
+  assert.doesNotMatch(page, /generateStaticParams/);
+  assert.match(profile, /artistSlug = ""/);
+  assert.doesNotMatch(profile, /usePathname/);
+});
+
 test("parked mixes stay in the CMS but are not sent to public listen surfaces", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");

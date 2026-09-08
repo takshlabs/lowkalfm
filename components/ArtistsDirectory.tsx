@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { ArrowUpRight, MapPin, Pause, Play } from "lucide-react";
-import { usePathname } from "next/navigation";
 import type { CSSProperties } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
@@ -13,13 +12,6 @@ import { useListenContent } from "./ListenContentProvider";
 
 type PortableTextChild = { text?: string };
 type PortableTextBlock = { _key?: string; _type?: string; children?: PortableTextChild[] };
-
-function profilePathSlug(pathname: string) {
-  const cleanPath = pathname.replace(/\/$/, "");
-  const marker = "/artists/";
-  const index = cleanPath.indexOf(marker);
-  return index >= 0 ? decodeURIComponent(cleanPath.slice(index + marker.length).split("/")[0]) : "";
-}
 
 function spotifyEmbedUrl(value?: string) {
   if (!value) return "";
@@ -71,10 +63,9 @@ function ArtistFocusPlayer({ record }: { record: SoundRecord }) {
   );
 }
 
-export function ArtistsDirectory() {
-  const pathname = usePathname();
+export function ArtistsDirectory({ artistSlug = "" }: { artistSlug?: string }) {
   const { artists, records } = useListenContent();
-  const slug = profilePathSlug(pathname);
+  const slug = artistSlug;
   const artist = slug ? artists.find((item) => item.slug === slug) : undefined;
 
   if (slug && artist) {
