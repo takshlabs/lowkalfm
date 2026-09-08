@@ -183,6 +183,13 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(soundroom, /HtmlAudioPlayerEngine/);
 });
 
+test("Soundroom keeps playback controls in the player card, not on the artwork", async () => {
+  const soundroom = await source("public/soundroom/index.html");
+
+  assert.doesNotMatch(soundroom, /btn-main-play-art|icon-main-play-art/);
+  assert.match(soundroom, /id="btn-main-play"/);
+});
+
 test("phone playback stays on the native media path and exposes system controls", async () => {
   const provider = await source("components/AudioProvider.tsx");
 

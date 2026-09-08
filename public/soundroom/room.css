@@ -98,8 +98,6 @@
     border-radius: 14px !important;
     box-shadow: 0 18px 54px rgba(0, 0, 0, .36);
   }
-  #screen-home > main > div:first-child > div { opacity: 1; background: linear-gradient(0deg, rgba(0, 0, 0, .36), transparent 48%); }
-  #btn-main-play-art { width: 54px !important; height: 54px !important; transform: translateY(52px); }
 
   #screen-home > main > div:nth-child(2) {
     width: 100% !important;
