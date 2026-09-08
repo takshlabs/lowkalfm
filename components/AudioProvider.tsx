@@ -2,6 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { SoundRecord } from "@/lib/content";
+import { createAudioAnalysis, isAnalysisSource, startAnalysisBridge } from "@/lib/audio-analysis";
+import { sitePath } from "@/lib/site-path";
 import { useListenContent } from "./ListenContentProvider";
 
 const STORAGE_KEY = "lowkal.player.v1";
@@ -99,6 +101,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [isRepeat, setIsRepeat] = useState(false);
   const [failedAudioUrl, setFailedAudioUrl] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const analysisRef = useRef<ReturnType<typeof createAudioAnalysis> | null>(null);
+  const analysisMounted = useRef(false);
+  const getAnalysis = useCallback(() => {
+    analysisRef.current ??= createAudioAnalysis(() => new window.AudioContext(), window.location.origin);
+    return analysisRef.current;
+  }, []);
+  const bindAudio = useCallback((audio: HTMLAudioElement | null) => {
+    audioRef.current = audio;
+    getAnalysis().setElement(audio);
+  }, [getAnalysis]);
   const youtubeHostRef = useRef<HTMLDivElement | null>(null);
   const youtubePlayerRef = useRef<YouTubePlayer | null>(null);
   const resumeAtRef = useRef(firstRecord.startOffset ?? 0);
@@ -109,6 +121,34 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const activeRecord = getRecord(activeSlug) ?? firstRecord;
   const useYouTube = Boolean(activeRecord.youtubeId && (!activeRecord.audioUrl || failedAudioUrl === activeRecord.audioUrl));
   const stateRef = useRef({ activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat });
+
+  useEffect(() => {
+    analysisMounted.current = true;
+    const stop = startAnalysisBridge(window, () => getAnalysis().read(), () => {
+      const audio = audioRef.current;
+      return Boolean(audio && !audio.paused && !audio.ended && audio.readyState >= 2);
+    }, sitePath("/soundroom/index.html"));
+    return () => {
+      stop();
+      analysisMounted.current = false;
+      // React Strict Mode replays effects and refs. Do not close its live graph.
+      queueMicrotask(() => {
+        if (!analysisMounted.current) {
+          analysisRef.current?.dispose();
+          analysisRef.current = null;
+        }
+      });
+    };
+  }, [getAnalysis]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !activeRecord.audioUrl || useYouTube) return;
+    // Apply CORS before src. Other hosts retain normal, non-CORS playback.
+    if (isAnalysisSource(activeRecord.audioUrl, window.location.origin)) audio.crossOrigin = "anonymous";
+    else audio.removeAttribute("crossorigin");
+    if (audio.getAttribute("src") !== activeRecord.audioUrl) audio.src = activeRecord.audioUrl;
+  }, [activeRecord.audioUrl, activeRecord.slug, useYouTube]);
 
   useEffect(() => { stateRef.current = { activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat }; }, [activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat]);
   useEffect(() => {
@@ -135,24 +175,26 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (!isPlayable(activeRecord)) return;
     autoplayRef.current = true;
     if (!useYouTube && activeRecord.audioUrl && audioRef.current) {
+      getAnalysis().activate();
       void audioRef.current.play().catch(() => { setIsPlaying(false); autoplayRef.current = false; });
       return;
     }
-    youtubePlayerRef.current?.playVideo();
-  }, [activeRecord, useYouTube]);
+    youtubePlayerRef.current?.playVideo?.();
+  }, [activeRecord, getAnalysis, useYouTube]);
   const pauseMedia = useCallback(() => {
     autoplayRef.current = false;
     audioRef.current?.pause();
-    youtubePlayerRef.current?.pauseVideo();
+    youtubePlayerRef.current?.pauseVideo?.();
   }, []);
 
   const playRecord = useCallback((slug: string, shouldPlay = true) => {
     const record = getRecord(slug);
     if (!isPlayable(record)) return;
     if (slug === activeRecord.slug) { if (shouldPlay) playMedia(); else pauseMedia(); return; }
+    if (shouldPlay && record?.audioUrl) getAnalysis().activate(record.audioUrl);
     autoplayRef.current = shouldPlay; resumeAtRef.current = record?.startOffset ?? 0;
     setFailedAudioUrl(null); setCurrentTime(0); setDuration(record?.duration ?? 0); setIsPlaying(false); setIsReady(false); setActiveSlug(slug);
-  }, [activeRecord.slug, getRecord, pauseMedia, playMedia]);
+  }, [activeRecord.slug, getAnalysis, getRecord, pauseMedia, playMedia]);
 
   const playNext = useCallback(() => {
     const available = playableRecords.filter((record, index, items) => items.findIndex((item) => item.slug === record.slug) === index);
@@ -168,7 +210,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (isRepeat) {
       resumeAtRef.current = activeRecord.startOffset ?? 0;
       if (audioRef.current) audioRef.current.currentTime = activeRecord.startOffset ?? 0;
-      youtubePlayerRef.current?.seekTo(activeRecord.startOffset ?? 0, true);
+      youtubePlayerRef.current?.seekTo?.(activeRecord.startOffset ?? 0, true);
       playMedia();
       return;
     }
@@ -218,7 +260,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }).catch(() => { if (active) { setIsReady(false); setIsPlaying(false); } });
     return () => {
       active = false;
-      youtubePlayerRef.current?.destroy();
+      youtubePlayerRef.current?.destroy?.();
       youtubePlayerRef.current = null;
     };
   }, [activeRecord.duration, activeRecord.slug, activeRecord.startOffset, activeRecord.youtubeId, useYouTube]);
@@ -226,8 +268,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isPlaying || !useYouTube || !activeRecord.youtubeId) return;
     const timer = window.setInterval(() => {
-      const nextTime = youtubePlayerRef.current?.getCurrentTime();
-      const nextDuration = youtubePlayerRef.current?.getDuration();
+      const nextTime = youtubePlayerRef.current?.getCurrentTime?.();
+      const nextDuration = youtubePlayerRef.current?.getDuration?.();
       if (Number.isFinite(nextTime)) setCurrentTime(nextTime as number);
       if (Number.isFinite(nextDuration) && (nextDuration as number) > 0) setDuration(nextDuration as number);
     }, 500);
@@ -239,14 +281,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const bounded = Math.min(duration || activeRecord.duration, Math.max(0, seconds));
     setCurrentTime(bounded);
     if (audioRef.current) audioRef.current.currentTime = bounded;
-    youtubePlayerRef.current?.seekTo(bounded, true);
+    youtubePlayerRef.current?.seekTo?.(bounded, true);
     persist(bounded);
   }, [activeRecord.duration, duration, persist]);
   const setVolume = useCallback((nextVolume: number) => {
     const bounded = Math.min(100, Math.max(0, nextVolume));
     setVolumeState(bounded);
     if (audioRef.current) audioRef.current.volume = bounded / 100;
-    youtubePlayerRef.current?.setVolume(bounded);
+    youtubePlayerRef.current?.setVolume?.(bounded);
   }, []);
 
   useEffect(() => {
@@ -262,8 +304,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const snapshot = stateRef.current;
     const audio = audioRef.current;
     const record = getRecord(snapshot.activeSlug) ?? firstRecord;
-    const youtubeTime = youtubePlayerRef.current?.getCurrentTime();
-    const youtubeDuration = youtubePlayerRef.current?.getDuration();
+    const youtubeTime = youtubePlayerRef.current?.getCurrentTime?.();
+    const youtubeDuration = youtubePlayerRef.current?.getDuration?.();
     const message = { channel: AUDIO_SYNC_CHANNEL, type: "state", state: { slug: record.slug, audioUrl: record.audioUrl, currentTime: audio?.currentTime ?? youtubeTime ?? snapshot.currentTime, duration: audio?.duration || youtubeDuration || snapshot.duration || record.duration, isPlaying: useYouTube ? snapshot.isPlaying : Boolean(audio && !audio.paused && !audio.ended), isReady: snapshot.isReady, volume: snapshot.volume, isShuffled: snapshot.isShuffled, isRepeat: snapshot.isRepeat } };
     if (target) { target.postMessage(message, window.location.origin); return; }
     for (let index = 0; index < window.frames.length; index += 1) window.frames[index]?.postMessage(message, window.location.origin);
@@ -295,7 +337,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     <AudioContext.Provider value={value}>
       {children}
       {!useYouTube && activeRecord.audioUrl ? (
-        <audio key={activeRecord.slug} ref={audioRef} className="audio-engine" src={activeRecord.audioUrl} preload="metadata" onLoadedMetadata={onLoadedMetadata} onTimeUpdate={(event) => { setCurrentTime(event.currentTarget.currentTime); persist(event.currentTarget.currentTime); }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={onEnded} onError={() => { setIsReady(false); setIsPlaying(false); if (activeRecord.youtubeId) setFailedAudioUrl(activeRecord.audioUrl ?? null); }}>
+        <audio key={`${activeRecord.slug}:${activeRecord.audioUrl}`} ref={bindAudio} className="audio-engine" preload="metadata" onLoadedMetadata={onLoadedMetadata} onTimeUpdate={(event) => { setCurrentTime(event.currentTarget.currentTime); persist(event.currentTarget.currentTime); }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={onEnded} onError={() => { setIsReady(false); setIsPlaying(false); if (activeRecord.youtubeId) setFailedAudioUrl(activeRecord.audioUrl ?? null); }}>
           <track kind="captions" srcLang="en" label="No spoken content" src="data:text/vtt,WEBVTT" />
         </audio>
       ) : useYouTube && activeRecord.youtubeId ? (
