@@ -11,6 +11,10 @@
   let returnFocus;
   let background = [];
   const clamp = (value, min, max, fallback = 0) => Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+  const isModalDismissalGuardActive = () => {
+    const until = Number(document.documentElement?.dataset?.lowkalModalDismissalUntil);
+    return Number.isFinite(until) && until > Date.now();
+  };
 
   function send(channel, command) {
     if (window.parent === window) return;
@@ -67,7 +71,14 @@
     opener.setAttribute('aria-expanded', String(show));
   }
 
-  opener.addEventListener('click', () => showSettings(true));
+  opener.addEventListener('click', (event) => {
+    if (isModalDismissalGuardActive()) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    showSettings(true);
+  });
   closer.addEventListener('click', () => showSettings(false));
   modal.addEventListener('click', (event) => {
     if (event.target === modal) showSettings(false);

@@ -205,6 +205,7 @@ async function settingsHarness() {
   const messages = [];
   const document = {
     activeElement: null,
+    documentElement: { dataset: {} },
     getElementById(id) {
       if (!elements.has(id)) elements.set(id, {
         id, hidden: id === 'modal-settings', inert: false, disabled: false, value: '0', textContent: '', isConnected: true, events: {}, attrs: {},
@@ -278,4 +279,24 @@ test('settings opens, traps keyboard focus, closes and restores focus', async ()
   get('btn-settings-open').events.click();
   get('btn-settings-close').events.click();
   assert.equal(get('modal-settings').hidden, true);
+});
+
+test('settings ignores a click that lands after another modal closes', async () => {
+  const { get, document } = await settingsHarness();
+  let prevented = false;
+  let stopped = false;
+  document.documentElement.dataset.lowkalModalDismissalUntil = String(Date.now() + 1_000);
+  get('btn-settings-open').events.click({
+    preventDefault() { prevented = true; },
+    stopPropagation() { stopped = true; }
+  });
+  assert.equal(get('modal-settings').hidden, true);
+  assert.equal(prevented, true);
+  assert.equal(stopped, true);
+});
+
+test('tracklist close button is a button and sets the settings click guard', async () => {
+  const soundroom = await source('public/soundroom/index.html');
+  assert.match(soundroom, /id="btn-tracklist-close"\s+type="button"/);
+  assert.match(soundroom, /lowkalModalDismissalUntil = String\(Date\.now\(\) \+ 1_000\)/);
 });
