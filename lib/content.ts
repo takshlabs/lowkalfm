@@ -22,6 +22,7 @@ export type SoundRecord = {
   startOffset?: number;
   audioUrl?: string;
   youtubeId?: string;
+  youtubeVideoUrl?: string;
   artwork: string;
   genres: string[];
   description: string;

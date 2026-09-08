@@ -5,7 +5,7 @@ import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
 import { isUnlistedPath } from "@/lib/site-chrome";
 import { sitePath } from "@/lib/site-path";
-import { ArrowUpRight, Pause, Play, Volume2 } from "lucide-react";
+import { ArrowUpRight, Pause, Play, Video, Volume2 } from "lucide-react";
 import { formatTime } from "@/lib/content";
 import { usePathname } from "next/navigation";
 import { useAudio } from "./AudioProvider";
@@ -44,7 +44,21 @@ export function PersistentPlayer() {
           <span><i aria-hidden="true" /> {isPlaying ? "Playing" : "Ready"}</span>
           <span>{activeRecord.format === "weekly" ? "Weekly volume" : "Programme set"}</span>
         </div>
-        <SiteLink className="lowkal-player-title" href={sitePath(activeRecord.artistSlugs[0] ? `/artists/${activeRecord.artistSlugs[0]}` : "/listen")}>{activeRecord.artist}</SiteLink>
+        <div className="lowkal-player-title-row">
+          <SiteLink className="lowkal-player-title" href={sitePath(activeRecord.artistSlugs[0] ? `/artists/${activeRecord.artistSlugs[0]}` : "/listen")}>{activeRecord.artist}</SiteLink>
+          {activeRecord.youtubeVideoUrl ? (
+            <a
+              className="lowkal-player-video"
+              href={activeRecord.youtubeVideoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Watch this mix on YouTube"
+              title="Watch on YouTube"
+            >
+              <Video aria-hidden="true" />
+            </a>
+          ) : null}
+        </div>
         <span className="lowkal-player-record">{activeRecord.series} <i>/</i> {activeRecord.title}</span>
       </div>
 

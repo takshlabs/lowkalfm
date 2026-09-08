@@ -1,5 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { MixDurationInput } from "@/sanity/components/MixDurationInput";
+import { getYouTubeVideoUrl } from "@/lib/audio-source";
 
 export const mixType = defineType({
   name: "mix",
@@ -81,6 +82,16 @@ export const mixType = defineType({
       ]
     }),
     defineField({ name: "externalUrl", title: "Original mix link", type: "url", group: "playback" }),
+    defineField({
+      name: "youtubeVideoUrl",
+      title: "YouTube video link",
+      type: "url",
+      group: "playback",
+      description: "Display only. This link adds a small YouTube video button to the mini player and Soundroom. It does not supply audio or change playback.",
+      validation: (rule) => rule.uri({ scheme: ["http", "https"], allowRelative: false }).custom((value) => (
+        !value || getYouTubeVideoUrl(value) ? true : "Enter a valid YouTube video link."
+      ))
+    }),
     defineField({
       name: "duration",
       title: "Duration in seconds",

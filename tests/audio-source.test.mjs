@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getMixStartOffset, getYouTubeVideoId, resolveMixPlayback } from "../lib/audio-source.ts";
+import { getMixStartOffset, getYouTubeVideoId, getYouTubeVideoUrl, resolveMixPlayback } from "../lib/audio-source.ts";
 
 test("mix playback prefers Cloudflare, then Sanity, then YouTube", () => {
   assert.deepEqual(resolveMixPlayback({ deliveryUrl: "https://audio.example/direct.wav", masterUrl: "https://sanity.example/master.wav", externalUrl: "https://www.youtube.com/watch?v=fw2mtwgCeGo" }), { audioUrl: "https://audio.example/direct.wav", youtubeId: "fw2mtwgCeGo" });
@@ -32,4 +32,11 @@ test("YouTube parsing accepts supported formats and rejects invalid IDs and host
     "https://youtube.com/watch?v=short",
     "https://youtube.com/watch?v=60O126HehGA-extra",
   ]) assert.equal(getYouTubeVideoId(url), undefined);
+});
+
+test("display video links preserve valid YouTube URLs and reject other hosts", () => {
+  const videoUrl = "https://www.youtube.com/watch?v=60O126HehGA&t=10";
+  assert.equal(getYouTubeVideoUrl(videoUrl), videoUrl);
+  assert.equal(getYouTubeVideoUrl("https://example.com/watch?v=60O126HehGA"), undefined);
+  assert.equal(getYouTubeVideoUrl(undefined), undefined);
 });

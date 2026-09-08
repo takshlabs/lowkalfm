@@ -41,6 +41,7 @@ export const listenContentQuery = `{
     "audioDeliveryUrl": audio.deliveryUrl,
     "audioStartOffset": audio.startOffset,
     externalUrl,
+    youtubeVideoUrl,
     "artwork": coalesce(artwork.asset->url, thumbnail.asset->url),
     genres,
     description,

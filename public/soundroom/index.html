@@ -318,6 +318,9 @@
           <div class="flex items-center justify-between mb-1">
             <p class="text-primary font-display font-bold text-xs tracking-widest uppercase" id="main-genre">GENRE</p>
             <div class="flex items-center gap-1.5">
+              <a id="main-youtube-video" class="inline-flex items-center justify-center w-7 h-7 mr-1 rounded-full border border-white/10 text-white/60 hover:text-primary hover:border-primary/30 transition-colors" target="_blank" rel="noopener noreferrer" aria-label="Watch this mix on YouTube" title="Watch on YouTube" hidden>
+                <span class="material-symbols-outlined text-lg" aria-hidden="true">smart_display</span>
+              </a>
               <span class="w-2.5 h-2.5 rounded-full bg-muted" id="main-status-dot"></span>
               <span class="text-[9px] font-bold tracking-widest text-muted uppercase font-ui" id="main-status-text">OFFLINE</span>
             </div>
@@ -439,6 +442,9 @@
 
         <!-- Right Controls -->
         <div class="flex items-center gap-3 shrink-0 ml-4">
+          <a id="mini-youtube-video" class="w-10 h-10 bg-surface border border-white/10 hover:border-primary/30 rounded-full flex items-center justify-center text-white hover:text-primary hover:scale-105 active:scale-95 transition-all focus:outline-none" target="_blank" rel="noopener noreferrer" aria-label="Watch this mix on YouTube" title="Watch on YouTube" hidden>
+            <span class="material-symbols-outlined text-2xl" aria-hidden="true">smart_display</span>
+          </a>
           <!-- Play / Pause -->
           <button class="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-background-base hover:scale-105 active:scale-95 transition-transform focus:outline-none" id="btn-mini-play" aria-label="Play/Pause">
             <span class="material-symbols-outlined text-2.5xl" id="icon-mini-play" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
@@ -1189,6 +1195,10 @@
         document.getElementById('main-host-date').textContent = [mix.dj ? `Hosted by ${mix.dj}` : '', mix.date].filter(Boolean).join(' • ');
         document.getElementById('main-cover-img').src = mix.artUrl || '../lowkal-logo.jpg';
         document.getElementById('main-cover-img').alt = mix.id ? `${mix.title} artwork` : 'Lowkal artwork';
+        for (const videoLink of [document.getElementById('main-youtube-video'), document.getElementById('mini-youtube-video')]) {
+          videoLink.href = mix.youtubeVideoUrl || '#';
+          videoLink.hidden = !mix.youtubeVideoUrl;
+        }
         const description = plainText(mix.description);
         document.getElementById('detail-mix-desc').textContent = description;
         document.getElementById('detail-mix-description').hidden = !description;

@@ -135,6 +135,30 @@ test("Soundroom displays CMS tracklists and plain-text mix descriptions", async 
   assert.doesNotMatch(soundroom, /id="detail-mix-desc"[^>]*\bitalic\b/);
 });
 
+test("CMS YouTube video links only open video buttons and never control audio playback", async () => {
+  const schema = await source("sanity/schemaTypes/mixType.ts");
+  const query = await source("lib/sanity.ts");
+  const content = await source("components/ListenContentProvider.tsx");
+  const player = await source("components/PersistentPlayer.tsx");
+  const audio = await source("components/AudioProvider.tsx");
+  const frame = await source("components/SoundroomFrame.tsx");
+  const soundroom = await source("public/soundroom/index.html");
+
+  assert.match(schema, /name:\s*"youtubeVideoUrl"/);
+  assert.match(schema, /Display only/);
+  assert.match(query, /youtubeVideoUrl/);
+  assert.match(content, /youtubeVideoUrl:\s*getYouTubeVideoUrl\(mix\.youtubeVideoUrl\)/);
+  assert.match(player, /activeRecord\.youtubeVideoUrl/);
+  assert.match(player, /aria-label="Watch this mix on YouTube"/);
+  assert.match(frame, /youtubeVideoUrl:\s*record\.youtubeVideoUrl/);
+  assert.match(soundroom, /id="main-youtube-video"/);
+  assert.match(soundroom, /id="mini-youtube-video"/);
+  assert.match(soundroom, /videoLink\.href = mix\.youtubeVideoUrl/);
+  assert.match(soundroom, /videoLink\.hidden = !mix\.youtubeVideoUrl/);
+  assert.doesNotMatch(audio, /youtubeVideoUrl/);
+  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, masterUrl: mix\.audioMasterUrl, externalUrl: mix\.externalUrl \}\)/);
+});
+
 test("the floating player and embedded Soundroom use one audio authority", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const soundroom = await source("public/soundroom/index.html");

@@ -23,6 +23,10 @@ export function getYouTubeVideoId(externalUrl?: string) {
   } catch { return undefined; }
 }
 
+export function getYouTubeVideoUrl(videoUrl?: string) {
+  return videoUrl && getYouTubeVideoId(videoUrl) ? videoUrl : undefined;
+}
+
 export function getMixStartOffset(startOffset?: number) {
   return Number.isFinite(startOffset) ? Math.max(0, Number(startOffset)) : 0;
 }

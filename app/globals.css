@@ -661,8 +661,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .lowkal-player-status span:first-child { display: flex; align-items: center; gap: 6px; color: var(--signal); }
 .lowkal-player-status i { width: 6px; height: 6px; background: var(--red); }
 .lowkal-player.is-playing .lowkal-player-status i { animation: signal-pulse 1.2s steps(2, end) infinite; }
-.lowkal-player-title { display: block; width: max-content; max-width: 100%; margin-top: 7px; overflow: hidden; font-family: var(--font-lowkal-display), serif; font-size: clamp(1.6rem, 3vw, 2.35rem); line-height: 0.88; letter-spacing: -0.045em; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
+.lowkal-player-title-row { display: flex; align-items: center; gap: 9px; min-width: 0; margin-top: 7px; }
+.lowkal-player-title { display: block; width: max-content; max-width: 100%; overflow: hidden; font-family: var(--font-lowkal-display), serif; font-size: clamp(1.6rem, 3vw, 2.35rem); line-height: 0.88; letter-spacing: -0.045em; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
 .lowkal-player-title:hover { color: var(--signal); }
+.lowkal-player-video { display: grid; flex: 0 0 auto; place-items: center; width: 27px; height: 27px; border: 1px solid rgba(242, 238, 229, 0.28); border-radius: 50%; color: var(--night-ink); text-decoration: none; transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease; }
+.lowkal-player-video svg { width: 14px; height: 14px; }
+.lowkal-player-video:hover,
+.lowkal-player-video:focus-visible { color: var(--ink); border-color: var(--signal); background: var(--signal); outline: 0; }
 .lowkal-player-record { display: block; margin-top: 5px; overflow: hidden; color: rgba(242, 238, 229, 0.68); font-family: var(--font-lowkal-body), sans-serif; font-size: 0.58rem; letter-spacing: 0.035em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .lowkal-player-record i { color: var(--red); font-style: normal; }
 .lowkal-player-timeline { grid-row: 2; grid-column: 4; min-width: 0; padding: 0 6px; }
@@ -1046,7 +1051,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .lowkal-player-transport-copy { display: none; }
   .lowkal-player-program { grid-row: 1; grid-column: 3; align-self: center; padding: 0; }
   .lowkal-player-status { font-size: 0.45rem; }
-  .lowkal-player-title { margin-top: 4px; font-size: 1.23rem; }
+  .lowkal-player-title-row { margin-top: 4px; }
+  .lowkal-player-title { font-size: 1.23rem; }
   .lowkal-player-record { margin-top: 3px; font-size: 0.48rem; }
   .lowkal-player-timeline { grid-row: 2; grid-column: 1 / -1; padding: 0 2px; }
   .lowkal-player-timecode { grid-template-columns: 34px 1fr 34px; font-size: 0.44rem; }
