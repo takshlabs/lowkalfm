@@ -1,5 +1,21 @@
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+function staticRscMetadata(): Plugin {
+  let compatibilityId = "";
+  return {
+    name: "lowkal-static-rsc-metadata",
+    apply: "build",
+    configResolved(config) {
+      compatibilityId = JSON.parse(config.define?.["process.env.__VINEXT_RSC_COMPATIBILITY_ID"] ?? '""');
+    },
+    generateBundle() {
+      if (this.environment.name !== "client") return;
+      if (!compatibilityId) throw new Error("Vinext did not expose its RSC compatibility ID");
+      this.emitFile({ type: "asset", fileName: "lowkal-rsc-compatibility.json", source: JSON.stringify({ compatibilityId }) });
+    }
+  };
+}
 
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 
@@ -18,6 +34,7 @@ export default defineConfig(async () => {
     server: isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : undefined,
     plugins: [
       vinext(),
+      staticRscMetadata(),
       cloudflare({ viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] }, config: localBindingConfig })
     ]
   };

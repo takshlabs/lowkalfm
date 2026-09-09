@@ -24,6 +24,17 @@ Do not use OpenAI Sites or a `chatgpt.site` URL for Lowkal. They are not Lowkal 
 
 Never run a production deployment command that targets OpenAI Sites.
 
+### Static navigation and continuous audio
+
+Vercel uses the Build Output API files made by `scripts/build-vercel-output.mjs` after the Vinext build. Keep this step in `vercel.json`.
+
+- Requests with the `RSC: 1` header must receive the exported `.rsc` file, not the HTML page.
+- The response must use `Content-Type: text/x-component` and the build's `X-Vinext-RSC-Compatibility-Id` header. The Vite plugin writes that ID for the output script.
+- Normal page requests must still receive HTML. Artist detail routes use the exported artist shell.
+- After deployment, start audio in Soundroom and open the archive with its link. Confirm that the same audio element remains mounted and its time advances. Then return to Soundroom. A saved position after a full-page reload is not continuous playback.
+
+Check the deployed response with `curl -I -H 'RSC: 1' 'https://lowkalfm.in/listen/archive?_rsc=release-check'`.
+
 ## Vercel environment variables
 
 Set these values in Vercel for Production, Preview, and Development:
