@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { CSSProperties } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
+import { UnderConstructionNote } from "@/components/UnderConstructionNote";
 import { formatTime, type SoundRecord } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 import { useAudio } from "./AudioProvider";
@@ -87,6 +88,7 @@ export function ArtistsDirectory() {
         <header className="artist-profile-hero">
           <div className="artist-profile-identity">
             <div className="artist-profile-eyebrow"><span>Lowkal artist file</span><span>{artist.relationship} / {artist.location || "Location open"}</span></div>
+            <UnderConstructionNote tone="dark" />
             <h1>{artist.name}</h1>
             <p>{artist.shortBio || "A Lowkal artist profile in progress."}</p>
             <div className="artist-profile-meta">{artist.genres.map((genre) => <span key={genre}>{genre}</span>)}</div>
@@ -178,6 +180,7 @@ export function ArtistsDirectory() {
   return (
     <main className="artist-directory">
       <header><p className="section-kicker">Lowkal artists</p><h1>People in<br />the frequency.</h1><p>Residents, guests, and collaborators heard across Lowkal.</p></header>
+      <UnderConstructionNote />
       <div className="artist-directory-grid">
         {artists.map((item, index) => (
           <SiteLink href={sitePath(`/artists/${item.slug}`)} className="artist-directory-card" key={item.slug}>

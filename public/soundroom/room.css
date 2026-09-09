@@ -110,8 +110,58 @@
   #screen-home > main > div:nth-child(2) > div:first-child { padding: 20px 18px 16px !important; }
   #main-title { max-height: none !important; font-size: clamp(28px, 9vw, 38px) !important; line-height: .98 !important; overflow-wrap: anywhere; }
   #main-host-date { font-size: 12px !important; }
-  #main-scrubber, #main-volume-slider { min-height: 28px; margin-top: -8px; margin-bottom: 8px !important; touch-action: pan-x; }
-  input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; margin-top: -8px; border: 6px solid #55e93b; border-radius: 50%; background: #131313; box-shadow: 0 0 0 4px rgba(85, 233, 59, .16); }
+  #main-scrubber, #main-volume-slider {
+    min-height: 28px;
+    margin-top: -8px;
+    margin-bottom: 8px !important;
+    background: transparent !important;
+    touch-action: pan-x;
+  }
+  #main-scrubber::-webkit-slider-runnable-track,
+  #main-volume-slider::-webkit-slider-runnable-track {
+    height: 2px;
+    border: 0;
+    border-radius: 1px;
+    background: linear-gradient(
+      to right,
+      rgba(229, 226, 225, .68) 0 var(--range-value, 0%),
+      rgba(229, 226, 225, .22) var(--range-value, 0%) 100%
+    );
+    box-shadow: none;
+  }
+  #main-scrubber::-webkit-slider-thumb,
+  #main-volume-slider::-webkit-slider-thumb {
+    width: 3px;
+    height: 16px;
+    margin-top: -7px;
+    border: 0;
+    border-radius: 1px;
+    background: #e5e2e1;
+    box-shadow: 0 0 0 1px rgba(12, 12, 12, .72);
+  }
+  #main-scrubber::-moz-range-track,
+  #main-volume-slider::-moz-range-track {
+    height: 2px;
+    border: 0;
+    background: rgba(229, 226, 225, .28);
+  }
+  #main-scrubber::-moz-range-progress,
+  #main-volume-slider::-moz-range-progress { background: rgba(229, 226, 225, .68); }
+  #main-scrubber::-moz-range-thumb,
+  #main-volume-slider::-moz-range-thumb {
+    width: 3px;
+    height: 16px;
+    border: 0;
+    border-radius: 1px;
+    background: #e5e2e1;
+  }
+  #main-scrubber { --range-value: var(--progress, 0%); }
+  #main-volume-slider { --range-value: var(--volume, 60%); }
+  #main-scrubber:focus-visible,
+  #main-volume-slider:focus-visible {
+    outline: 2px solid rgba(229, 226, 225, .72);
+    outline-offset: 3px;
+  }
   #btn-main-shuffle, #btn-main-replay-10, #btn-main-prev, #btn-main-next, #btn-main-forward-30, #btn-main-repeat, #btn-volume-mute {
     width: 40px;
     height: 44px;

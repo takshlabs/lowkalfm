@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MediaFrame } from "@/components/MediaFrame";
 import { ReadFeed } from "@/components/ReadFeed";
+import { UnderConstructionNote } from "@/components/UnderConstructionNote";
 import { journalStories } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 
@@ -19,6 +20,7 @@ export default function ReadPage() {
         <h1>Stories from<br />the <em>room.</em></h1>
         <p>Conversations and field notes from Lowkal.</p>
       </section>
+      <UnderConstructionNote />
       <ReadFeed fallback={journalStories.map((story, index) => ({
         ...story,
         slug: ["dancefloor-workers", "flyover-rain", "last-bus-home", "sarang-meeting-place"][index] ?? `story-${index + 1}`,

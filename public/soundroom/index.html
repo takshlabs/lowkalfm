@@ -70,6 +70,14 @@
   </script>
 
   <style>
+    @font-face {
+      font-family: "Kilimanjaro Sans";
+      src: url("../fonts/kilimanjaro-sans.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
     /* Prevent default scrollbars on full-viewport app */
     html, body {
       width: 100%;
@@ -82,7 +90,7 @@
     }
 
     h1, h2, h3, .font-display {
-      font-family: "Arial Black", Arial, sans-serif;
+      font-family: "Kilimanjaro Sans", "Arial Black", Arial, sans-serif;
     }
 
     /* Keep this standalone room on the Lowkal font system. Tailwind utility
@@ -105,6 +113,11 @@
     h5,
     h6,
     .font-display {
+      font-family: "Kilimanjaro Sans", "Arial Black", Arial, sans-serif !important;
+    }
+
+    header h1,
+    header .font-display {
       font-family: "Arial Black", Arial, sans-serif !important;
     }
 
@@ -654,6 +667,9 @@
         this.playbackTime = 0; // seconds
         this.isPlaying = false;
         this.timerInterval = null;
+        this.isLoading = false;
+        this.isReady = false;
+        this.error = null;
         
         // Additional player settings
         this.isShuffled = false;
@@ -775,6 +791,10 @@
         this.playbackTime = matchingMix && Number.isFinite(state.currentTime) ? Math.max(0, state.currentTime) : 0;
         this.externalDuration = matchingMix && Number.isFinite(state.duration) ? Math.max(0, state.duration) : 0;
         this.isPlaying = Boolean(matchingMix && state.isPlaying);
+        this.isLoading = Boolean(matchingMix && state.isLoading);
+        // Older messages may omit these fields. Do not retain stale failures.
+        this.isReady = Boolean(matchingMix && (state.isReady ?? state.isPlaying));
+        this.error = matchingMix && typeof state.error === 'string' && state.error.trim() ? state.error : null;
         this.isShuffled = Boolean(state.isShuffled);
         this.isRepeat = Boolean(state.isRepeat);
         this.volumeLevel = Number.isFinite(state.volume) ? Math.min(100, Math.max(0, state.volume)) : this.volumeLevel;
@@ -1263,7 +1283,7 @@
             this.sendAudioCommand('select', { slug: this.activeMix.id, autoplay: true });
             return;
           }
-          this.sendAudioCommand('toggle');
+          this.sendAudioCommand(this.error ? 'retry' : this.isLoading ? 'pause' : 'toggle');
           return;
         }
         if (this.isPlaying) {
@@ -1454,6 +1474,7 @@
         
         const volSlider = document.getElementById('main-volume-slider');
         volSlider.value = numericVolume;
+        volSlider.style.setProperty('--volume', `${numericVolume}%`);
         volSlider.style.background = `linear-gradient(to right, #55e93b ${numericVolume}%, #87957e ${numericVolume}%)`;
         
         if (IS_EMBEDDED) {
@@ -1512,6 +1533,15 @@
       // -------------------------------------------------------------
       // UI STATE SYNCS
       // -------------------------------------------------------------
+
+      getPlaybackStatus() {
+        if (!this.activeMix?.id || !(this.activeMix.audioUrl || this.activeMix.youtubeId)) return 'Unavailable';
+        if (this.error) return 'Playback failed';
+        if (this.isLoading) return this.isPlaying ? 'Buffering' : 'Loading';
+        if (this.isPlaying) return 'Playing';
+        if (!this.isReady) return 'Not ready';
+        return this.playbackTime > this.getStartOffset() ? 'Paused' : 'Ready';
+      }
       
       updatePlayerUI() {
         document.body.dataset.playing = String(this.isPlaying);
@@ -1519,7 +1549,9 @@
         for (const id of ['btn-main-play', 'btn-mini-play']) {
           const button = document.getElementById(id);
           button.disabled = !playable;
-          button.setAttribute('aria-label', this.isPlaying ? 'Pause' : 'Play');
+          const label = !playable ? 'Playback unavailable' : this.error ? 'Retry playback' : this.isLoading ? 'Cancel loading' : this.isPlaying ? 'Pause' : 'Play';
+          button.setAttribute('aria-label', label);
+          button.title = label;
         }
         for (const id of ['btn-main-prev', 'btn-main-next', 'btn-main-shuffle', 'btn-main-repeat']) {
           document.getElementById(id).disabled = !MIXES.some((mix) => mix.id);
@@ -1546,6 +1578,11 @@
           statusText.className = "text-[9px] font-bold tracking-widest text-muted uppercase font-ui";
         }
 
+        mainPlayBtn.textContent = this.error ? 'refresh' : this.isLoading || this.isPlaying ? 'pause' : 'play_arrow';
+        statusText.textContent = this.getPlaybackStatus();
+        statusText.setAttribute('aria-label', this.error || statusText.textContent);
+        statusText.title = this.error || statusText.textContent;
+
         // Time updates
         document.getElementById('main-time-current').textContent = formatTime(this.playbackTime);
         const dur = this.getEffectiveDuration();
@@ -1560,6 +1597,7 @@
         // Sync the volume controls without sending a command back to the parent.
         const volumeSlider = document.getElementById('main-volume-slider');
         volumeSlider.value = this.volumeLevel;
+        volumeSlider.style.setProperty('--volume', `${this.volumeLevel}%`);
         volumeSlider.style.background = `linear-gradient(to right, #55e93b ${this.volumeLevel}%, #87957e ${this.volumeLevel}%)`;
         this.updateVolumeUI();
       }
@@ -1577,7 +1615,7 @@
         document.getElementById('mini-art-img').src = this.activeMix.artUrl;
         document.getElementById('mini-title').textContent = this.activeMix.title;
         
-        const statusText = this.isPlaying ? 'Playing' : 'Ready';
+        const statusText = this.getPlaybackStatus();
         document.getElementById('mini-subtext').textContent = [this.activeMix.dj, this.activeMix.genre, statusText].filter(Boolean).join(' · ');
         
         const miniPlayIcon = document.getElementById('icon-mini-play');
@@ -1589,6 +1627,7 @@
           miniPlayIcon.textContent = 'play_arrow';
           miniArt.classList.remove('animate-rotate');
         }
+        miniPlayIcon.textContent = this.error ? 'refresh' : this.isLoading || this.isPlaying ? 'pause' : 'play_arrow';
         
         const miniDur = this.getEffectiveDuration();
         const percent = miniDur > 0 ? Math.floor((this.playbackTime / miniDur) * 100) : 0;

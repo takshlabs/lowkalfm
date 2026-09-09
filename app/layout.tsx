@@ -8,6 +8,7 @@ import { sitePath } from "@/lib/site-path";
 import "./globals.css";
 import "./reimagined.css";
 import "./home-transmissions.css";
+import "./design-polish.css";
 
 export const dynamic = "force-static";
 

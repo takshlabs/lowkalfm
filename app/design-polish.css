@@ -1,0 +1,283 @@
+/* Final brand polish. This layer stays after the core and font styles. */
+:root {
+  --lowkal-grid: rgba(241, 234, 219, 0.055);
+  --lowkal-rule-night: rgba(241, 234, 219, 0.18);
+  --lowkal-rule-day: rgba(14, 14, 13, 0.24);
+  --lowkal-ease: cubic-bezier(0.22, 0.72, 0.18, 1);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+:is(a, button, summary, input):focus-visible {
+  outline: 2px solid var(--lowkal-red);
+  outline-offset: 4px;
+}
+
+/* The header works as a compact station ident, not a generic site bar. */
+.site-header {
+  isolation: isolate;
+  border-bottom-color: rgba(241, 234, 219, 0.2);
+  background: rgba(10, 10, 9, 0.9);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.44);
+}
+
+.site-header::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  z-index: -1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--lowkal-red) 0 8%, rgba(240, 68, 55, 0.15) 28%, transparent 62%);
+  content: "";
+  pointer-events: none;
+}
+
+.brand-lockup .media-frame {
+  transition: transform 280ms var(--lowkal-ease);
+}
+
+.brand-lockup:hover .media-frame,
+.brand-lockup:focus-visible .media-frame { transform: rotate(-2deg) scale(1.035); }
+
+.brand-name { letter-spacing: -0.045em; }
+.brand-scripts { letter-spacing: 0.065em; }
+
+.header-nav a {
+  position: relative;
+  color: rgba(241, 234, 219, 0.72);
+  letter-spacing: 0.035em;
+  transition: color 160ms ease;
+}
+
+.header-nav a::after {
+  position: absolute;
+  right: 50%;
+  bottom: 4px;
+  left: 50%;
+  height: 2px;
+  background: var(--lowkal-red);
+  content: "";
+  transition: right 180ms var(--lowkal-ease), left 180ms var(--lowkal-ease);
+}
+
+.header-nav a:hover,
+.header-nav a:focus-visible,
+.header-nav a[aria-current="page"] {
+  color: var(--lowkal-paper);
+  text-decoration: none;
+}
+
+.header-nav a:hover::after,
+.header-nav a:focus-visible::after,
+.header-nav a[aria-current="page"]::after { right: 0; left: 0; }
+
+/* Preserve the composition while making the home page feel more art-directed. */
+.rinse-hero::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(rgba(241, 234, 219, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(241, 234, 219, 0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  content: "";
+  opacity: 0.25;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, black, transparent 72%);
+  mask-image: linear-gradient(90deg, black, transparent 72%);
+}
+
+.rinse-hero-copy > span,
+.rinse-section-head > div > span,
+.section-kicker {
+  letter-spacing: 0.1em;
+}
+
+.rinse-hero-copy h1 {
+  text-wrap: balance;
+  text-shadow: 0 12px 42px rgba(0, 0, 0, 0.22);
+}
+
+.rinse-hero-copy a {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(241, 234, 219, 0.48);
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.rinse-hero-copy a:hover,
+.rinse-hero-copy a:focus-visible {
+  border-color: var(--lowkal-red);
+  color: var(--lowkal-paper);
+  background: var(--lowkal-red);
+  text-decoration: none;
+}
+
+.home-channel-row a { transition: color 180ms ease, background-color 180ms ease; }
+.home-channel-row .channel-spectrum { opacity: 0.76; }
+.home-channel-row strong { line-height: 0.88; }
+.home-channel-row i { color: var(--lowkal-red); transition: transform 180ms var(--lowkal-ease); }
+.home-channel-row a:hover i,
+.home-channel-row a:focus-visible i { transform: translate(3px, -3px); }
+
+.home-transmissions,
+.home-city {
+  background-color: rgba(12, 12, 14, 0.82);
+}
+
+.rinse-section-head {
+  border-bottom: 1px solid rgba(241, 234, 219, 0.16);
+}
+
+.rinse-section-head h2 {
+  font-size: clamp(1.15rem, 1.55vw, 1.45rem);
+  line-height: 0.9;
+}
+
+.transmission-media,
+.city-card {
+  border: 1px solid rgba(241, 234, 219, 0.16);
+  border-radius: 4px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+}
+
+.transmission-media > button {
+  border: 1px solid rgba(14, 14, 13, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  transition: color 160ms ease, background-color 160ms ease, transform 160ms var(--lowkal-ease);
+}
+
+.transmission-media > button:hover,
+.transmission-media > button:focus-visible {
+  color: var(--lowkal-paper);
+  background: var(--lowkal-red);
+  transform: scale(1.06);
+}
+
+.transmission-channel { padding-bottom: 5px; border-bottom: 1px solid rgba(241, 234, 219, 0.32); }
+.transmission-tags span { border-radius: 3px; box-shadow: none; }
+.transmission-tags span::after { display: none; }
+.city-card h3,
+.transmission-overlay h3 { text-wrap: balance; }
+
+.home-open-call {
+  border-top: 1px solid rgba(14, 14, 13, 0.3);
+  border-bottom: 1px solid rgba(14, 14, 13, 0.4);
+  background: var(--lowkal-red);
+}
+
+.home-open-call a { transition: color 160ms ease, border-color 160ms ease; }
+.home-open-call a:hover,
+.home-open-call a:focus-visible { color: var(--lowkal-paper); }
+
+/* Section pages share one editorial grammar without losing their identity. */
+.section-page-hero h1,
+.artist-directory > header h1,
+.artist-profile-identity h1 { text-wrap: balance; }
+
+.section-page-hero h1 em { position: relative; }
+.section-page-hero h1 em::after {
+  position: absolute;
+  right: 0.02em;
+  bottom: -0.04em;
+  left: 0.02em;
+  height: 0.035em;
+  background: currentColor;
+  content: "";
+  opacity: 0.7;
+}
+
+.under-construction-note {
+  border-top: 1px solid rgba(14, 14, 13, 0.32);
+  background: var(--lowkal-paper);
+}
+
+.under-construction-note > span { color: var(--lowkal-red); }
+.under-construction-note p strong { color: var(--lowkal-red); }
+.under-construction-note--dark { background: var(--lowkal-black); }
+
+.read-story {
+  transition: background-color 180ms ease;
+}
+
+.read-story:hover { background: rgba(14, 14, 13, 0.035); }
+.read-story-copy h2 a { text-decoration-thickness: 0.055em; text-underline-offset: 0.12em; }
+.read-story-copy h2 a:focus-visible { color: var(--lowkal-red); }
+.reader-body { hanging-punctuation: first last; }
+.reader-body p { text-wrap: pretty; }
+
+.city-event-list article { transition: color 160ms ease, background-color 160ms ease; }
+.city-event-list article:hover { background: rgba(14, 14, 13, 0.045); }
+.artist-directory-card { transition: color 180ms ease, background-color 180ms ease, transform 240ms var(--lowkal-ease); }
+.artist-directory-card:hover { transform: translateY(-3px); }
+.artist-directory-index { color: var(--lowkal-red); }
+
+/* Player: more instrument, less floating card. */
+.lowkal-player.lowkal-player--compact {
+  border-radius: 4px;
+  border-color: rgba(241, 234, 219, 0.3);
+  box-shadow: 0 16px 52px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.42);
+}
+
+.lowkal-player--compact .lowkal-player-transport-icon,
+.lowkal-player--compact .lowkal-player-room { transition: color 160ms ease, background-color 160ms ease, transform 160ms var(--lowkal-ease); }
+.lowkal-player--compact .lowkal-player-transport:hover .lowkal-player-transport-icon { transform: scale(1.05); }
+
+.site-footer { border-top-color: rgba(241, 234, 219, 0.22); }
+.site-footer nav a { position: relative; padding-bottom: 5px; }
+.site-footer nav a::after {
+  position: absolute;
+  right: 100%;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: var(--lowkal-red);
+  content: "";
+  transition: right 180ms var(--lowkal-ease);
+}
+.site-footer nav a:hover::after,
+.site-footer nav a:focus-visible::after { right: 0; }
+
+@media (max-width: 680px) {
+  .header-nav { justify-content: flex-end; gap: 2px; }
+  .header-nav a {
+    font-size: 0.6rem;
+    letter-spacing: 0.015em;
+  }
+  .header-nav a::after { bottom: 2px; }
+
+  .rinse-hero::after { background-size: 36px 36px; opacity: 0.2; }
+  .rinse-hero-copy > span { font-size: 0.61rem; }
+  .rinse-hero-copy p { font-size: 0.94rem; }
+
+  .rinse-section-head h2 { font-size: 1.2rem; }
+  .transmission-media,
+  .city-card { border-radius: 3px; }
+  .transmission-tags { gap: 5px; }
+  .transmission-tags span { font-size: 0.54rem; }
+
+  .section-page-hero h1 em::after { display: none; }
+  .under-construction-note { border-top: 0; }
+  .under-construction-note p { max-width: 42ch; }
+  .under-construction-note p strong { display: block; margin-bottom: 3px; }
+
+  .read-story:hover,
+  .city-event-list article:hover { background: transparent; }
+  .artist-directory-card:hover { transform: none; }
+
+  .lowkal-player.lowkal-player--compact {
+    border-radius: 8px;
+    background: rgba(10, 10, 9, 0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-lockup .media-frame,
+  .artist-directory-card,
+  .transmission-media > button,
+  .home-channel-row i { transition: none; }
+}

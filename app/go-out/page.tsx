@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { MediaFrame } from "@/components/MediaFrame";
+import { UnderConstructionNote } from "@/components/UnderConstructionNote";
 import { cityEvents } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 
@@ -18,6 +19,7 @@ export default function GoOutPage() {
         <h1>A small guide<br />to a <em>large city.</em></h1>
         <p>Selected nights and independent spaces in Bengaluru.</p>
       </section>
+      <UnderConstructionNote />
       <section className="city-guide" aria-labelledby="city-guide-title">
         <div className="city-guide-head">
           <span className="section-kicker">Bengaluru · This week</span>
