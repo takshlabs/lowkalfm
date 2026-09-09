@@ -50,9 +50,9 @@
             "accent": "#ff8eb6",          // Tertiary Pink
           },
           fontFamily: {
-            "display": ["Arial Black", "Arial", "sans-serif"],
-            "ui": ["Arial", "Helvetica", "sans-serif"],
-            "mono": ["Arial", "Helvetica", "sans-serif"],
+            "display": ["Kilimanjaro Sans", "Arial Black", "Arial", "sans-serif"],
+            "ui": ["Kilimanjaro Sans", "Arial Black", "Arial", "sans-serif"],
+            "mono": ["Kilimanjaro Sans", "Arial Black", "Arial", "sans-serif"],
           },
           borderRadius: {
             "DEFAULT": "0.25rem",
@@ -85,7 +85,7 @@
       overflow: hidden;
       background-color: #131313;
       color: #e5e2e1;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Kilimanjaro Sans", "Arial Black", Arial, sans-serif;
       cursor: none !important;
     }
 
@@ -103,7 +103,7 @@
     .font-ui,
     .font-mono,
     .font-sans {
-      font-family: Arial, Helvetica, sans-serif !important;
+      font-family: "Kilimanjaro Sans", "Arial Black", Arial, sans-serif !important;
     }
 
     h1,
@@ -116,10 +116,6 @@
       font-family: "Kilimanjaro Sans", "Arial Black", Arial, sans-serif !important;
     }
 
-    header h1,
-    header .font-display {
-      font-family: "Arial Black", Arial, sans-serif !important;
-    }
 
     .material-symbols-outlined {
       font-family: "Material Symbols Outlined" !important;
@@ -247,7 +243,7 @@
     .soundroom-return-nav a {
       padding: 0.44rem 0.58rem;
       color: rgba(229,226,225,0.84);
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Kilimanjaro Sans", "Arial Black", Arial, sans-serif;
       font-size: 0.62rem;
       letter-spacing: 0.06em;
       text-decoration: none;
@@ -489,7 +485,7 @@
         <img src="../lowkal-logo.jpg" class="w-14 h-14 shrink-0" alt="Lowkal.fm"
           style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 0 20px rgba(85,233,59,0.08);"/>
         <div>
-          <div class="font-mono text-xs tracking-widest uppercase mb-1" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">CURRENT MIX</div>
+          <div class="font-mono text-xs tracking-widest uppercase mb-1" style="color:#55e93b;">CURRENT MIX</div>
           <h2 class="font-display font-bold uppercase leading-none" id="tracklist-title" style="font-size: clamp(1.6rem, 4vw, 2.5rem); letter-spacing: -0.01em;">TRACKLIST</h2>
           <p class="font-ui text-sm mt-2 text-white/60" id="tracklist-mix-meta">Select a mix to see its tracklist.</p>
         </div>
@@ -499,7 +495,7 @@
       <div class="overflow-y-auto custom-scrollbar flex-1 p-6 md:p-8 flex flex-col gap-7">
         <div>
           <div class="flex items-center gap-3 mb-4">
-            <span class="font-mono text-xs tracking-widest uppercase" style="color:#55e93b; font-family:Arial,Helvetica,sans-serif;">Tracklist</span>
+            <span class="font-mono text-xs tracking-widest uppercase" style="color:#55e93b;">Tracklist</span>
             <div class="flex-1" style="height:1px; background: linear-gradient(to right, rgba(85,233,59,0.3), transparent);"></div>
           </div>
           <ol class="flex flex-col gap-1" id="tracklist-entries"></ol>

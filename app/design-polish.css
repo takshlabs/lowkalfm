@@ -11,6 +11,11 @@ body {
   text-rendering: geometricPrecision;
 }
 
+/* The station typeface carries the interface and editorial copy as one system. */
+body :is(p, span, small, a, button, label, summary, time, output, li, strong, input, textarea, select, figcaption, blockquote) {
+  font-family: var(--font-lowkal-body);
+}
+
 :is(a, button, summary, input):focus-visible {
   outline: 2px solid var(--lowkal-red);
   outline-offset: 4px;
