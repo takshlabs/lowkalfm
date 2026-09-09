@@ -1553,7 +1553,7 @@
           document.getElementById(id).disabled = !MIXES.some((mix) => mix.id);
         }
         for (const id of ['main-scrubber', 'btn-main-replay-10', 'btn-main-forward-30']) {
-          document.getElementById(id).disabled = !playable;
+          document.getElementById(id).disabled = !playable || !this.isReady || Boolean(this.error) || !(this.getEffectiveDuration() > 0);
         }
         
         const mainPlayBtn = document.getElementById('icon-main-play');
@@ -1587,6 +1587,7 @@
         
         const scrubber = document.getElementById('main-scrubber');
         scrubber.value = percent;
+        scrubber.setAttribute('aria-valuetext', `${formatTime(this.playbackTime)} of ${formatTime(dur)}`);
         scrubber.style.setProperty('--progress', `${percent}%`);
         scrubber.style.background = `linear-gradient(to right, #55e93b ${percent}%, #87957e ${percent}%)`;
         
@@ -1600,6 +1601,7 @@
 
       updateMiniPlayerUI() {
         const miniPlayer = document.getElementById('archive-mini-player');
+        miniPlayer.inert = this.currentScreen !== 'archive';
         
         if (this.currentScreen !== 'archive') {
           miniPlayer.className = "absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-xl z-40 transition-all duration-500 transform translate-y-2 opacity-0 pointer-events-none";

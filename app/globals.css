@@ -1150,6 +1150,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .archive-play { display: grid; grid-template-columns: 22px auto; align-items: center; gap: 8px; min-width: 132px; padding: 11px 13px; border: 1px solid var(--ink); background: transparent; font-size: 0.62rem; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
 .archive-play:hover, .archive-play:focus-visible { color: var(--ink); background: var(--signal); outline: none; }
 .archive-play svg { width: 15px; height: 15px; }
+.archive-return { align-self: flex-start; min-height: 44px; margin-top: 12px; padding: 8px 12px; border: 1px solid currentColor; background: transparent; text-align: left; cursor: pointer; }
+.archive-return:hover, .archive-return:focus-visible { background: var(--signal); }
+.archive-room button:disabled { opacity: 0.45; cursor: not-allowed; }
+.archive-record[aria-current="true"] .archive-record-caption small { color: var(--red); }
+.archive-controls button { min-width: 44px; min-height: 44px; }
+.archive-record:focus-visible { outline: 2px solid var(--red); outline-offset: 6px; }
 
 @media (max-width: 900px) {
   .archive-room-heading { grid-template-columns: 210px 1fr; padding-right: 20px; padding-left: 20px; }
@@ -1170,7 +1176,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .archive-track { gap: 28px; padding: 42px calc(50vw - 125px) 28px; }
   .archive-record { flex-basis: 250px; }
   .archive-desk { grid-template-columns: 1fr; gap: 24px; padding: 20px 16px 52px; }
-  .archive-desk-group { display: none; }
+  .archive-desk-group { display: flex; max-width: none; }
+  .archive-desk-group > span, .archive-desk-group > p:not(.archive-playback-note) { display: none; }
   .archive-selection { grid-template-columns: 44px 1fr; gap: 14px; padding-left: 0; border-left: 0; }
   .archive-selection-title h2 { font-size: clamp(2.7rem, 14vw, 4.4rem); }
   .archive-play { grid-column: 2; justify-self: start; }

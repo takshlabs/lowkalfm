@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { SoundRecord } from "@/lib/content";
+import { boundPlaybackTime, createPlaybackRequests } from "@/lib/audio-playback";
 import { createAudioAnalysis, isAnalysisSource, startAnalysisBridge, startMixerBridge } from "@/lib/audio-analysis";
 import { sitePath } from "@/lib/site-path";
 import { useListenContent } from "./ListenContentProvider";
@@ -12,10 +13,11 @@ const YOUTUBE_API_URL = "https://www.youtube.com/iframe_api";
 
 type SavedPlayerState = { slug: string; currentTime: number; volume: number; savedAt: number };
 type AudioCommand =
-  | { action: "request-state" } | { action: "toggle" } | { action: "play" } | { action: "pause" }
+  | { action: "request-state" } | { action: "toggle" } | { action: "play" } | { action: "pause" } | { action: "retry" }
   | { action: "seek"; seconds: number } | { action: "seek-by"; seconds: number } | { action: "volume"; volume: number }
   | { action: "shuffle" } | { action: "repeat" } | { action: "select"; slug: string; autoplay: boolean };
 type AudioContextValue = {
+  isLoading: boolean; error: string | null; retryPlayback: () => void;
   activeRecord: SoundRecord; currentTime: number; duration: number; isPlaying: boolean; isReady: boolean; volume: number;
   playRecord: (slug: string, autoplay?: boolean) => void; togglePlayback: () => void; seek: (seconds: number) => void; setVolume: (volume: number) => void;
 };
@@ -104,6 +106,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [volume, setVolumeState] = useState(82);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+  const requestsRef = useRef(createPlaybackRequests());
   const [isShuffled, setIsShuffled] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [failedAudioUrl, setFailedAudioUrl] = useState<string | null>(null);
@@ -127,7 +133,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const onEndedRef = useRef<() => void>(() => undefined);
   const activeRecord = getRecord(activeSlug) ?? firstRecord;
   const useYouTube = Boolean(activeRecord.youtubeId && (!activeRecord.audioUrl || failedAudioUrl === activeRecord.audioUrl));
-  const stateRef = useRef({ activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat });
+  const stateRef = useRef({ activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, isLoading, error, volume, isShuffled, isRepeat });
 
   useEffect(() => {
     analysisMounted.current = true;
@@ -159,7 +165,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (audio.getAttribute("src") !== activeRecord.audioUrl) audio.src = activeRecord.audioUrl;
   }, [activeRecord.audioUrl, activeRecord.slug, useYouTube]);
 
-  useEffect(() => { stateRef.current = { activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat }; }, [activeRecord.slug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat]);
+  useEffect(() => { stateRef.current = { activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, isLoading, error, volume, isShuffled, isRepeat }; }, [activeRecord.slug, currentTime, duration, isPlaying, isReady, isLoading, error, volume, isShuffled, isRepeat]);
   useEffect(() => {
     const saved = readSavedState();
     if (!saved || !getRecord(saved.slug)) return;
@@ -182,27 +188,66 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const playMedia = useCallback(() => {
     if (!isPlayable(activeRecord)) return;
+    const request = requestsRef.current.begin();
+    setError(null); setIsLoading(true);
     autoplayRef.current = true;
     if (!useYouTube && activeRecord.audioUrl && audioRef.current) {
+      const audio = audioRef.current;
+      if (audio.ended) audio.currentTime = activeRecord.startOffset ?? 0;
+      if (!audio.paused && !audio.ended && audio.readyState >= 3) { setIsLoading(false); setIsPlaying(true); return; }
       // A MediaElementAudioSourceNode can be suspended with its AudioContext
       // when a phone backgrounds the browser. Keep the native media path on
       // touch devices so playback and system media controls remain available.
       if (!needsNativeBackgroundAudio()) getAnalysis().activate();
-      void audioRef.current.play().catch(() => { setIsPlaying(false); autoplayRef.current = false; });
+      void audio.play().catch(() => {
+        if (!requestsRef.current.isCurrent(request) || audioRef.current !== audio) return;
+        setIsPlaying(false); setIsLoading(false); autoplayRef.current = false;
+        setError("Audio could not start. Press retry to play.");
+      });
       return;
     }
     youtubePlayerRef.current?.playVideo?.();
   }, [activeRecord, getAnalysis, useYouTube]);
   const pauseMedia = useCallback(() => {
+    requestsRef.current.cancel();
     autoplayRef.current = false;
+    setIsLoading(false); setIsPlaying(false);
     audioRef.current?.pause();
     youtubePlayerRef.current?.pauseVideo?.();
   }, []);
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = window.setTimeout(() => {
+      pauseMedia();
+      setError("Audio is taking too long to load. Check your connection and retry.");
+    }, 20000);
+    return () => window.clearTimeout(timer);
+  }, [isLoading, activeRecord.slug, currentTime, pauseMedia]);
+
+  const retryPlayback = useCallback(() => {
+    requestsRef.current.cancel();
+    setError(null); setIsLoading(true); setIsReady(false);
+    autoplayRef.current = true;
+    resumeAtRef.current = currentTimeRef.current;
+    if (useYouTube) {
+      youtubeApiPromise = null;
+      if (!(window as YouTubeWindow).YT?.Player) document.querySelector(`script[src="${YOUTUBE_API_URL}"]`)?.remove();
+      setRetryKey((value) => value + 1);
+    } else {
+      audioRef.current?.load();
+      playMedia();
+    }
+  }, [playMedia, useYouTube]);
 
   const playRecord = useCallback((slug: string, shouldPlay = true) => {
     const record = getRecord(slug);
     if (!isPlayable(record)) return;
     if (slug === activeRecord.slug) { if (shouldPlay) playMedia(); else pauseMedia(); return; }
+    requestsRef.current.cancel();
+    audioRef.current?.pause();
+    youtubePlayerRef.current?.pauseVideo?.();
+    setError(null); setIsLoading(shouldPlay);
     if (shouldPlay && record?.audioUrl && !needsNativeBackgroundAudio()) getAnalysis().activate(record.audioUrl);
     autoplayRef.current = shouldPlay; resumeAtRef.current = record?.startOffset ?? 0;
     setFailedAudioUrl(null); setCurrentTime(0); setDuration(record?.duration ?? 0); setIsPlaying(false); setIsReady(false); setActiveSlug(slug);
@@ -241,12 +286,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = volume / 100;
-    const startTime = resumeAtRef.current || activeRecord.startOffset || 0;
-    if (startTime > 0) audio.currentTime = startTime;
+    const startTime = boundPlaybackTime(resumeAtRef.current, audio.duration) ?? 0;
+    audio.currentTime = startTime;
+    setCurrentTime(startTime);
     setDuration(Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : activeRecord.duration);
     setIsReady(true);
     if (autoplayRef.current) playMedia();
-  }, [activeRecord.duration, activeRecord.startOffset, playMedia, volume]);
+  }, [activeRecord.duration, playMedia, volume]);
 
   useEffect(() => {
     if (!useYouTube || !activeRecord.youtubeId || !youtubeHostRef.current) return;
@@ -261,7 +307,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           onReady: ({ target }) => {
             if (!active) return;
             target.setVolume(volumeRef.current);
-            const startTime = resumeAtRef.current || activeRecord.startOffset || 0;
+            const startTime = boundPlaybackTime(resumeAtRef.current, target.getDuration()) ?? 0;
             if (startTime > 0) target.seekTo(startTime, true);
             const sourceDuration = target.getDuration();
             setDuration(sourceDuration > 0 ? sourceDuration : activeRecord.duration);
@@ -271,18 +317,20 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           onStateChange: ({ data }) => {
             if (!active) return;
             setIsPlaying(data === 1);
+            setIsLoading(data === 3 && autoplayRef.current);
+            if (data === 1) { setError(null); if (!autoplayRef.current) youtubePlayerRef.current?.pauseVideo?.(); }
             if (data === 0) onEndedRef.current();
           },
-          onError: () => { if (active) { setIsReady(false); setIsPlaying(false); autoplayRef.current = false; } }
+          onError: () => { if (active) { setIsReady(false); setIsPlaying(false); setIsLoading(false); setError("This video could not play. Try again."); autoplayRef.current = false; } }
         }
       });
-    }).catch(() => { if (active) { setIsReady(false); setIsPlaying(false); } });
+    }).catch(() => { if (active) { setIsReady(false); setIsPlaying(false); setIsLoading(false); setError("The video player could not load. Try again."); autoplayRef.current = false; } });
     return () => {
       active = false;
       youtubePlayerRef.current?.destroy?.();
       youtubePlayerRef.current = null;
     };
-  }, [activeRecord.duration, activeRecord.slug, activeRecord.startOffset, activeRecord.youtubeId, useYouTube]);
+  }, [activeRecord.duration, activeRecord.slug, activeRecord.startOffset, activeRecord.youtubeId, useYouTube, retryKey]);
 
   useEffect(() => {
     if (!isPlaying || !useYouTube || !activeRecord.youtubeId) return;
@@ -295,11 +343,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearInterval(timer);
   }, [activeRecord.youtubeId, isPlaying, useYouTube]);
 
-  const togglePlayback = useCallback(() => { if (isPlayable(activeRecord)) { if (isPlaying) pauseMedia(); else playMedia(); } }, [activeRecord, isPlaying, pauseMedia, playMedia]);
+  const togglePlayback = useCallback(() => { if (isPlayable(activeRecord)) { if (autoplayRef.current) pauseMedia(); else if (error) retryPlayback(); else playMedia(); } }, [activeRecord, error, pauseMedia, playMedia, retryPlayback]);
   const seek = useCallback((seconds: number) => {
-    const bounded = Math.min(duration || activeRecord.duration, Math.max(0, seconds));
+    const bounded = boundPlaybackTime(seconds, duration || activeRecord.duration);
+    if (bounded === null) return;
+    resumeAtRef.current = bounded;
+    currentTimeRef.current = bounded;
     setCurrentTime(bounded);
-    if (audioRef.current) audioRef.current.currentTime = bounded;
+    if (audioRef.current && audioRef.current.readyState >= 1) audioRef.current.currentTime = bounded;
     youtubePlayerRef.current?.seekTo?.(bounded, true);
     persist(bounded);
   }, [activeRecord.duration, duration, persist]);
@@ -308,6 +359,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     seek(mediaTime + seconds);
   }, [seek]);
   const setVolume = useCallback((nextVolume: number) => {
+    if (!Number.isFinite(nextVolume)) return;
     const bounded = Math.min(100, Math.max(0, nextVolume));
     setVolumeState(bounded);
     if (audioRef.current) audioRef.current.volume = bounded / 100;
@@ -373,11 +425,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const record = getRecord(snapshot.activeSlug) ?? firstRecord;
     const youtubeTime = youtubePlayerRef.current?.getCurrentTime?.();
     const youtubeDuration = youtubePlayerRef.current?.getDuration?.();
-    const message = { channel: AUDIO_SYNC_CHANNEL, type: "state", state: { slug: record.slug, audioUrl: record.audioUrl, currentTime: audio?.currentTime ?? youtubeTime ?? snapshot.currentTime, duration: audio?.duration || youtubeDuration || snapshot.duration || record.duration, isPlaying: useYouTube ? snapshot.isPlaying : Boolean(audio && !audio.paused && !audio.ended), isReady: snapshot.isReady, volume: snapshot.volume, isShuffled: snapshot.isShuffled, isRepeat: snapshot.isRepeat } };
+    const message = { channel: AUDIO_SYNC_CHANNEL, type: "state", state: { slug: record.slug, audioUrl: record.audioUrl, currentTime: audio?.currentTime ?? youtubeTime ?? snapshot.currentTime, duration: audio?.duration || youtubeDuration || snapshot.duration || record.duration, isPlaying: snapshot.isPlaying, isReady: snapshot.isReady, isLoading: snapshot.isLoading, error: snapshot.error, volume: snapshot.volume, isShuffled: snapshot.isShuffled, isRepeat: snapshot.isRepeat } };
     if (target) { target.postMessage(message, window.location.origin); return; }
     for (let index = 0; index < window.frames.length; index += 1) window.frames[index]?.postMessage(message, window.location.origin);
-  }, [firstRecord, getRecord, useYouTube]);
-  useEffect(() => { postState(); }, [activeSlug, currentTime, duration, isPlaying, isReady, volume, isShuffled, isRepeat, postState]);
+  }, [firstRecord, getRecord]);
+  useEffect(() => { postState(); }, [activeSlug, currentTime, duration, isPlaying, isReady, isLoading, error, volume, isShuffled, isRepeat, postState]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -388,6 +440,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       if (command.action === "request-state") { if (event.source && "postMessage" in event.source) postState(event.source as Window); return; }
       if (command.action === "toggle") togglePlayback();
       if (command.action === "play") playMedia();
+      if (command.action === "retry") retryPlayback();
       if (command.action === "pause") pauseMedia();
       if (command.action === "seek" && Number.isFinite(command.seconds)) seek(command.seconds);
       if (command.action === "seek-by" && Number.isFinite(command.seconds)) seekBy(command.seconds);
@@ -398,18 +451,23 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [pauseMedia, playMedia, playRecord, postState, seek, seekBy, setVolume, togglePlayback]);
+  }, [pauseMedia, playMedia, playRecord, postState, retryPlayback, seek, seekBy, setVolume, togglePlayback]);
 
-  const value = useMemo<AudioContextValue>(() => ({ activeRecord, currentTime, duration, isPlaying, isReady, volume, playRecord, togglePlayback, seek, setVolume }), [activeRecord, currentTime, duration, isPlaying, isReady, volume, playRecord, togglePlayback, seek, setVolume]);
+  const value = useMemo<AudioContextValue>(() => ({ activeRecord, currentTime, duration, isPlaying, isReady, isLoading, error, retryPlayback, volume, playRecord, togglePlayback, seek, setVolume }), [activeRecord, currentTime, duration, isPlaying, isReady, isLoading, error, retryPlayback, volume, playRecord, togglePlayback, seek, setVolume]);
   return (
     <AudioContext.Provider value={value}>
       {children}
       {!useYouTube && activeRecord.audioUrl ? (
-        <audio key={`${activeRecord.slug}:${activeRecord.audioUrl}`} ref={bindAudio} className="audio-engine" preload="auto" onLoadedMetadata={onLoadedMetadata} onTimeUpdate={(event) => { setCurrentTime(event.currentTarget.currentTime); persist(event.currentTarget.currentTime); }} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={onEnded} onError={() => { setIsReady(false); setIsPlaying(false); if (activeRecord.youtubeId) setFailedAudioUrl(activeRecord.audioUrl ?? null); }}>
+        <audio key={`${activeRecord.slug}:${activeRecord.audioUrl}`} ref={bindAudio} className="audio-engine" preload="auto" onLoadedMetadata={onLoadedMetadata}
+          onTimeUpdate={(event) => { currentTimeRef.current = event.currentTarget.currentTime; setCurrentTime(event.currentTarget.currentTime); persist(event.currentTarget.currentTime); }}
+          onPlaying={(event) => { if (!autoplayRef.current) { event.currentTarget.pause(); return; } setIsPlaying(true); setIsLoading(false); setError(null); }}
+          onWaiting={() => { if (autoplayRef.current) setIsLoading(true); }}
+          onPause={() => setIsPlaying(false)} onEnded={onEnded}
+          onError={() => { requestsRef.current.cancel(); setIsReady(false); setIsPlaying(false); if (activeRecord.youtubeId) { setFailedAudioUrl(activeRecord.audioUrl ?? null); setIsLoading(autoplayRef.current); } else { autoplayRef.current = false; setIsLoading(false); setError("Audio could not load. Check your connection and retry."); } }}>
           <track kind="captions" srcLang="en" label="No spoken content" src="data:text/vtt,WEBVTT" />
         </audio>
       ) : useYouTube && activeRecord.youtubeId ? (
-        <div key={activeRecord.slug} className="youtube-audio-engine" aria-hidden="true"><div ref={youtubeHostRef} /></div>
+        <div key={`${activeRecord.slug}:${retryKey}`} className="youtube-audio-engine" aria-hidden="true"><div ref={youtubeHostRef} /></div>
       ) : null}
     </AudioContext.Provider>
   );

@@ -45,6 +45,18 @@ test('external loading is truthful and can be cancelled without starting local a
   assert.equal(messages.at(-1).command.action, 'pause');
 });
 
+test('seeking requires metadata and hidden mini-player is not focusable', () => {
+  const { app, get, state } = harness();
+  state({ isReady: false });
+  assert.equal(get('main-scrubber').disabled, true);
+  assert.equal(get('archive-mini-player').inert, true);
+  app.currentScreen = 'archive';
+  state({ isReady: true });
+  assert.equal(get('main-scrubber').disabled, false);
+  assert.equal(get('archive-mini-player').inert, false);
+  assert.equal(get('main-scrubber').attrs['aria-valuetext'], '01:05 of 60:00');
+});
+
 test('errors expose retry on both surfaces and clear on older state messages', () => {
   const { app, get, messages, state } = harness();
   app.currentScreen = 'archive';

@@ -5,16 +5,21 @@ import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
 import { isUnlistedPath } from "@/lib/site-chrome";
 import { sitePath } from "@/lib/site-path";
-import { ArrowUpRight, Pause, Play, Video, Volume2 } from "lucide-react";
+import { ArrowUpRight, Pause, Play, RotateCcw, Video, Volume2 } from "lucide-react";
 import { formatTime } from "@/lib/content";
 import { usePathname } from "next/navigation";
 import { useAudio } from "./AudioProvider";
 
 export function PersistentPlayer() {
   const pathname = usePathname();
-  const { activeRecord, currentTime, duration, isPlaying, isReady, volume, togglePlayback, seek, setVolume } = useAudio();
-  const total = duration || activeRecord.duration;
-  const progress = total > 0 ? Math.min(100, (currentTime / total) * 100) : 0;
+  const { activeRecord, currentTime, duration, isPlaying, isReady, isLoading, error, volume, togglePlayback, retryPlayback, seek, setVolume } = useAudio();
+  const isPlayable = Boolean(activeRecord.audioUrl || activeRecord.youtubeId);
+  const status = !isPlayable ? "Unavailable" : error ? "Playback error · retry" : isLoading ? "Loading…" : isPlaying ? "Playing" : "Paused";
+  const sourceDuration = duration || activeRecord.duration;
+  const total = Number.isFinite(sourceDuration) ? Math.max(0, sourceDuration) : 0;
+  const position = Number.isFinite(currentTime) ? Math.min(total, Math.max(0, currentTime)) : 0;
+  const canSeek = isPlayable && isReady && !error && total > 0;
+  const progress = total > 0 ? (position / total) * 100 : 0;
   const progressStyle = { "--deck-progress": `${progress}%` } as CSSProperties;
   const volumeStyle = { "--deck-volume": `${volume}%` } as CSSProperties;
   const volumeLabel = Math.round(volume).toString().padStart(2, "0");
@@ -30,18 +35,19 @@ export function PersistentPlayer() {
       <button
         className="lowkal-player-transport"
         type="button"
-        onClick={togglePlayback}
-        aria-label={`${isPlaying ? "Pause" : "Play"} ${activeRecord.series}`}
-        disabled={!isReady}
+        onClick={error ? retryPlayback : togglePlayback}
+        aria-label={`${error ? "Retry" : isLoading ? "Cancel loading" : isPlaying ? "Pause" : "Play"} ${activeRecord.series} — ${activeRecord.title}`}
+        aria-describedby="lowkal-playback-status"
+        disabled={!isPlayable}
       >
         <span className="lowkal-player-transport-icon">
-          {isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+          {error ? <RotateCcw aria-hidden="true" /> : isPlaying || isLoading ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
         </span>
       </button>
 
       <div className="lowkal-player-program" aria-live="polite">
         <div className="lowkal-player-status">
-          <span><i aria-hidden="true" /> {isPlaying ? "Playing" : "Ready"}</span>
+          <span id="lowkal-playback-status" role="status" title={error ?? undefined}><i aria-hidden="true" /> {status}<span className="sr-only">{error ? `: ${error}` : ""}</span></span>
           <span>{activeRecord.format === "weekly" ? "Weekly volume" : "Programme set"}</span>
         </div>
         <div className="lowkal-player-title-row">
@@ -65,7 +71,7 @@ export function PersistentPlayer() {
       <label className="lowkal-player-timeline">
         <span className="sr-only">Playback position</span>
         <div className="lowkal-player-timecode" aria-hidden="true">
-          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(position)}</span>
           <span>Position</span>
           <span>{formatTime(total)}</span>
         </div>
@@ -75,7 +81,9 @@ export function PersistentPlayer() {
             min={0}
             max={Math.max(1, total)}
             step={1}
-            value={Math.min(currentTime, Math.max(1, total))}
+            value={position}
+            aria-valuetext={`${formatTime(position)} of ${formatTime(total)}`}
+            disabled={!canSeek}
             style={progressStyle}
             onInput={(event) => seek(Number(event.currentTarget.value))}
           />
@@ -91,6 +99,7 @@ export function PersistentPlayer() {
           min={0}
           max={100}
           value={volume}
+          aria-valuetext={`${Math.round(volume)} percent`}
           style={volumeStyle}
           onChange={(event) => setVolume(Number(event.target.value))}
         />

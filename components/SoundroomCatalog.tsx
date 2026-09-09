@@ -52,17 +52,19 @@ function getGroup(record: SoundRecord) {
 export function SoundroomCatalog() {
   const { records } = useListenContent();
   const archiveRecords = records;
-  const [selectedSlug, setSelectedSlug] = useState(archiveRecords[0].slug);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const recordRefs = useRef(new Map<string, HTMLButtonElement>());
-  const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
-  const selectedIndex = Math.max(0, archiveRecords.findIndex((record) => record.slug === selectedSlug));
+  const { activeRecord, isPlaying, isLoading, error, retryPlayback, playRecord, togglePlayback } = useAudio();
+  const selectedIndex = Math.max(0, archiveRecords.findIndex((record) => record.slug === (selectedSlug ?? activeRecord.slug)));
   const selected = archiveRecords[selectedIndex] ?? archiveRecords[0];
   const group = useMemo(() => getGroup(selected), [selected]);
   const selectedIsActive = activeRecord.slug === selected.slug;
+  const playable = Boolean(selected.audioUrl || selected.youtubeId);
+  const playLabel = !playable ? "Unavailable" : selectedIsActive && error ? "Retry playback" : selectedIsActive && isLoading ? "Cancel loading" : selectedIsActive && isPlaying ? "Pause" : "Play record";
 
   useEffect(() => {
     recordRefs.current.get(selected.slug)?.scrollIntoView({
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
       block: "nearest",
       inline: "center"
     });
@@ -74,7 +76,9 @@ export function SoundroomCatalog() {
   };
 
   const handlePlay = () => {
-    if (selectedIsActive) togglePlayback();
+    if (!playable) return;
+    if (selectedIsActive && error) retryPlayback();
+    else if (selectedIsActive) togglePlayback();
     else playRecord(selected.slug);
   };
 
@@ -100,6 +104,7 @@ export function SoundroomCatalog() {
               <button
                 type="button"
                 aria-pressed={isActive}
+                disabled={count === 0}
                 key={item.id}
                 onClick={() => {
                   const firstRecord = archiveRecords.find(item.includes);
@@ -125,7 +130,8 @@ export function SoundroomCatalog() {
               <button
                 type="button"
                 className={`archive-record${isSelected ? " is-selected" : ""}`}
-                aria-label={`Select ${record.series} by ${record.artist}`}
+                aria-label={`Select ${record.series} by ${record.artist}${record.slug === activeRecord.slug ? " — current record" : ""}`}
+                aria-current={record.slug === activeRecord.slug ? "true" : undefined}
                 aria-pressed={isSelected}
                 key={record.slug}
                 ref={(element) => {
@@ -134,8 +140,11 @@ export function SoundroomCatalog() {
                 }}
                 onClick={() => setSelectedSlug(record.slug)}
                 onKeyDown={(event) => {
-                  if (event.key === "ArrowLeft") move(-1);
-                  if (event.key === "ArrowRight") move(1);
+                  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+                  event.preventDefault();
+                  const next = event.key === "Home" ? 0 : event.key === "End" ? archiveRecords.length - 1 : (index + (event.key === "ArrowLeft" ? -1 : 1) + archiveRecords.length) % archiveRecords.length;
+                  setSelectedSlug(archiveRecords[next].slug);
+                  recordRefs.current.get(archiveRecords[next].slug)?.focus({ preventScroll: true });
                 }}
               >
                 <span className="archive-record-number">[{String(index + 1).padStart(2, "0")}]</span>
@@ -149,7 +158,7 @@ export function SoundroomCatalog() {
                 </span>
                 <span className="archive-record-caption">
                   <strong>{record.artist}</strong>
-                  <small>{record.series}</small>
+                  <small>{record.series}{record.slug === activeRecord.slug ? isLoading ? " · Loading" : isPlaying ? " · Playing" : " · Current" : ""}</small>
                 </span>
               </button>
             );
@@ -167,6 +176,8 @@ export function SoundroomCatalog() {
         <div className="archive-desk-group">
           <span><i aria-hidden="true" /> Catalogue {group.number}</span>
           <p>{group.description}</p>
+          {!selectedIsActive ? <button type="button" className="archive-return" onClick={() => setSelectedSlug(null)}>Return to current record</button> : null}
+          <p className="archive-playback-note">{selectedIsActive ? error ?? (isLoading ? "Loading audio…" : isPlaying ? "Playing across Lowkal" : "Current record · paused") : "Browse freely. Your current record stays in the mini-player."}</p>
         </div>
 
         <div className="archive-selection">
@@ -183,9 +194,9 @@ export function SoundroomCatalog() {
             <span>{selected.genres.join(" / ")}</span>
             <span>{formatTime(selected.duration)}</span>
           </div>
-          <button type="button" className="archive-play" onClick={handlePlay}>
-            {selectedIsActive && isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-            <span>{selectedIsActive && isPlaying ? "Pause" : "Play record"}</span>
+          <button type="button" className="archive-play" onClick={handlePlay} disabled={!playable} aria-label={`${playLabel} — ${selected.title}`}>
+            {selectedIsActive && (isPlaying || isLoading) ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+            <span>{playLabel}</span>
           </button>
         </div>
       </footer>
