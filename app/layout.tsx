@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AudioProvider } from "@/components/AudioProvider";
 import { ListenContentProvider } from "@/components/ListenContentProvider";
 import { PersistentPlayer } from "@/components/PersistentPlayer";
@@ -51,6 +53,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <PersistentPlayer />
           </AudioProvider>
         </ListenContentProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
