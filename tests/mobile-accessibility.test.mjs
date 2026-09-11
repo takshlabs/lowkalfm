@@ -43,18 +43,26 @@ test('Soundroom mobile chrome uses safe areas and touch-sized controls', async (
   assert.match(source, /@media \(max-width: 760px\)[\s\S]*?#modal-settings\s*\{[\s\S]*?safe-area-inset-left/);
 });
 
-test('mobile PWA notices and playback controls stay fully on screen', async () => {
-  const source = await read('app/pwa-audio.css');
-  assert.match(source, /\.lowkal-player\s*\{[\s\S]*?overflow:\s*visible;[\s\S]*?transform:\s*none;/);
-  assert.match(source, /grid-template-rows:\s*auto;/);
-  assert.match(source, /\.lowkal-player-art\s*\{[\s\S]*?grid-row:\s*auto;[\s\S]*?grid-column:\s*auto;/);
-  assert.match(source, /\.lowkal-player-timeline\s*\{[\s\S]*?grid-row:\s*auto;[\s\S]*?grid-column:\s*auto;/);
-  assert.match(source, /\.pwa-status\s*\{\s*bottom:\s*calc\(202px \+ var\(--safe-bottom\)\)/);
-  assert.doesNotMatch(source, /var\(--chalk\)/);
+test('Soundroom keeps the production mobile control geometry', async () => {
+  const source = await read('public/soundroom/room.css');
+  assert.match(source, /#main-scrubber, #main-volume-slider\s*\{[\s\S]*?min-height:\s*28px/);
+  assert.match(source, /#btn-main-shuffle,[\s\S]*?width:\s*40px;[\s\S]*?min-width:\s*40px/);
+  assert.match(source, /#mini-youtube-video,[\s\S]*?width:\s*42px[^\n]*height:\s*42px[^\n]*min-width:\s*42px/);
+  assert.match(source, /@media \(max-width: 380px\)[\s\S]*?#btn-main-shuffle, #btn-main-repeat \{ display: none; \}/);
 });
 
-test('phone pages reserve enough space for the expanded persistent player', async () => {
+test('PWA additions do not override the production player or header geometry', async () => {
   const source = await read('app/pwa-audio.css');
-  const phoneRule = source.match(/@media \(max-width: 760px\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? '';
-  assert.match(phoneRule, /body\s*\{\s*padding-bottom:\s*calc\(206px \+ var\(--safe-bottom\)\);/);
+  assert.doesNotMatch(source, /\.lowkal-player(?:[\s.{:#-])/);
+  assert.doesNotMatch(source, /\.site-header\s*\{/);
+  assert.doesNotMatch(source, /\.brand-lockup|\.header-nav/);
+});
+
+test('PWA lifecycle is headless and leaves installation to browser chrome', async () => {
+  const source = await read('components/PwaLifecycle.tsx');
+  assert.doesNotMatch(source, /preventDefault\(\)/);
+  assert.doesNotMatch(source, /pwa-status/);
+  assert.doesNotMatch(source, /Install Lowkal|Add to Home Screen/);
+  assert.match(source, /serviceWorker\.register/);
+  assert.match(source, /hasSharedPlaybackActivity/);
 });

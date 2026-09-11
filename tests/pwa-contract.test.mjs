@@ -68,27 +68,21 @@ test('offline page is honest about streaming and offers recovery', async () => {
   assert.match(html, /Try again/i);
 });
 
-test('PWA lifecycle consumes install prompts once and never forces updates during playback', async () => {
+test('PWA lifecycle stays headless and never forces updates during playback', async () => {
   const source = await readFile(new URL('components/PwaLifecycle.tsx', root), 'utf8');
-  assert.match(source, /beforeinstallprompt/);
-  assert.match(source, /installConsumedRef/);
+  assert.doesNotMatch(source, /beforeinstallprompt/);
+  assert.doesNotMatch(source, /preventDefault\(\)/);
   assert.match(source, /SKIP_WAITING/);
   assert.match(source, /isPlaying/);
   assert.match(source, /isLoading/);
   assert.match(source, /const playbackActive = isPlaying \|\| isLoading/);
-  assert.match(source, /useState\(true\)/);
-  assert.match(source, /useState\(false\)/);
-  assert.match(source, /iosInstallAvailable/);
-  assert.match(source, /setIosInstallAvailable\(isIosSafari\(\) && !isStandalone\(\)\)/);
-  assert.doesNotMatch(source, /canInstall[^\n]*isIosSafari/);
-  assert.doesNotMatch(source, /useState\(\(\) => typeof navigator/);
+  assert.match(source, /hasSharedPlaybackActivity/);
+  assert.match(source, /return null/);
 });
 
-test('PWA notices stay above the full-screen Soundroom', async () => {
+test('PWA lifecycle adds no overlay to the existing interface', async () => {
   const css = await readFile(new URL('app/reimagined.css', root), 'utf8');
-  const statusRule = css.match(/\.pwa-status\s*\{([\s\S]*?)\}/)?.[1] ?? '';
-  const zIndex = Number(statusRule.match(/z-index:\s*(\d+)/)?.[1] ?? 0);
-  assert.ok(zIndex > 1000);
+  assert.doesNotMatch(css, /\.pwa-status/);
 });
 
 test('Soundroom does not depend on runtime third-party utility CSS', async () => {

@@ -1584,60 +1584,7 @@ body :is(
   font-weight: 400;
 }
 
-/* PWA lifecycle notices stay compact and never cover transport controls. */
-.pwa-status {
-  position: fixed;
-  right: max(16px, var(--safe-right));
-  bottom: calc(164px + var(--safe-bottom));
-  z-index: 1100;
-  display: grid;
-  gap: 7px;
-  width: min(460px, calc(100vw - max(32px, var(--safe-left)) - max(32px, var(--safe-right))));
-  color: var(--lowkal-paper);
-}
-.pwa-status-item {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 10px;
-  min-height: 52px;
-  padding: 9px 10px 9px 13px;
-  border: 1px solid rgba(241, 234, 219, .28);
-  background: rgba(14, 14, 13, .97);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, .42);
-  backdrop-filter: blur(20px);
-}
-.pwa-status-item > svg { width: 17px; height: 17px; color: var(--lowkal-red); }
-.pwa-status-item > span { font-size: .7rem; line-height: 1.35; }
-.pwa-status-item button {
-  min-height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--lowkal-red);
-  color: var(--lowkal-paper);
-  background: transparent;
-  font: inherit;
-  font-size: .64rem;
-  cursor: pointer;
-}
-.pwa-status-item button:hover,
-.pwa-status-item button:focus-visible { color: var(--lowkal-black); background: var(--lowkal-red); outline: 2px solid var(--lowkal-paper); outline-offset: 2px; }
-.pwa-status-item .pwa-status-close { display: grid; width: 38px; padding: 0; place-items: center; border-color: transparent; }
-.pwa-status-close svg { width: 16px; height: 16px; }
-
 @media (display-mode: standalone) {
   html { overscroll-behavior-y: none; }
   .site-header { padding-right: max(18px, var(--safe-right)); padding-left: max(18px, var(--safe-left)); }
-}
-
-@media (max-width: 680px) {
-  .pwa-status {
-    right: max(8px, var(--safe-right));
-    bottom: calc(110px + var(--safe-bottom));
-    left: max(8px, var(--safe-left));
-    width: auto;
-  }
-  .pwa-status-item { grid-template-columns: 18px minmax(0, 1fr) auto; min-height: 58px; }
-  .pwa-status-item > span { font-size: .66rem; }
-  .pwa-status-item > button:not(.pwa-status-close) { grid-column: 2; justify-self: start; min-height: 44px; }
-  .pwa-status-item .pwa-status-close { grid-row: 1; grid-column: 3; min-width: 44px; min-height: 44px; }
 }

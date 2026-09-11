@@ -87,22 +87,17 @@ test("seek uses bounded accessible time and requires a ready seekable source", (
   assert.match(text(view.render()), /Unavailable/);
 });
 
-test("mobile player exposes complete transport controls", () => {
-  const calls = [];
-  const view = mount("PersistentPlayer", {
-    isReady: true,
-    playPrevious: () => calls.push("previous"),
-    playNext: () => calls.push("next"),
-    seekBy: (seconds) => calls.push(seconds),
-    toggleMuted: () => calls.push("mute"),
-  });
+test("persistent player preserves the compact production shell", () => {
+  const view = mount("PersistentPlayer");
   const tree = view.render();
-  for (const label of ["Previous mix", "Back 10 seconds", "Forward 30 seconds", "Next mix", "Mute"]) {
-    const button = all(tree, (node) => node.type === "button" && node.props["aria-label"] === label)[0];
-    assert.ok(button, `${label} control should exist`);
-    button.props.onClick();
+  const player = byClass(tree, "lowkal-player--compact")[0];
+  assert.ok(player, "the production compact player class must remain active");
+  for (const className of ["lowkal-player-program", "lowkal-player-title-row", "lowkal-player-title", "lowkal-player-record", "lowkal-player-timecode", "lowkal-player-track", "lowkal-player-room", "lowkal-player-transport-icon"]) {
+    assert.ok(byClass(tree, className)[0], `${className} must remain in the compact player`);
   }
-  assert.deepEqual(calls, ["previous", -10, 30, "next", "mute"]);
+  assert.equal(byClass(tree, "lowkal-player-options").length, 0);
+  assert.equal(byClass(tree, "lowkal-player-controls").length, 0);
+  assert.equal(byClass(tree, "lowkal-player-quick-tools").length, 0);
 });
 
 test("timeline previews a scrub and commits one seek when released", () => {
@@ -116,12 +111,13 @@ test("timeline previews a scrub and commits one seek when released", () => {
   assert.deepEqual(seeks, [75]);
 });
 
-test("expanded player keeps active modes and sleep controls visible", () => {
-  const view = mount("PersistentPlayer", { isShuffled: true, repeatMode: "one", sleepTimer: 30 });
-  const expand = all(view.render(), (node) => node.type === "button" && node.props["aria-label"] === "Open playback options")[0];
-  assert.ok(expand);
-  expand.props.onClick();
-  const tree = view.render();
-  assert.equal(all(tree, (node) => node.type === "button" && node.props["aria-pressed"] === true).length >= 2, true);
-  assert.match(text(tree), /Sleep timer · 30 min/);
+test("timeline does not commit a scrub to a newly selected mix", () => {
+  const seeks = [];
+  const view = mount("PersistentPlayer", { isReady: true, seek: (seconds) => seeks.push(seconds) });
+  let input = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
+  input.props.onChange({ currentTarget: { value: "75" } });
+  view.audio.activeRecord = records[0];
+  input = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
+  input.props.onPointerUp();
+  assert.deepEqual(seeks, []);
 });

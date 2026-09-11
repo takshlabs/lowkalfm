@@ -112,7 +112,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
   #main-title { max-height: none !important; font-size: clamp(28px, 9vw, 38px) !important; line-height: .98 !important; overflow-wrap: anywhere; }
   #main-host-date { font-size: 12px !important; }
   #main-scrubber, #main-volume-slider {
-    min-height: 44px;
+    min-height: 28px;
     margin-top: -8px;
     margin-bottom: 8px !important;
     background: transparent !important;
@@ -164,9 +164,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
     outline-offset: 3px;
   }
   #btn-main-shuffle, #btn-main-replay-10, #btn-main-prev, #btn-main-next, #btn-main-forward-30, #btn-main-repeat, #btn-volume-mute {
-    width: 44px;
+    width: 40px;
     height: 44px;
-    min-width: 44px;
+    min-width: 40px;
   }
   #btn-main-play { width: 58px !important; height: 58px !important; min-width: 58px; }
   #screen-home > main > div:nth-child(2) > div:first-child .justify-between.px-2 { margin-right: -8px; margin-left: -8px; padding: 0 !important; }
@@ -184,14 +184,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
   #mini-player-info-click > div:first-child { width: 44px !important; height: 44px !important; }
   #mini-player-info-click > div:last-child { margin-left: 10px !important; }
   #archive-mini-player > div > div:last-child { gap: 6px !important; margin-left: 6px !important; }
-  #mini-youtube-video, #btn-mini-play, #btn-mini-maximize { width: 44px !important; height: 44px !important; min-width: 44px; min-height: 44px; }
+  #mini-youtube-video, #btn-mini-play, #btn-mini-maximize { width: 42px !important; height: 42px !important; min-width: 42px; }
 }
 
 @media (max-width: 380px) {
   #header-nav-text { display: none; }
   #header-nav-btn { width: 44px; }
   #screen-home { padding-right: 10px !important; padding-left: 10px !important; }
-  #btn-main-shuffle, #btn-main-repeat { display: inline-flex !important; }
+  #btn-main-shuffle, #btn-main-repeat { display: none; }
   #main-details-scroll { padding: 16px !important; }
 }
 
