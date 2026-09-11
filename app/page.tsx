@@ -7,7 +7,7 @@ export const dynamic = "force-static";
 
 export default function Home() {
   return (
-    <main className="home-shell rinse-home">
+    <main id="main-content" className="home-shell rinse-home" tabIndex={-1}>
       <div className="home-shader" aria-hidden="true" />
 
       <section className="rinse-hero" aria-labelledby="rinse-hero-title">

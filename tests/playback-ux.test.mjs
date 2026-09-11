@@ -3,10 +3,10 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import ts from "typescript";
 
-const record = (slug, source = true) => ({ slug, artist: slug, series: "Volume", title: slug, duration: 120, artistSlugs: [], genres: [], artwork: "/art.jpg", archiveSection: "volumes-guests", ...(source ? { audioUrl: "/mix.mp3" } : {}) });
+const record = (slug, source = true) => ({ slug, artist: slug, series: "Volume", title: slug, duration: 120, artistSlugs: [], genres: [], artwork: "/art.jpg", archiveSection: "volumes-guests", ...(source ? { playback: { provider: "cloudflare", url: "/mix.mp3" } } : {}) });
 const records = [record("first"), record("current"), record("unavailable", false)];
 function mount(name, overrides = {}) {
-  const audio = { activeRecord: records[1], currentTime: 30, duration: 120, isPlaying: false, isReady: false, isLoading: false, error: null, volume: 82, togglePlayback() {}, retryPlayback() {}, seek() {}, setVolume() {}, playRecord() {}, ...overrides };
+  const audio = { activeRecord: records[1], currentTime: 30, duration: 120, isPlaying: false, isReady: false, isLoading: false, error: null, volume: 82, isMuted: false, isShuffled: false, repeatMode: "off", sleepTimer: null, togglePlayback() {}, retryPlayback() {}, playNext() {}, playPrevious() {}, seek() {}, seekBy() {}, setVolume() {}, toggleMuted() {}, toggleShuffle() {}, cycleRepeatMode() {}, setSleepTimer() {}, playRecord() {}, ...overrides };
   const slots = []; let cursor = 0; const effects = [];
   const react = {
     useState(initial) { const i = cursor++; if (!(i in slots)) slots[i] = typeof initial === "function" ? initial() : initial; return [slots[i], (value) => { slots[i] = typeof value === "function" ? value(slots[i]) : value; }]; },
@@ -85,4 +85,43 @@ test("seek uses bounded accessible time and requires a ready seekable source", (
   view.audio.activeRecord = records[2];
   assert.equal(byClass(view.render(), "lowkal-player-transport")[0].props.disabled, true);
   assert.match(text(view.render()), /Unavailable/);
+});
+
+test("mobile player exposes complete transport controls", () => {
+  const calls = [];
+  const view = mount("PersistentPlayer", {
+    isReady: true,
+    playPrevious: () => calls.push("previous"),
+    playNext: () => calls.push("next"),
+    seekBy: (seconds) => calls.push(seconds),
+    toggleMuted: () => calls.push("mute"),
+  });
+  const tree = view.render();
+  for (const label of ["Previous mix", "Back 10 seconds", "Forward 30 seconds", "Next mix", "Mute"]) {
+    const button = all(tree, (node) => node.type === "button" && node.props["aria-label"] === label)[0];
+    assert.ok(button, `${label} control should exist`);
+    button.props.onClick();
+  }
+  assert.deepEqual(calls, ["previous", -10, 30, "next", "mute"]);
+});
+
+test("timeline previews a scrub and commits one seek when released", () => {
+  const seeks = [];
+  const view = mount("PersistentPlayer", { isReady: true, seek: (seconds) => seeks.push(seconds) });
+  let input = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
+  input.props.onChange({ currentTarget: { value: "75" } });
+  assert.deepEqual(seeks, []);
+  input = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
+  input.props.onPointerUp();
+  assert.deepEqual(seeks, [75]);
+});
+
+test("expanded player keeps active modes and sleep controls visible", () => {
+  const view = mount("PersistentPlayer", { isShuffled: true, repeatMode: "one", sleepTimer: 30 });
+  const expand = all(view.render(), (node) => node.type === "button" && node.props["aria-label"] === "Open playback options")[0];
+  assert.ok(expand);
+  expand.props.onClick();
+  const tree = view.render();
+  assert.equal(all(tree, (node) => node.type === "button" && node.props["aria-pressed"] === true).length >= 2, true);
+  assert.match(text(tree), /Sleep timer · 30 min/);
 });

@@ -49,6 +49,7 @@ test('the room restores the original split player and moves controls into settin
   assert.match(html, /aria-label="Playback position"/);
   assert.match(html, /aria-label="Volume"/);
   assert.match(html, /room-visuals\.js/);
-  assert.match(html, /cdn\.tailwindcss\.com/);
+  assert.match(html, /href="\.\/tailwind\.css"/);
+  assert.match(html, /href="\.\/material-symbols\.css"/);
   assert.doesNotMatch(html, /three\.min\.js|class LowkalVisualizer|DJ Void|createOscillator/);
 });

@@ -59,7 +59,7 @@ export function SoundroomCatalog() {
   const selected = archiveRecords[selectedIndex] ?? archiveRecords[0];
   const group = useMemo(() => getGroup(selected), [selected]);
   const selectedIsActive = activeRecord.slug === selected.slug;
-  const playable = Boolean(selected.audioUrl || selected.youtubeId);
+  const playable = Boolean(selected.playback);
   const playLabel = !playable ? "Unavailable" : selectedIsActive && error ? "Retry playback" : selectedIsActive && isLoading ? "Cancel loading" : selectedIsActive && isPlaying ? "Pause" : "Play record";
 
   useEffect(() => {

@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { getMixStartOffset, getYouTubeVideoId, getYouTubeVideoUrl, resolveMixPlayback } from "../lib/audio-source.ts";
 
-test("mix playback prefers Cloudflare, then Sanity, then YouTube", () => {
-  assert.deepEqual(resolveMixPlayback({ deliveryUrl: "https://audio.example/direct.wav", masterUrl: "https://sanity.example/master.wav", externalUrl: "https://www.youtube.com/watch?v=fw2mtwgCeGo" }), { audioUrl: "https://audio.example/direct.wav", youtubeId: "fw2mtwgCeGo" });
-  assert.deepEqual(resolveMixPlayback({ masterUrl: "https://sanity.example/master.wav", externalUrl: "https://youtu.be/fw2mtwgCeGo" }), { audioUrl: "https://sanity.example/master.wav", youtubeId: "fw2mtwgCeGo" });
-  assert.deepEqual(resolveMixPlayback({ externalUrl: "https://youtube.com/embed/fw2mtwgCeGo" }), { audioUrl: undefined, youtubeId: "fw2mtwgCeGo" });
+test("each mix resolves to one playback source with no master or source fallback", () => {
+  assert.deepEqual(resolveMixPlayback({ deliveryUrl: "https://audio.example/direct.wav", youtubeUrl: "https://www.youtube.com/watch?v=fw2mtwgCeGo" }), { provider: "cloudflare", url: "https://audio.example/direct.wav" });
+  assert.deepEqual(resolveMixPlayback({ youtubeUrl: "https://youtu.be/fw2mtwgCeGo" }), { provider: "youtube", videoId: "fw2mtwgCeGo" });
+  assert.equal(resolveMixPlayback({ masterUrl: "https://sanity.example/master.wav" }), undefined);
+  assert.equal(resolveMixPlayback({}), undefined);
 });
 
 test("start offsets preserve valid seconds and make invalid values safe", () => {

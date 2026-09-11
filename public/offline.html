@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e0e0d">
+  <title>Lowkal is offline</title>
+  <style>
+    :root { color-scheme: dark; font-family: Arial, sans-serif; background: #0e0e0d; color: #f4f1e9; }
+    * { box-sizing: border-box; }
+    body { min-height: 100svh; margin: 0; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); background: radial-gradient(circle at 80% 10%, #35243d 0, transparent 36%), #0e0e0d; }
+    main { width: min(100%, 560px); border-top: 2px solid #ef5d87; padding-top: 28px; }
+    img { width: 64px; height: 64px; border-radius: 8px; }
+    p:first-of-type { color: #ef5d87; text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; }
+    h1 { max-width: 10ch; margin: 16px 0; font-size: clamp(2.8rem, 12vw, 5.5rem); line-height: .88; text-transform: uppercase; }
+    p { max-width: 46ch; color: #c8c2b8; line-height: 1.55; }
+    nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    a, button { min-height: 44px; display: inline-flex; align-items: center; border: 1px solid #8f8b82; background: transparent; color: #f4f1e9; padding: 0 16px; text-decoration: none; font: inherit; }
+    button { border-color: #ef5d87; background: #ef5d87; color: #0e0e0d; cursor: pointer; }
+    :focus-visible { outline: 3px solid #f4f1e9; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="/icons/icon-192.png" alt="">
+    <p>Lowkal · Offline</p>
+    <h1>The signal dropped.</h1>
+    <p>Check your connection and try again. Previously opened pages can remain available, but mixes need a connection to stream.</p>
+    <nav aria-label="Offline choices">
+      <button type="button" onclick="location.reload()">Try again</button>
+      <a href="/">Home</a>
+      <a href="/listen/archive">Archive</a>
+    </nav>
+  </main>
+</body>
+</html>

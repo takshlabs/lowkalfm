@@ -42,14 +42,14 @@ export const mixType = defineType({
       title: "Audio",
       type: "object",
       group: "playback",
-      description: "Upload a lossless WAV master here. Publish the mix to copy it automatically to Lowkal's audio CDN.",
+      description: "Use this for a Cloudflare audio mix. Publish the mix to copy the master to Lowkal's audio CDN.",
       fields: [
         defineField({
           name: "master",
           title: "WAV master",
           type: "file",
           options: { accept: "audio/wav,audio/x-wav,audio/flac,audio/mpeg,audio/mp4,audio/aac" },
-          description: "Use WAV for the archive master. Duration is read from this file. The site streams it from the audio CDN after publication."
+          description: "Use WAV for the archive master. Duration is read from this file. The site streams only the Cloudflare delivery file after publication."
         }),
         defineField({
           name: "startOffset",
@@ -81,7 +81,16 @@ export const mixType = defineType({
         })
       ]
     }),
-    defineField({ name: "externalUrl", title: "Original mix link", type: "url", group: "playback" }),
+    defineField({
+      name: "externalUrl",
+      title: "YouTube audio source",
+      type: "url",
+      group: "playback",
+      description: "Use this only for a mix that streams from YouTube. Do not add it to a mix with a Cloudflare audio file.",
+      validation: (rule) => rule.uri({ scheme: ["http", "https"], allowRelative: false }).custom((value) => (
+        !value || getYouTubeVideoUrl(value) ? true : "Enter a valid YouTube video link."
+      ))
+    }),
     defineField({
       name: "youtubeVideoUrl",
       title: "YouTube video link",

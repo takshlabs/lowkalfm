@@ -4,6 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AudioProvider } from "@/components/AudioProvider";
 import { ListenContentProvider } from "@/components/ListenContentProvider";
 import { PersistentPlayer } from "@/components/PersistentPlayer";
+import { PwaLifecycle } from "@/components/PwaLifecycle";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { sitePath } from "@/lib/site-path";
@@ -11,12 +12,14 @@ import "./globals.css";
 import "./reimagined.css";
 import "./home-transmissions.css";
 import "./design-polish.css";
+import "./pwa-audio.css";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://lowkalfm.in"),
   title: "Lowkal.fm",
+  manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     siteName: "Lowkal.fm",
@@ -30,8 +33,15 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: sitePath("/lowkal-logo.jpg"),
-    shortcut: sitePath("/lowkal-logo.jpg")
-  }
+    shortcut: sitePath("/lowkal-logo.jpg"),
+    apple: "/icons/apple-touch-icon.png"
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Lowkal",
+    statusBarStyle: "black-translucent"
+  },
+  applicationName: "Lowkal"
 };
 
 export const viewport: Viewport = {
@@ -51,6 +61,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             {children}
             <SiteFooter />
             <PersistentPlayer />
+            <PwaLifecycle />
           </AudioProvider>
         </ListenContentProvider>
         <Analytics />

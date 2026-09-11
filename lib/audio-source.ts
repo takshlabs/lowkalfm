@@ -1,8 +1,11 @@
 export type MixPlaybackInput = {
   deliveryUrl?: string;
-  masterUrl?: string;
-  externalUrl?: string;
+  youtubeUrl?: string;
 };
+
+export type MixPlaybackSource =
+  | { provider: "cloudflare"; url: string }
+  | { provider: "youtube"; videoId: string };
 
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
 
@@ -31,9 +34,8 @@ export function getMixStartOffset(startOffset?: number) {
   return Number.isFinite(startOffset) ? Math.max(0, Number(startOffset)) : 0;
 }
 
-export function resolveMixPlayback({ deliveryUrl, masterUrl, externalUrl }: MixPlaybackInput) {
-  return {
-    audioUrl: deliveryUrl || masterUrl || undefined,
-    youtubeId: getYouTubeVideoId(externalUrl),
-  };
+export function resolveMixPlayback({ deliveryUrl, youtubeUrl }: MixPlaybackInput): MixPlaybackSource | undefined {
+  if (deliveryUrl) return { provider: "cloudflare", url: deliveryUrl };
+  const videoId = getYouTubeVideoId(youtubeUrl);
+  return videoId ? { provider: "youtube", videoId } : undefined;
 }

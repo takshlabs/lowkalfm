@@ -46,8 +46,8 @@ export function HomeTransmissionDeck() {
                   <span>{record.title}</span>
                 </div>
               </div>
-              <div className="transmission-tags" aria-label="Genres">
-                {record.genres.map((genre) => <span key={genre}>{genre}</span>)}
+              <div className="transmission-tags" role="list" aria-label="Genres">
+                {record.genres.map((genre) => <span role="listitem" key={genre}>{genre}</span>)}
               </div>
             </article>
           );

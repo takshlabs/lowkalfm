@@ -8,7 +8,7 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("the floating player preserves its live state during client navigation and supports direct audio with YouTube fallback", async () => {
+test("the floating player preserves its live state with one selected playback source", async () => {
   const provider = await source("components/AudioProvider.tsx");
   const content = await source("components/ListenContentProvider.tsx");
   const query = await source("lib/sanity.ts");
@@ -17,18 +17,18 @@ test("the floating player preserves its live state during client navigation and 
   assert.match(provider, /HTMLAudioElement/);
   assert.match(provider, /<audio/);
   assert.match(provider, /youtube\.com\/iframe_api/);
-  assert.match(provider, /youtubeId/);
+  assert.match(provider, /isYouTubeSource/);
   assert.match(provider, /activeRecord\.startOffset/);
   assert.match(provider, /resumeAtRef\.current = record\?\.startOffset/);
-  assert.match(provider, /failedAudioUrl === activeRecord\.audioUrl/);
-  assert.match(provider, /setFailedAudioUrl\(activeRecord\.audioUrl/);
-  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, masterUrl: mix\.audioMasterUrl, externalUrl: mix\.externalUrl \}\)/);
-  assert.match(content, /\.\.\.playback/);
-  assert.match(query, /externalUrl/);
+  assert.doesNotMatch(provider, /failedAudioUrl|setFailedAudioUrl/);
+  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, youtubeUrl: mix\.youtubeUrl \}\)/);
+  assert.match(content, /playback,/);
+  assert.match(query, /"youtubeUrl": externalUrl/);
   assert.doesNotMatch(provider, /react-youtube/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
   assert.match(provider, /const autoplayRef = useRef\(false\)/);
-  assert.match(player, /onInput=\{\(event\) => seek\(Number\(event\.currentTarget\.value\)\)\}/);
+  assert.match(player, /onChange=\{\(event\) => previewSeek\(event\.currentTarget\.value\)\}/);
+  assert.match(player, /onPointerUp=\{commitSeek\}/);
   assert.doesNotMatch(provider, /lowkal\.player\.playback-intent\.v1/);
   assert.doesNotMatch(provider, /sessionStorage/);
   assert.doesNotMatch(player, /Live signal/i);
@@ -159,7 +159,7 @@ test("CMS YouTube video links only open video buttons and never control audio pl
   assert.match(soundroom, /videoLink\.href = mix\.youtubeVideoUrl/);
   assert.match(soundroom, /videoLink\.hidden = !mix\.youtubeVideoUrl/);
   assert.doesNotMatch(audio, /youtubeVideoUrl/);
-  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, masterUrl: mix\.audioMasterUrl, externalUrl: mix\.externalUrl \}\)/);
+  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, youtubeUrl: mix\.youtubeUrl \}\)/);
 });
 
 test("the floating player and embedded Soundroom use one audio authority", async () => {
@@ -182,7 +182,7 @@ test("the floating player and embedded Soundroom use one audio authority", async
   assert.match(soundroom, /sendAudioCommand\('volume'/);
   assert.match(soundroom, /applyExternalAudioState/);
   assert.match(soundroom, /mix\.id === state\.slug/);
-  assert.match(soundroom, /mix\.audioUrl \|\| mix\.youtubeId/);
+  assert.match(soundroom, /hasPlayback\(mix\)/);
   assert.match(soundroom, /Only the parent can make sound/);
   assert.match(soundroom, /HtmlAudioPlayerEngine/);
 });
@@ -206,7 +206,7 @@ test("phone playback stays on the native media path and exposes system controls"
   assert.match(provider, /seekforward/);
   assert.match(provider, /setPositionState/);
   assert.match(provider, /session\.playbackState = isPlaying \? "playing" : "paused"/);
-  assert.match(provider, /preload="auto"/);
+  assert.match(provider, /preload="metadata"/);
 });
 
 

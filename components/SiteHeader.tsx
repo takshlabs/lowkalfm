@@ -19,6 +19,8 @@ export function SiteHeader() {
   if (isUnlistedPath(pathname)) return null;
 
   return (
+    <>
+    <SiteLink className="skip-link" href="#main-content">Skip to content</SiteLink>
     <header className="site-header">
       <SiteLink className="brand-lockup" href={sitePath("/")} aria-label="Lowkal FM home">
         <MediaFrame variant="mark" src={sitePath("/lowkal-logo.jpg")} alt="" width={52} height={52} priority />
@@ -35,5 +37,6 @@ export function SiteHeader() {
         })}
       </nav>
     </header>
+    </>
   );
 }

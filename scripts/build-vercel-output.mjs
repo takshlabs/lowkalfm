@@ -14,6 +14,9 @@ async function collect(directory, prefix = '') {
 }
 const files = await collect(source);
 if (!files.includes('listen.rsc') || !files.includes('listen/archive.rsc')) throw new Error('Static Soundroom payloads are missing');
+for (const file of ['sw.js', 'manifest.webmanifest', 'offline.html', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png']) {
+  if (!files.includes(file)) throw new Error(`Required PWA output is missing: ${file}`);
+}
 await mkdir(output, { recursive: true });
 await cp(source, join(output, 'static'), { recursive: true });
 await writeFile(join(output, 'config.json'), JSON.stringify({ version: 3, routes: createStaticRoutes(files, compatibilityId) }, null, 2));

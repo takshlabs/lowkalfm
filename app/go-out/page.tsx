@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function GoOutPage() {
   return (
-    <main className="city-page">
+    <main id="main-content" className="city-page" tabIndex={-1}>
       <section className="section-page-hero city-hero">
         <MediaFrame variant="hero" frameClassName="section-hero-art city-hero-art" src={sitePath("/art/ember-bloom.jpg")} alt="Red and orange flower emerging from a dark field" fill sizes="(max-width: 680px) 70vw, 38vw" priority />
         <span className="section-kicker">03 · Go out</span>

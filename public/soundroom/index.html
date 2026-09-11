@@ -30,44 +30,8 @@
   <meta property="twitter:image" content="https://lowkalfm.in/og.png" />
   
   <!-- CSS & Fonts -->
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com" rel="preconnect"/>
-  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-  
-  <script id="tailwind-config">
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "primary": "#55e93b",        // Acid Green
-            "background-base": "#131313", // Deep Obsidian
-            "surface": "rgba(255, 255, 255, 0.03)", // Glass
-            "text-main": "#e5e2e1",
-            "muted": "#87957e",           // Outline / muted
-            "secondary": "#b9c3ff",       // Cobalt Blue
-            "accent": "#ff8eb6",          // Tertiary Pink
-          },
-          fontFamily: {
-            "display": ["Kilimanjaro Sans", "Arial Black", "Arial", "sans-serif"],
-            "ui": ["Kilimanjaro Sans", "Arial Black", "Arial", "sans-serif"],
-            "mono": ["Kilimanjaro Sans", "Arial Black", "Arial", "sans-serif"],
-          },
-          borderRadius: {
-            "DEFAULT": "0.25rem",
-            "sm": "0.125rem",
-            "lg": "0.5rem",
-            "xl": "0.75rem",
-            "full": "9999px"
-          },
-          boxShadow: {
-            "float": "0 16px 48px rgba(0,0,0,0.8)",
-          }
-        },
-      },
-    }
-  </script>
+  <link rel="stylesheet" href="./tailwind.css"/>
+  <link rel="stylesheet" href="./material-symbols.css"/>
 
   <style>
     @font-face {
@@ -292,12 +256,12 @@
 
     <!-- Right elements: Station tag & tracklist button -->
     <div class="flex items-center gap-6">
-      <div class="flex items-center gap-3 cursor-pointer group" id="header-logo">
+      <button type="button" class="flex items-center gap-3 cursor-pointer group" id="header-logo" aria-label="Return to the main player">
         <img src="../lowkal-logo.jpg" class="w-8 h-8 rounded-md border border-white/10 group-hover:border-primary/30 transition-all duration-300" alt="Lowkal.fm Logo" />
-        <h1 class="font-display font-extrabold text-lg tracking-tighter group-hover:text-primary transition-colors duration-300">
+        <span class="header-logo-name font-display font-extrabold text-lg tracking-tighter group-hover:text-primary transition-colors duration-300">
           LOWKAL.FM
-        </h1>
-      </div>
+        </span>
+      </button>
       <button class="flex items-center gap-2 font-display font-bold text-sm tracking-wider uppercase hover:text-primary transition-colors py-2 px-4 rounded-full border border-white/10 hover:border-primary/30 bg-surface/30 backdrop-blur-md" id="btn-tracklist-open" aria-label="Tracklist" aria-controls="modal-tracklist" aria-expanded="false">
         <span class="material-symbols-outlined text-lg">format_list_numbered</span>
         <span>tracklist</span>
@@ -417,7 +381,7 @@
   </div>
 
   <!-- SCREEN 2: ARCHIVE (DRIFTING CLOUD) -->
-  <div class="absolute inset-0 z-20 overflow-hidden screen-fade opacity-0 pointer-events-none transform scale-95" id="screen-archive">
+  <div class="absolute inset-0 z-20 overflow-hidden screen-fade opacity-0 pointer-events-none transform scale-95" id="screen-archive" inert aria-hidden="true">
     <!-- Drifting Archive Cloud Canvas -->
     <div class="absolute inset-0 w-full h-full" id="archive-canvas">
       <!-- Nodes will be inserted dynamically in JS to track physics states correctly -->
@@ -432,7 +396,7 @@
         </div>
 
         <!-- Left metadata (click redirects to home player) -->
-        <div class="flex items-center min-w-0 flex-1 hover:opacity-90 active:scale-98 transition-all cursor-none" id="mini-player-info-click">
+        <button type="button" class="flex items-center min-w-0 flex-1 hover:opacity-90 active:scale-98 transition-all cursor-none text-left" id="mini-player-info-click" aria-label="Return to the main player">
           <!-- Thumbnail cover -->
           <div class="w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0 relative bg-black/40">
             <img class="w-full h-full object-cover" id="mini-art-img" src="" alt="Thumbnail"/>
@@ -442,7 +406,7 @@
             <span class="text-white font-display font-extrabold text-sm truncate" id="mini-title">Mix Title</span>
             <span class="text-muted font-ui text-xs truncate" id="mini-subtext">DJ Name • Track title</span>
           </div>
-        </div>
+        </button>
 
         <!-- Right Controls -->
         <div class="flex items-center gap-3 shrink-0 ml-4">
@@ -536,13 +500,15 @@
     // The parent owns the CMS catalog. Do not invent local mixes while it loads.
     function catalogPlaceholder(title = 'Select a mix') {
       return {
-        id: '', title, dj: '', date: '', genre: '', audioUrl: null,
+        id: '', title, dj: '', date: '', genre: '', playback: null,
         artUrl: '../lowkal-logo.jpg', description: '', artistBio: '', artistUrl: '',
         duration: 0, tracks: [],
         cloud: { size: 250, zIndex: 10, basePos: { top: 20, left: 20 }, vx: 0, vy: 0 }
       };
     }
     let MIXES = [catalogPlaceholder()];
+    const hasPlayback = (mix) => Boolean(mix?.playback);
+    const cloudflareUrlFor = (mix) => mix?.playback?.provider === 'cloudflare' ? mix.playback.url : null;
 
     // Shader mood selection
     const SHADER_PALETTES = {
@@ -670,6 +636,7 @@
         // Additional player settings
         this.isShuffled = false;
         this.isRepeat = false;
+        this.repeatMode = 'off';
         this.volumeLevel = 60; // 0 to 100
         this.isMuted = false;
         this.preMuteVolume = 60;
@@ -693,7 +660,7 @@
 
       getEffectiveDuration() {
         if (IS_EMBEDDED && this.externalDuration > 0) return this.externalDuration;
-        if (this.activeMix && this.activeMix.audioUrl) {
+        if (cloudflareUrlFor(this.activeMix)) {
           const d = this.mediaEngine.getDuration();
           return d > 0 ? d : this.activeMix.duration;
         }
@@ -709,7 +676,8 @@
         this.setupArchiveNodes();
         this.loadMixToPlayer(this.activeMix, false);
         // Pre-cue initial mix — loadMixToPlayer skips mediaEngine.load when mix has not changed.
-        if (!IS_EMBEDDED && this.activeMix.audioUrl) this.mediaEngine.load(this.activeMix.audioUrl, false, this.getStartOffset());
+        const cloudflareUrl = cloudflareUrlFor(this.activeMix);
+        if (!IS_EMBEDDED && cloudflareUrl) this.mediaEngine.load(cloudflareUrl, false, this.getStartOffset());
         window._appInstance = this;
         this.sendAudioCommand('request-state');
       }
@@ -792,9 +760,10 @@
         this.isReady = Boolean(matchingMix && (state.isReady ?? state.isPlaying));
         this.error = matchingMix && typeof state.error === 'string' && state.error.trim() ? state.error : null;
         this.isShuffled = Boolean(state.isShuffled);
-        this.isRepeat = Boolean(state.isRepeat);
+        this.repeatMode = ['off', 'all', 'one'].includes(state.repeatMode) ? state.repeatMode : state.isRepeat ? 'one' : 'off';
+        this.isRepeat = this.repeatMode !== 'off';
         this.volumeLevel = Number.isFinite(state.volume) ? Math.min(100, Math.max(0, state.volume)) : this.volumeLevel;
-        this.isMuted = this.volumeLevel === 0;
+        this.isMuted = typeof state.isMuted === 'boolean' ? state.isMuted : this.volumeLevel === 0;
 
         // An embedded Soundroom is a control surface. Only the parent can make sound.
         this.mediaEngine.pause();
@@ -832,9 +801,11 @@
         container.innerHTML = '';
         
         this.archiveNodes = MIXES.filter((mix) => mix.id).map((mix) => {
-          const node = document.createElement('div');
+          const node = document.createElement('button');
+          node.type = 'button';
           node.id = `node-${mix.id}`;
-          node.className = 'absolute node-transition group overflow-hidden shadow-float rounded-lg';
+          node.className = 'absolute node-transition group overflow-hidden shadow-float rounded-lg border-0 p-0 bg-transparent text-left';
+          node.setAttribute('aria-label', `Open ${mix.title} by ${mix.dj || 'Lowkal'}`);
           node.style.width = `${mix.cloud.size}px`;
           node.style.height = `${mix.cloud.size}px`;
           node.style.zIndex = mix.cloud.zIndex;
@@ -993,8 +964,8 @@
 
         // Homepage detailed player controls
         document.getElementById('btn-main-play').addEventListener('click', () => this.togglePlayback());
-        document.getElementById('btn-main-prev').addEventListener('click', () => this.navigateNextPrevMix(-1));
-        document.getElementById('btn-main-next').addEventListener('click', () => this.navigateNextPrevMix(1));
+        document.getElementById('btn-main-prev').addEventListener('click', () => this.previousTrack());
+        document.getElementById('btn-main-next').addEventListener('click', () => this.nextTrack());
         
         // Replay 10 / Forward 30
         document.getElementById('btn-main-replay-10').addEventListener('click', () => this.replaySeconds(10));
@@ -1050,12 +1021,16 @@
           el.style.opacity = 0;
           el.style.pointerEvents = 'none';
           el.style.transform = 'scale(0.95)';
+          el.inert = true;
+          el.setAttribute('aria-hidden', 'true');
         };
 
         const showScreen = (el) => {
           el.style.opacity = 1;
           el.style.pointerEvents = 'auto';
           el.style.transform = 'scale(1)';
+          el.inert = false;
+          el.setAttribute('aria-hidden', 'false');
         };
 
         if (this.currentScreen === 'archive') {
@@ -1246,20 +1221,21 @@
           this.syncMixDetails(mix, mixChanged);
           this.updatePlayerUI();
           this.updateMiniPlayerUI();
-          if (mixChanged && (mix.audioUrl || mix.youtubeId) && !this.applyingExternalState) {
+          if ((mixChanged || startImmediately) && hasPlayback(mix) && !this.applyingExternalState) {
             this.sendAudioCommand('select', { slug: mix.id, autoplay: startImmediately });
           }
           return;
         }
 
         if (mixChanged) {
+          const cloudflareUrl = cloudflareUrlFor(mix);
           this.playbackTime = this.getStartOffset(mix);
           if (this.isPlaying) {
             this.pausePlaybackEngine();
-            if (mix.audioUrl) this.mediaEngine.load(mix.audioUrl, false, this.getStartOffset(mix));
+            if (cloudflareUrl) this.mediaEngine.load(cloudflareUrl, false, this.getStartOffset(mix));
             if (startImmediately) this.startPlaybackEngine();
           } else {
-            if (mix.audioUrl) this.mediaEngine.load(mix.audioUrl, false, this.getStartOffset(mix));
+            if (cloudflareUrl) this.mediaEngine.load(cloudflareUrl, false, this.getStartOffset(mix));
           }
         }
 
@@ -1273,7 +1249,7 @@
       }
 
       togglePlayback() {
-        if (!this.activeMix?.id || !(this.activeMix.audioUrl || this.activeMix.youtubeId)) return;
+        if (!this.activeMix?.id || !hasPlayback(this.activeMix)) return;
         if (IS_EMBEDDED) {
           if (this.lastExternalState?.slug !== this.activeMix.id) {
             this.sendAudioCommand('select', { slug: this.activeMix.id, autoplay: true });
@@ -1296,7 +1272,8 @@
         }
         this.isPlaying = true;
 
-        if (!this.activeMix.audioUrl) {
+        const cloudflareUrl = cloudflareUrlFor(this.activeMix);
+        if (!cloudflareUrl) {
           this.isPlaying = false;
           this.updatePlayerUI();
           this.updateMiniPlayerUI();
@@ -1382,7 +1359,7 @@
           return;
         }
         this.playbackTime = seconds;
-        if (this.activeMix.audioUrl) this.mediaEngine.seekTo(seconds);
+        if (cloudflareUrlFor(this.activeMix)) this.mediaEngine.seekTo(seconds);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
@@ -1397,7 +1374,7 @@
           return;
         }
         this.playbackTime = newTime;
-        if (this.activeMix.audioUrl) this.mediaEngine.seekTo(newTime);
+        if (cloudflareUrlFor(this.activeMix)) this.mediaEngine.seekTo(newTime);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
@@ -1413,7 +1390,7 @@
           return;
         }
         this.playbackTime = newTime;
-        if (this.activeMix.audioUrl) this.mediaEngine.seekTo(newTime);
+        if (cloudflareUrlFor(this.activeMix)) this.mediaEngine.seekTo(newTime);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }
@@ -1432,7 +1409,8 @@
           this.sendAudioCommand('repeat');
           return;
         }
-        this.isRepeat = !this.isRepeat;
+        this.repeatMode = this.repeatMode === 'off' ? 'all' : this.repeatMode === 'all' ? 'one' : 'off';
+        this.isRepeat = this.repeatMode !== 'off';
         this.renderPlaybackModes();
       }
 
@@ -1451,6 +1429,7 @@
         
         const repeatBtn = document.getElementById('btn-main-repeat');
         repeatBtn.setAttribute('aria-pressed', String(this.isRepeat));
+        repeatBtn.setAttribute('aria-label', `Repeat ${this.repeatMode}`);
         if (this.isRepeat) {
           repeatBtn.classList.remove('text-muted');
           repeatBtn.classList.add('text-primary');
@@ -1482,6 +1461,10 @@
       }
 
       toggleMute() {
+        if (IS_EMBEDDED) {
+          this.sendAudioCommand('mute');
+          return;
+        }
         if (this.isMuted) {
           this.isMuted = false;
           this.setVolume(this.preMuteVolume || 60);
@@ -1516,6 +1499,10 @@
       }
 
       navigateNextPrevMix(direction) {
+        if (IS_EMBEDDED) {
+          this.sendAudioCommand(direction < 0 ? 'previous' : 'next');
+          return;
+        }
         if (!MIXES.length) return;
         const currentIdx = MIXES.findIndex(m => m.id === this.activeMix.id);
         let nextIdx = currentIdx + direction;
@@ -1526,12 +1513,20 @@
         this.loadMixToPlayer(MIXES[nextIdx], this.isPlaying);
       }
 
+      previousTrack() {
+        this.navigateNextPrevMix(-1);
+      }
+
+      nextTrack() {
+        this.navigateNextPrevMix(1);
+      }
+
       // -------------------------------------------------------------
       // UI STATE SYNCS
       // -------------------------------------------------------------
 
       getPlaybackStatus() {
-        if (!this.activeMix?.id || !(this.activeMix.audioUrl || this.activeMix.youtubeId)) return 'Unavailable';
+        if (!this.activeMix?.id || !hasPlayback(this.activeMix)) return 'Unavailable';
         if (this.error) return 'Playback failed';
         if (this.isLoading) return this.isPlaying ? 'Buffering' : 'Loading';
         if (this.isPlaying) return 'Playing';
@@ -1541,7 +1536,7 @@
       
       updatePlayerUI() {
         document.body.dataset.playing = String(this.isPlaying);
-        const playable = Boolean(this.activeMix?.id && (this.activeMix.audioUrl || this.activeMix.youtubeId));
+        const playable = Boolean(this.activeMix?.id && hasPlayback(this.activeMix));
         for (const id of ['btn-main-play', 'btn-mini-play']) {
           const button = document.getElementById(id);
           button.disabled = !playable;

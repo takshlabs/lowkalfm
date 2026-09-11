@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function ReadPage() {
   return (
-    <main className="journal-page">
+    <main id="main-content" className="journal-page" tabIndex={-1}>
       <section className="section-page-hero read-hero">
         <MediaFrame variant="hero" frameClassName="section-hero-art read-hero-art" src={sitePath("/art/lotus-collage.jpg")} alt="Red collage with lotus flowers and painted eyes" fill sizes="(max-width: 680px) 64vw, 34vw" priority />
         <span className="section-kicker">02 · Read</span>

@@ -1,3 +1,4 @@
+import type { MixPlaybackSource } from "@/lib/audio-source";
 import { sitePath } from "@/lib/site-path";
 
 export type SoundFormat = "weekly" | "live-set";
@@ -20,8 +21,7 @@ export type SoundRecord = {
   duration: number;
   /** Seconds skipped at the beginning of the source file. */
   startOffset?: number;
-  audioUrl?: string;
-  youtubeId?: string;
+  playback?: MixPlaybackSource;
   youtubeVideoUrl?: string;
   artwork: string;
   genres: string[];
@@ -81,7 +81,7 @@ export const soundRecords: SoundRecord[] = [
     date: "05 Jul 2026",
     dateISO: "2026-07-05",
     duration: 9366,
-    youtubeId: "NZETtyc9MFo",
+    playback: { provider: "youtube", videoId: "NZETtyc9MFo" },
     artwork: sitePath("/lowkal-002.jpg"),
     genres: ["Multi-genre", "Low end", "B2B2B"],
     description: "Samgod, Sinhatra and Takezo share one long Lowkal session from Bengaluru.",
@@ -105,7 +105,7 @@ export const soundRecords: SoundRecord[] = [
     date: "13 Apr 2026",
     dateISO: "2026-04-13",
     duration: 3120,
-    youtubeId: "fw2mtwgCeGo",
+    playback: { provider: "youtube", videoId: "fw2mtwgCeGo" },
     artwork: sitePath("/kinetic-drift.png"),
     genres: ["Drum + bass", "Breaks", "Footwork"],
     description: "A low-to-high pressure mix built around shifting drums, deep bass and the many forms that keep a floor moving.",
@@ -132,7 +132,7 @@ export const soundRecords: SoundRecord[] = [
     date: "19 Mar 2026",
     dateISO: "2026-03-19",
     duration: 4200,
-    youtubeId: "60O126HehGA",
+    playback: { provider: "youtube", videoId: "60O126HehGA" },
     artwork: sitePath("/meeting-point.png"),
     genres: ["Footwork", "Polyrhythmic", "Bass"],
     description: "A fast-moving meeting point between polyrhythm, bass pressure and wide electronic space.",
@@ -159,7 +159,7 @@ export const soundRecords: SoundRecord[] = [
     date: "13 Apr 2026",
     dateISO: "2026-04-13",
     duration: 3120,
-    youtubeId: "fw2mtwgCeGo",
+    playback: { provider: "youtube", videoId: "fw2mtwgCeGo" },
     artwork: sitePath("/kinetic-drift.png"),
     genres: ["Drum + bass", "Breaks"],
     description: "The featured set from Lowkal 001, selected from the full multi-artist programme.",
@@ -187,7 +187,7 @@ export const soundRecords: SoundRecord[] = [
     date: "13 Apr 2026",
     dateISO: "2026-04-13",
     duration: 4200,
-    youtubeId: "60O126HehGA",
+    playback: { provider: "youtube", videoId: "60O126HehGA" },
     artwork: sitePath("/meeting-point.png"),
     genres: ["Footwork", "Polyrhythmic"],
     description: "A set from Lowkal 001, held inside the complete live-program record.",

@@ -9,7 +9,10 @@ import * as playback from "../lib/audio-playback.ts";
 // retain state between explicit renders; media promises and events are controlled.
 function harness() {
   const slots = []; let cursor = 0; let effects = []; let value; let tree;
-  const records = [{ slug: "one", title: "One", artist: "Test", artwork: "/one.png", series: "Test", duration: 100, startOffset: 10, audioUrl: "/one.mp3" }];
+  const records = [
+    { slug: "one", title: "One", artist: "Test", artwork: "/one.png", series: "Test", duration: 100, startOffset: 10, playback: { provider: "cloudflare", url: "/one.mp3" } },
+    { slug: "two", title: "Two", artist: "Test", artwork: "/two.png", series: "Test", duration: 120, startOffset: 0, playback: { provider: "cloudflare", url: "/two.mp3" } },
+  ];
   const getRecord = slug => records.find(record => record.slug === slug);
   const hook = factory => { const index = cursor++; slots[index] ??= factory(); return slots[index]; };
   const react = {
@@ -26,7 +29,7 @@ function harness() {
     pause() { this.paused = true; }, load() { this.readyState = 0; },
   };
   const window = { location: { origin: "https://lowkalfm.in" }, localStorage: { getItem: () => null, setItem() {} }, screen: { width: 390, height: 844 }, matchMedia: () => ({ matches: true }), frames: [{ postMessage: message => messages.push(message) }],
-    addEventListener: (name, fn) => { listeners[name] = fn; }, removeEventListener() {}, setTimeout: fn => { timers.set(++timerId, fn); return timerId; }, clearTimeout: id => timers.delete(id), setInterval, clearInterval };
+    addEventListener: (name, fn) => { listeners[name] = fn; }, removeEventListener() {}, setTimeout: fn => { timers.set(++timerId, fn); return timerId; }, clearTimeout: id => timers.delete(id), setInterval: fn => { timers.set(++timerId, fn); return timerId; }, clearInterval: id => timers.delete(id) };
   const analysis = { setElement() {}, activate() {}, dispose() {}, read() {} };
   const compiled = { exports: {} };
   const code = ts.transpileModule(readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8"), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
@@ -88,11 +91,12 @@ test("an old play rejection cannot cancel a newer play request", async () => {
   assert.equal(h.value.error, null);
 });
 
-test("single-record ended playback starts again at the record offset", () => {
+test("ended playback advances to the next record when repeat is off", () => {
   const h = harness();
   h.audio.currentTime = 100; h.audio.duration = 100; h.audio.readyState = 1; h.audio.ended = true;
-  h.event("onEnded");
-  assert.equal(h.audio.currentTime, 10);
+  h.event("onEnded"); h.render();
+  assert.equal(h.value.activeRecord.slug, "two");
+  assert.equal(h.value.repeatMode, "off");
 });
 
 test("media failure exposes retry and publishes the same error to the iframe", () => {
@@ -105,4 +109,72 @@ test("media failure exposes retry and publishes the same error to the iframe", (
   assert.equal(h.value.error, null);
   assert.equal(h.value.isLoading, true);
   assert.equal(h.messages.at(-1).state.isLoading, true);
+});
+
+test("provider exposes authoritative queue navigation and playback modes", () => {
+  const h = harness();
+  assert.equal(h.value.repeatMode, "off");
+  h.value.playNext(); h.render();
+  assert.equal(h.value.activeRecord.slug, "two");
+  h.value.playPrevious(); h.render();
+  assert.equal(h.value.activeRecord.slug, "one");
+  h.value.toggleShuffle(); h.value.cycleRepeatMode(); h.render();
+  assert.equal(h.value.isShuffled, true);
+  assert.equal(h.value.repeatMode, "all");
+});
+
+test("mute is authoritative and preserves the selected volume", () => {
+  const h = harness();
+  assert.equal(h.value.isMuted, false);
+  h.value.toggleMuted(); h.render();
+  assert.equal(h.value.isMuted, true);
+  assert.equal(h.audio.muted, true);
+  assert.equal(h.value.volume, 82);
+  h.value.toggleMuted(); h.render();
+  assert.equal(h.audio.muted, false);
+  assert.equal(h.value.volume, 82);
+});
+
+test("sleep timer expiry pauses without selecting another record", () => {
+  const h = harness();
+  h.value.setSleepTimer(15); h.render();
+  assert.equal(h.value.sleepTimerMinutes, 15);
+  h.expire(); h.render();
+  assert.equal(h.audio.paused, true);
+  assert.equal(h.value.activeRecord.slug, "one");
+  assert.equal(h.value.sleepTimerMinutes, null);
+});
+
+test("provider restores saved playback state only once", () => {
+  const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
+  assert.match(source, /const didRestoreRef = useRef\(false\)/);
+  assert.match(source, /if \(didRestoreRef\.current\) return/);
+  assert.match(source, /didRestoreRef\.current = true/);
+});
+
+test("all delayed playback starts claim cross-tab ownership", () => {
+  const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
+  const playerStart = source.indexOf("new YT.Player");
+  const onReady = source.slice(source.indexOf("onReady:", playerStart), source.indexOf("onStateChange:", playerStart));
+  assert.match(onReady, /playMedia\(\)/);
+  assert.doesNotMatch(onReady, /target\.playVideo\(\)/);
+  assert.match(source, /comparePlaybackClaims/);
+  assert.match(source, /PLAYBACK_CLAIM_STORAGE_KEY/);
+});
+
+test("Cloudflare errors do not switch playback providers", () => {
+  const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
+  const start = source.lastIndexOf("onError={() =>");
+  const onError = source.slice(start, source.indexOf("<track kind=", start));
+  assert.doesNotMatch(onError, /youtube|setFailedAudioUrl|resumeAtRef/);
+});
+
+test("an idle YouTube pre-cue failure does not present playback failure before a play request", () => {
+  const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
+  const start = source.indexOf("onError: () =>", source.indexOf("new YT.Player"));
+  const onError = source.slice(start, source.indexOf("}\n        }\n      });", start));
+  assert.match(source, /const youtubeFailureRef = useRef<string \| null>\(null\)/);
+  assert.match(onError, /youtubeFailureRef\.current = "This video could not play\. Try again\."/);
+  assert.match(onError, /if \(autoplayRef\.current\) setError\(youtubeFailureRef\.current\)/);
+  assert.doesNotMatch(onError, /setError\("This video could not play\. Try again\."\)/);
 });

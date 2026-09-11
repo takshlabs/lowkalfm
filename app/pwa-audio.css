@@ -1,0 +1,223 @@
+/* Mobile app shell and authoritative audio controls. Loaded last. */
+.skip-link {
+  position: fixed;
+  z-index: 2000;
+  top: max(8px, var(--safe-top));
+  left: max(8px, var(--safe-left));
+  padding: 10px 14px;
+  transform: translateY(-150%);
+  border: 2px solid var(--ink);
+  background: var(--signal);
+  color: var(--ink);
+  font-weight: 800;
+}
+.skip-link:focus { transform: translateY(0); }
+#main-content:focus { outline: none; }
+.site-header {
+  padding-left: max(2vw, var(--safe-left));
+  padding-right: max(2vw, var(--safe-right));
+}
+.brand-lockup,
+.header-nav a { min-height: 44px; display: inline-flex; align-items: center; }
+
+.lowkal-player {
+  position: fixed;
+  z-index: 110;
+  left: max(16px, var(--safe-left));
+  right: max(16px, var(--safe-right));
+  bottom: max(16px, var(--safe-bottom));
+  width: auto;
+  max-width: 1120px;
+  min-height: 92px;
+  margin-inline: auto;
+  overflow: visible;
+  transform: none;
+  display: grid;
+  grid-template-columns: 64px minmax(190px, 1fr) auto auto;
+  grid-template-rows: auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(228, 255, 0, 0.34);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ink) 96%, transparent);
+  color: var(--lowkal-paper);
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(18px);
+}
+
+.lowkal-player-art {
+  position: relative;
+  grid-row: auto;
+  grid-column: auto;
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.lowkal-player-art .media-frame,
+.lowkal-player-art img { width: 100%; height: 100%; }
+
+.lowkal-player-now { min-width: 0; display: grid; gap: 1px; align-content: center; }
+.lowkal-player-now > p,
+.lowkal-player-now > strong,
+.lowkal-player-now > a,
+.lowkal-player-now > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lowkal-player-now > p { margin: 0; color: var(--signal); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.lowkal-player-now > strong { color: var(--lowkal-paper); font-size: clamp(0.92rem, 2vw, 1.18rem); line-height: 1.05; }
+.lowkal-player-now > a,
+.lowkal-player-now > span { min-height: 22px; display: inline-flex; width: fit-content; max-width: 100%; align-items: center; color: var(--muted); font-size: 0.76rem; }
+.lowkal-player-now > a:hover { color: var(--signal); }
+
+.lowkal-player-timeline {
+  min-width: 0;
+  grid-row: auto;
+  grid-column: auto;
+  display: grid;
+  grid-template-columns: 36px minmax(80px, 1fr) 36px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+  color: rgba(248, 248, 244, 0.68);
+  font-size: 0.61rem;
+}
+.lowkal-player-timeline > span:last-child { text-align: right; }
+.lowkal-player-timeline input,
+.lowkal-player-volume input {
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  accent-color: var(--signal);
+  cursor: pointer;
+}
+.lowkal-player-timeline input:disabled { cursor: not-allowed; opacity: 0.45; }
+
+.lowkal-player-status { margin: 2px 0 0; color: var(--signal); font-size: 0.65rem; line-height: 1.15; }
+.lowkal-player-status.is-error { color: #ff9088; }
+
+.lowkal-player-controls,
+.lowkal-player-quick-tools { display: flex; align-items: center; gap: 4px; }
+.lowkal-player-controls button,
+.lowkal-player-quick-tools button,
+.lowkal-player-quick-tools a,
+.lowkal-player-options button {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(248, 248, 244, 0.17);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--lowkal-paper);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.lowkal-player-controls button:hover,
+.lowkal-player-quick-tools button:hover,
+.lowkal-player-quick-tools a:hover,
+.lowkal-player-options button:hover { border-color: var(--signal); color: var(--signal); }
+.lowkal-player-controls button:disabled { cursor: not-allowed; opacity: 0.32; }
+.lowkal-player-controls .lowkal-player-transport {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
+  border-color: var(--signal);
+  border-radius: 50%;
+  background: var(--signal);
+  color: var(--ink);
+}
+.lowkal-player-controls .lowkal-player-transport:hover { color: var(--ink); transform: scale(1.03); }
+.lowkal-player-controls .lowkal-player-transport.is-loading svg { animation: lowkal-pulse 1s ease-in-out infinite; }
+
+.lowkal-player-quick-tools { flex-direction: column; }
+.lowkal-player-quick-tools a { width: 44px; padding-inline: 6px; color: var(--signal); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.lowkal-player-quick-tools button:first-of-type { display: none; }
+
+.lowkal-player-options {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  width: min(620px, 100%);
+  max-height: min(70dvh, 560px);
+  overflow: auto;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(228, 255, 0, 0.42);
+  border-radius: 3px;
+  background: #131312;
+  color: var(--lowkal-paper);
+  box-shadow: 0 20px 56px rgba(0, 0, 0, 0.5);
+}
+.lowkal-player-options-heading,
+.lowkal-player-options-heading > span,
+.lowkal-player-mode-row,
+.lowkal-player-volume,
+.lowkal-player-sleep p,
+.lowkal-player-sleep > div { display: flex; align-items: center; }
+.lowkal-player-options-heading { justify-content: space-between; font-size: 0.74rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.lowkal-player-options-heading > span,
+.lowkal-player-sleep p { gap: 7px; }
+.lowkal-player-mode-row { flex-wrap: wrap; gap: 7px; }
+.lowkal-player-mode-row button { gap: 7px; width: auto; padding: 0 12px; }
+.lowkal-player-options button[aria-pressed="true"] { border-color: var(--signal); background: rgba(228, 255, 0, 0.12); color: var(--signal); }
+.lowkal-player-volume { display: grid; grid-template-columns: 58px minmax(100px, 1fr) 30px; gap: 10px; padding: 0; border: 0; font-size: 0.72rem; }
+.lowkal-player-volume input { height: 44px; }
+.lowkal-player-sleep { display: grid; gap: 7px; }
+.lowkal-player-sleep p { margin: 0; font-size: 0.72rem; }
+.lowkal-player-sleep > div { flex-wrap: wrap; gap: 6px; }
+.lowkal-player-sleep button { min-width: 62px; padding-inline: 10px; font-size: 0.68rem; }
+
+@keyframes lowkal-pulse { 50% { opacity: 0.45; } }
+
+@media (max-width: 760px) {
+  body { padding-bottom: calc(206px + var(--safe-bottom)); }
+  .lowkal-player {
+    left: var(--safe-left);
+    right: var(--safe-right);
+    bottom: var(--safe-bottom);
+    max-width: none;
+    min-height: 0;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    gap: 7px 10px;
+    padding: 10px max(10px, var(--safe-right)) 8px max(10px, var(--safe-left));
+    border-width: 1px 0 0;
+    border-radius: 0;
+  }
+  .lowkal-player-art { width: 54px; height: 54px; min-width: 54px; }
+  .lowkal-player-now > p { display: none; }
+  .lowkal-player-now > strong { font-size: 0.92rem; }
+  .lowkal-player-now > a,
+  .lowkal-player-now > span { min-height: 20px; font-size: 0.7rem; }
+  .lowkal-player-timeline { grid-template-columns: 31px minmax(50px, 1fr) 31px; gap: 5px; margin-top: 0; }
+  .lowkal-player-timeline input { height: 28px; }
+  .lowkal-player-controls { grid-column: 1 / -1; width: 100%; justify-content: center; gap: clamp(3px, 2vw, 12px); }
+  .lowkal-player-controls button { min-width: 44px; min-height: 44px; }
+  .lowkal-player-controls .lowkal-player-transport { width: 48px; height: 48px; min-width: 48px; min-height: 48px; }
+  .lowkal-player-quick-tools { flex-direction: row; align-self: start; }
+  .lowkal-player-quick-tools button:first-of-type { display: inline-flex; }
+  .lowkal-player-quick-tools a,
+  .lowkal-player-quick-tools button { min-width: 44px; min-height: 44px; width: 44px; }
+  .lowkal-player-options { left: 8px; right: 8px; width: auto; max-height: 60dvh; }
+  .pwa-status { bottom: calc(202px + var(--safe-bottom)); }
+}
+
+@media (max-width: 380px) {
+  .lowkal-player { grid-template-columns: minmax(0, 1fr) auto; }
+  .lowkal-player-art { display: none; }
+  .lowkal-player-controls { gap: 3px; }
+  .lowkal-player-controls button { min-width: 42px; }
+  .lowkal-player-controls .lowkal-player-transport { min-width: 46px; width: 46px; }
+}
+
+@media (display-mode: standalone) {
+  html { overscroll-behavior-y: none; }
+  .site-header { padding-top: max(10px, var(--safe-top)); }
+}

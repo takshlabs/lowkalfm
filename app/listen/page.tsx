@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function ListenPage() {
   return (
-    <main style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#070711" }}>
+    <main id="main-content" tabIndex={-1} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#070711" }}>
       <SoundroomFrame />
     </main>
   );

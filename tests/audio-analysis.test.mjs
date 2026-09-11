@@ -362,18 +362,18 @@ test("YouTube calls are safe while its iframe API is still loading", async () =>
 
 test("a new keyed audio element receives its source even when two mixes share one URL", async () => {
   const provider = await readFile(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
-  assert.ok(/audio\.src = activeRecord\.audioUrl;\s*\}, \[activeRecord\.audioUrl, activeRecord\.slug, useYouTube\]\)/.test(provider));
+  assert.ok(/audio\.src = cloudflareUrl;\s*\}, \[activeRecord\.slug, cloudflareUrl\]\)/.test(provider));
 });
 
 test("AudioProvider owns the bridge, sets CORS before src and resumes during playback activation", async () => {
   const provider = await readFile(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
   assert.match(provider, /from "@\/lib\/audio-analysis"/);
   assert.match(provider, /startAnalysisBridge\(window/);
-  assert.match(provider, /isAnalysisSource\(activeRecord\.audioUrl, window\.location\.origin\)/);
-  assert.match(provider, /audio\.crossOrigin = "anonymous"[\s\S]*audio\.removeAttribute\("crossorigin"\)[\s\S]*audio\.src = activeRecord\.audioUrl/);
+  assert.match(provider, /isAnalysisSource\(cloudflareUrl, window\.location\.origin\)/);
+  assert.match(provider, /audio\.crossOrigin = "anonymous"[\s\S]*audio\.removeAttribute\("crossorigin"\)[\s\S]*audio\.src = cloudflareUrl/);
   assert.match(provider, /if \(!needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(\);\s*void audio\.play\(\)/);
-  assert.match(provider, /shouldPlay && record\?\.audioUrl && !needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(record\.audioUrl\)/);
-  assert.match(provider, /key=\{`\$\{activeRecord\.slug\}:\$\{activeRecord\.audioUrl\}`\} ref=\{bindAudio\}/);
+  assert.match(provider, /record\?\.playback\?\.provider === "cloudflare" && !needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(record\.playback\.url\)/);
+  assert.match(provider, /key=\{`\$\{activeRecord\.slug\}:\$\{cloudflareUrl\}`\} ref=\{bindAudio\}/);
   assert.match(provider, /queueMicrotask[\s\S]*\.dispose\(\)/);
   assert.doesNotMatch(provider, /getUserMedia|captureStream/);
 });

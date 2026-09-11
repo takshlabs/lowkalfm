@@ -15,12 +15,14 @@ function harness() {
     return elements.get(id);
   };
   const messages = [];
-  const mix = { id: 'test-mix', title: 'Test mix', audioUrl: '/mix.mp3', duration: 3600 };
+  const mix = { id: 'test-mix', title: 'Test mix', playback: { provider: 'cloudflare', url: '/mix.mp3' }, duration: 3600 };
   const context = {
     MIXES: [mix], IS_EMBEDDED: true, AUDIO_SYNC_CHANNEL: 'lowkal.audio.v1',
     document: { body: { dataset: {} }, getElementById: get },
     window: { parent: { postMessage(message) { messages.push(JSON.parse(JSON.stringify(message))); } }, location: { origin: 'https://lowkalfm.in' } },
     HtmlAudioPlayerEngine: class { pause() {} getDuration() { return 0; } },
+    hasPlayback: source => Boolean(source?.playback),
+    cloudflareUrlFor: source => source?.playback?.provider === 'cloudflare' ? source.playback.url : null,
   };
   const format = html.slice(html.indexOf('    function formatTime('), html.indexOf('    function formatTime(') + html.slice(html.indexOf('    function formatTime(')).indexOf('\n    }') + 6);
   const appSource = html.slice(html.indexOf('    class LowkalApp {'), html.indexOf('    // Register bridges synchronously'));
@@ -29,6 +31,9 @@ function harness() {
   app.updateVolumeUI = () => {};
   app.renderPlaybackModes = () => {};
   app.syncMixDetails = () => {};
+  app.setupArchiveNodes = () => {};
+  app.startDriftingCloud = () => {};
+  app.stopDriftingCloud = () => {};
   const state = overrides => app.applyExternalAudioState({ slug: mix.id, currentTime: 65, duration: 3600, isPlaying: false, isReady: true, ...overrides });
   return { app, get, messages, state };
 }
@@ -73,4 +78,31 @@ test('errors expose retry on both surfaces and clear on older state messages', (
   assert.equal(app.error, null);
   assert.equal(app.isLoading, false);
   assert.equal(get('main-status-text').textContent, 'Not ready');
+});
+
+test('transport and mute commands defer to the parent playback authority', () => {
+  const { app, messages, state } = harness();
+  state({ isMuted: false, repeatMode: 'one' });
+  assert.equal(app.isMuted, false);
+  assert.equal(app.repeatMode, 'one');
+  app.nextTrack();
+  app.previousTrack();
+  app.toggleMute();
+  assert.deepEqual(messages.slice(-3).map(message => message.command.action), ['next', 'previous', 'mute']);
+});
+
+test('selecting the active paused mix starts parent playback', () => {
+  const { app, messages } = harness();
+  app.loadMixToPlayer(app.activeMix, true);
+  assert.equal(messages.at(-1).command.action, 'select');
+  assert.equal(messages.at(-1).command.autoplay, true);
+});
+
+test('inactive Soundroom screens are hidden from keyboard and assistive technology', () => {
+  const { app, get } = harness();
+  app.navigate('archive');
+  assert.equal(get('screen-home').inert, true);
+  assert.equal(get('screen-home').attrs['aria-hidden'], 'true');
+  assert.equal(get('screen-archive').inert, false);
+  assert.equal(get('screen-archive').attrs['aria-hidden'], 'false');
 });

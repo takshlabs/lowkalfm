@@ -16,11 +16,9 @@ type SanityMix = {
   artists?: Array<{ name: string; slug: string }>;
   releaseDate: string;
   duration?: number;
-  audioMasterUrl?: string;
-  audioMasterFilename?: string;
   audioDeliveryUrl?: string;
   audioStartOffset?: number;
-  externalUrl?: string;
+  youtubeUrl?: string;
   youtubeVideoUrl?: string;
   artwork?: string;
   genres?: string[];
@@ -59,7 +57,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
   if (!mix.slug || !mix.artwork) return null;
   const artistNames = mix.artists?.map((artist) => artist.name).filter(Boolean) ?? [];
   const format: SoundFormat = mix.format === "volume" ? "weekly" : "live-set";
-  const playback = resolveMixPlayback({ deliveryUrl: mix.audioDeliveryUrl, masterUrl: mix.audioMasterUrl, externalUrl: mix.externalUrl });
+  const playback = resolveMixPlayback({ deliveryUrl: mix.audioDeliveryUrl, youtubeUrl: mix.youtubeUrl });
   return {
     slug: mix.slug,
     format,
@@ -71,7 +69,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     dateISO: mix.releaseDate,
     duration: mix.duration ?? 0,
     startOffset: getMixStartOffset(mix.audioStartOffset),
-    ...playback,
+    playback,
     youtubeVideoUrl: getYouTubeVideoUrl(mix.youtubeVideoUrl),
     artwork: mix.artwork,
     genres: mix.genres ?? [],
