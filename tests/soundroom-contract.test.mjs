@@ -294,22 +294,17 @@ test('settings opens, traps keyboard focus, closes and restores focus', async ()
   assert.equal(get('modal-settings').hidden, true);
 });
 
-test('settings ignores a click that lands after another modal closes', async () => {
-  const { get, document } = await settingsHarness();
-  let prevented = false;
-  let stopped = false;
-  document.documentElement.dataset.lowkalModalDismissalUntil = String(Date.now() + 1_000);
-  get('btn-settings-open').events.click({
-    preventDefault() { prevented = true; },
-    stopPropagation() { stopped = true; }
-  });
-  assert.equal(get('modal-settings').hidden, true);
-  assert.equal(prevented, true);
-  assert.equal(stopped, true);
+test('settings can open after another modal closes', async () => {
+  const { get } = await settingsHarness();
+  get('btn-settings-open').events.click();
+  assert.equal(get('modal-settings').hidden, false);
 });
 
-test('tracklist close button is a button and sets the settings click guard', async () => {
+test('tracklist close button is inside its dialog header, not the page corner', async () => {
   const soundroom = await source('public/soundroom/index.html');
+  const roomCss = await source('public/soundroom/room.css');
   assert.match(soundroom, /id="btn-tracklist-close"\s+type="button"/);
-  assert.match(soundroom, /lowkalModalDismissalUntil = String\(Date\.now\(\) \+ 1_000\)/);
+  assert.match(soundroom, /justify-between gap-5 p-6 md:p-8[\s\S]{0,1800}id="btn-tracklist-close"/);
+  assert.doesNotMatch(soundroom, /lowkalModalDismissalUntil/);
+  assert.match(roomCss, /#modal-tracklist\[hidden\]\s*\{\s*display:\s*none\s*!important;/);
 });
