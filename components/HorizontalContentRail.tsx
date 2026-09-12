@@ -47,17 +47,18 @@ export function HorizontalContentRail({ ariaLabel, className, children }: Horizo
     });
   };
 
-
   return (
     <div className="horizontal-content-rail">
-      <div className="horizontal-content-rail-controls" aria-label={`${ariaLabel} navigation`}>
-        <button type="button" onClick={() => move(-1)} disabled={!scrollState.canGoBack} aria-label={`Previous ${ariaLabel}`}>
-          <ChevronLeft aria-hidden="true" />
-        </button>
-        <button type="button" onClick={() => move(1)} disabled={!scrollState.canGoForward} aria-label={`Next ${ariaLabel}`}>
-          <ChevronRight aria-hidden="true" />
-        </button>
-      </div>
+      {scrollState.canGoBack || scrollState.canGoForward ? (
+        <div className="horizontal-content-rail-controls" aria-label={`${ariaLabel} navigation`}>
+          <button type="button" onClick={() => move(-1)} disabled={!scrollState.canGoBack} aria-label={`Previous ${ariaLabel}`}>
+            <ChevronLeft aria-hidden="true" />
+          </button>
+          <button type="button" onClick={() => move(1)} disabled={!scrollState.canGoForward} aria-label={`Next ${ariaLabel}`}>
+            <ChevronRight aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
       <div ref={railRef} className={className} role="region" aria-label={ariaLabel}>
         {children}
       </div>

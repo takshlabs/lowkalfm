@@ -1251,23 +1251,34 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .rinse-section-head > a { padding-bottom: 3px; border-bottom: 1px solid currentColor; font-size: 0.65rem; letter-spacing: 0.05em; text-decoration: none; text-transform: uppercase; }
 .rinse-section-head > p { max-width: 340px; margin: 0; color: rgba(245, 241, 232, 0.66); font-size: 0.9rem; }
 .horizontal-content-rail { position: relative; }
-.horizontal-content-rail-controls { display: flex; justify-content: flex-end; gap: 8px; margin: -52px 0 16px; }
+.horizontal-content-rail-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  pointer-events: none;
+}
 .horizontal-content-rail-controls button {
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border: 1px solid rgba(245, 241, 232, 0.34);
+  border: 1px solid rgba(245, 241, 232, 0.42);
   border-radius: 50%;
   place-items: center;
   color: #f5f1e8;
-  background: rgba(12, 12, 15, 0.64);
+  background: rgba(12, 12, 15, 0.82);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
   cursor: pointer;
+  pointer-events: auto;
   transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 .horizontal-content-rail-controls button:hover:not(:disabled),
 .horizontal-content-rail-controls button:focus-visible:not(:disabled) { border-color: var(--lowkal-red); color: #101014; background: var(--lowkal-red); }
-.horizontal-content-rail-controls button:disabled { opacity: 0.35; cursor: default; }
+.horizontal-content-rail-controls button:disabled { visibility: hidden; pointer-events: none; }
 .horizontal-content-rail-controls svg { width: 18px; height: 18px; }
 .transmission-row,
 .city-card-row {

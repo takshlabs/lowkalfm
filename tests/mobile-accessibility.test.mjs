@@ -32,9 +32,11 @@ test('home card rails provide labelled desktop arrow navigation and touch scroll
   assert.match(rail, /aria-label=\{`Previous \$\{ariaLabel\}`\}/);
   assert.match(rail, /aria-label=\{`Next \$\{ariaLabel\}`\}/);
   assert.match(rail, /scrollBy\(/);
+  assert.match(rail, /scrollState\.canGoBack \|\| scrollState\.canGoForward/);
   assert.match(home, /<HorizontalContentRail className="transmission-row" ariaLabel="Latest records">/);
   assert.match(page, /<HorizontalContentRail className="city-card-row" ariaLabel="City notes">/);
   assert.match(styles, /\.horizontal-content-rail-controls \{ display: none; \}/);
+  assert.match(styles, /\.horizontal-content-rail-controls \{[\s\S]*?position: absolute/);
   assert.match(styles, /\.transmission-row,[\s\S]*?scroll-snap-type: x mandatory/);
 });
 
