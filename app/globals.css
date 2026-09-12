@@ -1250,8 +1250,38 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .rinse-section-head h2 { margin: 7px 0 0; font-family: var(--font-lowkal-body), sans-serif; font-size: 0.94rem; font-weight: 700; line-height: 1; letter-spacing: 0; }
 .rinse-section-head > a { padding-bottom: 3px; border-bottom: 1px solid currentColor; font-size: 0.65rem; letter-spacing: 0.05em; text-decoration: none; text-transform: uppercase; }
 .rinse-section-head > p { max-width: 340px; margin: 0; color: rgba(245, 241, 232, 0.66); font-size: 0.9rem; }
+.horizontal-content-rail { position: relative; }
+.horizontal-content-rail-controls { display: flex; justify-content: flex-end; gap: 8px; margin: -52px 0 16px; }
+.horizontal-content-rail-controls button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid rgba(245, 241, 232, 0.34);
+  border-radius: 50%;
+  place-items: center;
+  color: #f5f1e8;
+  background: rgba(12, 12, 15, 0.64);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+.horizontal-content-rail-controls button:hover:not(:disabled),
+.horizontal-content-rail-controls button:focus-visible:not(:disabled) { border-color: var(--lowkal-red); color: #101014; background: var(--lowkal-red); }
+.horizontal-content-rail-controls button:disabled { opacity: 0.35; cursor: default; }
+.horizontal-content-rail-controls svg { width: 18px; height: 18px; }
 .transmission-row,
-.city-card-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.city-card-row {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.transmission-row::-webkit-scrollbar,
+.city-card-row::-webkit-scrollbar { display: none; }
+.transmission-card,
+.city-card { flex: 0 0 calc((100% - 40px) / 3); scroll-snap-align: start; }
 .transmission-media { position: relative; aspect-ratio: 2.08 / 1; min-height: 0; overflow: hidden; border-radius: 12px; background: #09090b; }
 .transmission-frame,
 .transmission-frame .media-frame-mount { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
@@ -1324,8 +1354,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .home-channel-row { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 20px; }
   .home-transmissions,
   .home-city { padding: 34px 20px 44px; }
+  .horizontal-content-rail-controls { display: none; }
   .transmission-row,
-  .city-card-row { display: flex; gap: 14px; margin: 0 -20px; padding: 0 20px 6px; overflow-x: auto; scroll-snap-type: x mandatory; }
+  .city-card-row { gap: 14px; margin: 0 -20px; padding: 0 20px 6px; }
   .transmission-card { flex: 0 0 min(72vw, 280px); scroll-snap-align: start; }
   .city-card { flex: 0 0 86vw; scroll-snap-align: start; }
   .city-card { min-height: 230px; }

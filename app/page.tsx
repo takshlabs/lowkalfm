@@ -1,4 +1,5 @@
 import { HomeTransmissionDeck } from "@/components/HomeTransmissionDeck";
+import { HorizontalContentRail } from "@/components/HorizontalContentRail";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
 import { sitePath } from "@/lib/site-path";
@@ -39,7 +40,7 @@ export default function Home() {
             <h2 id="home-city-title">From the city</h2>
           </div>
         </div>
-        <div className="city-card-row">
+        <HorizontalContentRail className="city-card-row" ariaLabel="City notes">
           <SiteLink className="city-card" href={sitePath("/read")}>
             <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/art/eye-in-hand.jpg")} alt="Green collage of a face, hands, and painted eyes" fill sizes="(max-width: 760px) 88vw, 31vw" />
             <div><span>Journal · 02</span><h3>Stories behind the signal.</h3><p>Read the room ↗</p></div>
@@ -52,7 +53,7 @@ export default function Home() {
             <MediaFrame variant="editorial" frameClassName="city-card-frame" src={sitePath("/lowkal-002.jpg")} alt="Lowkal 002 archive artwork" fill sizes="(max-width: 760px) 88vw, 31vw" />
             <div><span>Archive · 01</span><h3>Sessions worth returning to.</h3><p>Browse records ↗</p></div>
           </SiteLink>
-        </div>
+        </HorizontalContentRail>
       </section>
 
       <aside className="home-open-call">

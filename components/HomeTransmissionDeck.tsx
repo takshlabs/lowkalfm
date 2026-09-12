@@ -1,6 +1,7 @@
 "use client";
 
 import { Pause, Play } from "lucide-react";
+import { HorizontalContentRail } from "@/components/HorizontalContentRail";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
 import { sitePath } from "@/lib/site-path";
@@ -27,8 +28,8 @@ export function HomeTransmissionDeck() {
         <SiteLink href={sitePath("/listen/archive")}>All records ↗</SiteLink>
       </div>
 
-      <div className="transmission-row">
-        {homeRecords.slice(0, 3).map((record, index) => {
+      <HorizontalContentRail className="transmission-row" ariaLabel="Latest records">
+        {homeRecords.map((record, index) => {
           const active = activeRecord.slug === record.slug;
           const playing = active && isPlaying;
 
@@ -52,7 +53,7 @@ export function HomeTransmissionDeck() {
             </article>
           );
         })}
-      </div>
+      </HorizontalContentRail>
     </section>
   );
 }

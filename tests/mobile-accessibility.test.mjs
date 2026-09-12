@@ -23,6 +23,21 @@ test('transmission genres use valid list semantics', async () => {
   assert.match(source, /<span role="listitem"/);
 });
 
+test('home card rails provide labelled desktop arrow navigation and touch scrolling', async () => {
+  const rail = await read('components/HorizontalContentRail.tsx');
+  const home = await read('components/HomeTransmissionDeck.tsx');
+  const page = await read('app/page.tsx');
+  const styles = await read('app/globals.css');
+
+  assert.match(rail, /aria-label=\{`Previous \$\{ariaLabel\}`\}/);
+  assert.match(rail, /aria-label=\{`Next \$\{ariaLabel\}`\}/);
+  assert.match(rail, /scrollBy\(/);
+  assert.match(home, /<HorizontalContentRail className="transmission-row" ariaLabel="Latest records">/);
+  assert.match(page, /<HorizontalContentRail className="city-card-row" ariaLabel="City notes">/);
+  assert.match(styles, /\.horizontal-content-rail-controls \{ display: none; \}/);
+  assert.match(styles, /\.transmission-row,[\s\S]*?scroll-snap-type: x mandatory/);
+});
+
 test('Soundroom click surfaces are keyboard-native controls', async () => {
   const source = await read('public/soundroom/index.html');
   assert.match(source, /<button[^>]*id="header-logo"/);
