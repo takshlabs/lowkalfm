@@ -643,6 +643,10 @@
         this.externalDuration = 0;
         this.applyingExternalState = false;
         this.lastExternalState = null;
+        this.lastExternalRevision = -1;
+        this.lastExternalSourceKey = null;
+        this.isScrubbing = false;
+        this.scrubPercent = 0;
         
         // Core Engines
         this.mediaEngine = new HtmlAudioPlayerEngine(() => this.handleMixFinished());
@@ -743,16 +747,28 @@
 
       applyExternalAudioState(state) {
         if (!state) return;
+        const revision = Number.isInteger(state.revision) && state.revision >= 0 ? state.revision : null;
+        if (revision !== null && revision < this.lastExternalRevision) return;
+        if (revision !== null) this.lastExternalRevision = revision;
         this.lastExternalState = state;
         this.applyingExternalState = true;
 
         const matchingMix = MIXES.find((mix) => mix.id && mix.id === state.slug);
+        const sourceKey = typeof state.sourceKey === 'string' ? state.sourceKey : null;
+        const sourceChanged = Boolean(matchingMix && (matchingMix.id !== this.activeMix.id || (sourceKey && sourceKey !== this.lastExternalSourceKey)));
+        if (sourceKey) this.lastExternalSourceKey = sourceKey;
+        if (sourceChanged) {
+          this.isScrubbing = false;
+          this.scrubPercent = 0;
+        }
         if (matchingMix && matchingMix.id !== this.activeMix.id) {
           this.activeMix = matchingMix;
           this.syncMixDetails(matchingMix, false);
         }
 
-        this.playbackTime = matchingMix && Number.isFinite(state.currentTime) ? Math.max(0, state.currentTime) : 0;
+        if (!this.isScrubbing || sourceChanged) {
+          this.playbackTime = matchingMix && Number.isFinite(state.currentTime) ? Math.max(0, state.currentTime) : 0;
+        }
         this.externalDuration = matchingMix && Number.isFinite(state.duration) ? Math.max(0, state.duration) : 0;
         this.isPlaying = Boolean(matchingMix && state.isPlaying);
         this.isLoading = Boolean(matchingMix && state.isLoading);
@@ -990,12 +1006,15 @@
         // Scrubber range changes
         const scrubber = document.getElementById('main-scrubber');
         scrubber.addEventListener('input', (e) => {
-          const val = e.target.value;
-          scrubber.style.setProperty('--progress', `${val}%`);
-          scrubber.style.background = `linear-gradient(to right, #55e93b ${val}%, #87957e ${val}%)`;
+          this.previewScrub(e.target.value);
         });
-        scrubber.addEventListener('change', (e) => {
-          this.scrubPlayback(e.target.value);
+        scrubber.addEventListener('change', () => this.commitScrub());
+        scrubber.addEventListener('pointerup', () => this.commitScrub());
+        scrubber.addEventListener('pointercancel', () => this.cancelScrub());
+        scrubber.addEventListener('blur', () => this.commitScrub());
+        scrubber.addEventListener('keyup', () => this.commitScrub());
+        scrubber.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') this.cancelScrub();
         });
         
         window.addEventListener('resize', () => {
@@ -1360,6 +1379,31 @@
         }
         this.playbackTime = seconds;
         if (cloudflareUrlFor(this.activeMix)) this.mediaEngine.seekTo(seconds);
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+      }
+
+      previewScrub(percent) {
+        const bounded = Math.min(100, Math.max(0, Number(percent)));
+        if (!Number.isFinite(bounded)) return;
+        this.isScrubbing = true;
+        this.scrubPercent = bounded;
+        this.playbackTime = Math.floor((bounded / 100) * this.getEffectiveDuration());
+        this.updatePlayerUI();
+        this.updateMiniPlayerUI();
+      }
+
+      commitScrub() {
+        if (!this.isScrubbing) return;
+        this.isScrubbing = false;
+        this.scrubPlayback(this.scrubPercent);
+      }
+
+      cancelScrub() {
+        if (!this.isScrubbing) return;
+        this.isScrubbing = false;
+        const restored = this.lastExternalState?.currentTime;
+        if (Number.isFinite(restored)) this.playbackTime = Math.max(0, restored);
         this.updatePlayerUI();
         this.updateMiniPlayerUI();
       }

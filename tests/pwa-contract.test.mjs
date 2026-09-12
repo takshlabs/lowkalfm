@@ -75,7 +75,8 @@ test('PWA lifecycle stays headless and never forces updates during playback', as
   assert.match(source, /SKIP_WAITING/);
   assert.match(source, /isPlaying/);
   assert.match(source, /isLoading/);
-  assert.match(source, /const playbackActive = isPlaying \|\| isLoading/);
+  assert.match(source, /isExternalMediaPlaying/);
+  assert.match(source, /const playbackActive = isPlaying \|\| isLoading \|\| isExternalMediaPlaying/);
   assert.match(source, /hasSharedPlaybackActivity/);
   assert.match(source, /return null/);
 });

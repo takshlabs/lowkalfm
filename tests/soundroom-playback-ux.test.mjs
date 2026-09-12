@@ -91,6 +91,33 @@ test('transport and mute commands defer to the parent playback authority', () =>
   assert.deepEqual(messages.slice(-3).map(message => message.command.action), ['next', 'previous', 'mute']);
 });
 
+test('Soundroom keeps a local scrub preview while parent progress updates arrive', () => {
+  const { app, state } = harness();
+  app.isScrubbing = true;
+  app.playbackTime = 300;
+  state({ currentTime: 65 });
+  assert.equal(app.playbackTime, 300);
+});
+
+test('Soundroom abandons a scrub preview when the parent changes source', () => {
+  const { app, messages, state } = harness();
+  state({ currentTime: 65, sourceKey: 'test-mix:cloudflare:first' });
+  app.isScrubbing = true;
+  app.playbackTime = 300;
+  state({ currentTime: 15, sourceKey: 'test-mix:cloudflare:replacement' });
+  assert.equal(app.playbackTime, 15);
+  assert.equal(app.isScrubbing, false);
+  app.commitScrub();
+  assert.equal(messages.filter(message => message.command.action === 'seek').length, 0);
+});
+
+test('Soundroom rejects an older parent state revision after a newer state', () => {
+  const { app, state } = harness();
+  state({ currentTime: 90, revision: 2 });
+  state({ currentTime: 25, revision: 1 });
+  assert.equal(app.playbackTime, 90);
+});
+
 test('selecting the active paused mix starts parent playback', () => {
   const { app, messages } = harness();
   app.loadMixToPlayer(app.activeMix, true);

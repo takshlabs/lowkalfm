@@ -14,8 +14,8 @@ function hasSharedPlaybackActivity() {
 }
 
 export function PwaLifecycle() {
-  const { isPlaying, isLoading } = useAudio();
-  const playbackActive = isPlaying || isLoading;
+  const { isPlaying, isLoading, isExternalMediaPlaying } = useAudio();
+  const playbackActive = isPlaying || isLoading || isExternalMediaPlaying;
   const playbackActiveRef = useRef(playbackActive);
 
   useEffect(() => {

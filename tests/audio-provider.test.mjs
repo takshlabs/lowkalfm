@@ -22,13 +22,19 @@ function harness() {
     useMemo: fn => fn(), useCallback: fn => fn,
     useEffect(fn, deps) { const slot = hook(() => ({})); if (!slot.deps || deps.some((item, i) => item !== slot.deps[i])) { effects.push(() => { slot.cleanup?.(); slot.cleanup = fn(); }); slot.deps = deps; } },
   };
-  const requests = []; const messages = []; const listeners = {}; const timers = new Map(); let timerId = 0;
+  const requests = []; const messages = []; const listeners = {}; const documentListeners = {}; const timers = new Map(); const storage = new Map(); let timerId = 0;
+  class MediaElement {
+    constructor() { this.paused = false; this.listeners = {}; }
+    addEventListener(name, fn) { this.listeners[name] = fn; }
+    removeEventListener(name) { delete this.listeners[name]; }
+    pause() { this.paused = true; this.listeners.pause?.(); }
+  }
   const audio = { paused: true, ended: false, readyState: 0, duration: NaN, currentTime: 0, volume: .82,
     getAttribute: () => "/one.mp3", removeAttribute() {},
     play() { this.paused = false; return new Promise((resolve, reject) => requests.push({ resolve, reject })); },
     pause() { this.paused = true; }, load() { this.readyState = 0; },
   };
-  const window = { location: { origin: "https://lowkalfm.in" }, localStorage: { getItem: () => null, setItem() {} }, screen: { width: 390, height: 844 }, matchMedia: () => ({ matches: true }), frames: [{ postMessage: message => messages.push(message) }],
+  const window = { location: { origin: "https://lowkalfm.in" }, localStorage: { getItem: key => storage.get(key) ?? null, setItem(key, value) { storage.set(key, value); } }, screen: { width: 390, height: 844 }, matchMedia: () => ({ matches: true }), frames: [{ postMessage: message => messages.push(message) }],
     addEventListener: (name, fn) => { listeners[name] = fn; }, removeEventListener() {}, setTimeout: fn => { timers.set(++timerId, fn); return timerId; }, clearTimeout: id => timers.delete(id), setInterval: fn => { timers.set(++timerId, fn); return timerId; }, clearInterval: id => timers.delete(id) };
   const analysis = { setElement() {}, activate() {}, dispose() {}, read() {} };
   const compiled = { exports: {} };
@@ -42,10 +48,11 @@ function harness() {
     if (name === "@/lib/site-path") return { sitePath: path => path };
     if (name === "./ListenContentProvider") return { useListenContent: () => ({ records, getRecord }) };
     throw new Error(name);
-  }, window, navigator: { maxTouchPoints: 1 }, document: { addEventListener() {}, removeEventListener() {} }, queueMicrotask, console, setTimeout, clearTimeout });
+  }, window, navigator: { maxTouchPoints: 1 }, document: { addEventListener: (name, fn) => { (documentListeners[name] ??= []).push(fn); }, removeEventListener() {} }, HTMLMediaElement: MediaElement, queueMicrotask, console, setTimeout, clearTimeout });
   function render() { cursor = 0; effects = []; tree = compiled.exports.AudioProvider({ children: null }); const media = tree.props.children.find?.(child => child?.type === "audio"); media?.props.ref(audio); effects.forEach(fn => fn()); return value; }
   render(); render();
-  return { render, audio, requests, messages, listeners, expire() { [...timers.values()].forEach(fn => fn()); timers.clear(); }, get value() { return value; }, event(name) { const media = tree.props.children.find(child => child?.type === "audio"); media.props[name]({ currentTarget: audio }); } };
+  const mediaProps = () => tree.props.children.find(child => child?.type === "audio")?.props;
+  return { render, audio, requests, messages, storage, listeners, documentListeners, MediaElement, expire() { [...timers.values()].forEach(fn => fn()); timers.clear(); }, get value() { return value; }, mediaProps, event(name, target = audio) { mediaProps()?.[name]?.({ currentTarget: target }); } };
 }
 
 test("toggle cancels loading intent before the playing event", () => {
@@ -79,6 +86,65 @@ test("a queued zero seek overrides the record offset at metadata", () => {
   h.audio.duration = 100; h.audio.readyState = 1;
   h.event("onLoadedMetadata");
   assert.equal(h.audio.currentTime, 0);
+});
+
+test("a committed seek stays authoritative until the media reports the new position", () => {
+  const h = harness();
+  h.value.seek(75); h.render();
+  h.audio.currentTime = 30;
+  h.event("onTimeUpdate"); h.render();
+  assert.equal(h.value.currentTime, 75);
+
+  h.audio.currentTime = 75.6;
+  h.event("onTimeUpdate"); h.render();
+  assert.equal(h.value.currentTime, 75.6);
+});
+
+test("a replacement source resumes from the last observed timeline position", () => {
+  const h = harness();
+  h.audio.duration = 100;
+  h.audio.currentTime = 55;
+  h.event("onTimeUpdate"); h.render();
+  h.event("onLoadedMetadata");
+  assert.equal(h.audio.currentTime, 55);
+});
+
+test("retry waits for metadata so playback cannot begin at a stale source position", () => {
+  const h = harness();
+  h.audio.readyState = 1;
+  h.audio.currentTime = 55;
+  h.value.retryPlayback();
+  assert.equal(h.requests.length, 0);
+});
+
+test("a late event from a replaced native element cannot change the active session", () => {
+  const h = harness();
+  const oldProps = h.mediaProps();
+  h.value.playRecord("two"); h.render();
+  oldProps.onError({ currentTarget: { paused: true, currentTime: 0 } });
+  h.render();
+  assert.equal(h.value.activeRecord.slug, "two");
+  assert.equal(h.value.error, null);
+  assert.equal(h.value.isLoading, true);
+});
+
+test("an unexpected current-element pause makes the next transport action resume", () => {
+  const h = harness();
+  h.value.togglePlayback();
+  h.audio.paused = true;
+  h.event("onPause"); h.render();
+  h.value.togglePlayback();
+  assert.equal(h.requests.length, 2);
+});
+
+test("a reader audio element takes over from the Lowkal player", () => {
+  const h = harness();
+  h.value.togglePlayback();
+  const readerAudio = new h.MediaElement();
+  h.documentListeners.play.at(-1)({ target: readerAudio });
+  h.render();
+  assert.equal(h.audio.paused, true);
+  assert.equal(h.value.isExternalMediaPlaying, true);
 });
 
 test("an old play rejection cannot cancel a newer play request", async () => {
@@ -135,6 +201,46 @@ test("mute is authoritative and preserves the selected volume", () => {
   assert.equal(h.value.volume, 82);
 });
 
+test("volume changes persist immediately while paused", () => {
+  const h = harness();
+  h.value.setVolume(43);
+  const saved = JSON.parse(h.storage.get("lowkal.player.v1"));
+  assert.equal(saved.volume, 43);
+});
+
+test("mute changes persist immediately while paused", () => {
+  const h = harness();
+  h.value.toggleMuted();
+  const saved = JSON.parse(h.storage.get("lowkal.player.v1"));
+  assert.equal(saved.muted, true);
+  assert.equal(saved.volume, 82);
+});
+
+test("queue mode changes persist immediately while paused", () => {
+  const h = harness();
+  h.value.toggleShuffle();
+  let saved = JSON.parse(h.storage.get("lowkal.player.v1"));
+  assert.equal(saved.shuffled, true);
+  h.render();
+  h.value.cycleRepeatMode();
+  saved = JSON.parse(h.storage.get("lowkal.player.v1"));
+  assert.equal(saved.repeatMode, "all");
+});
+
+test("sleep deadline persists immediately so mobile suspension cannot erase it", () => {
+  const h = harness();
+  h.value.setSleepTimer(15);
+  const saved = JSON.parse(h.storage.get("lowkal.player.v1"));
+  assert.equal(saved.sleepTimer, 15);
+  assert.ok(saved.sleepDeadline > Date.now());
+});
+
+test("returning from mobile background enforces an overdue sleep deadline", () => {
+  const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
+  assert.match(source, /if \(!document\.hidden && typeof sleepTimer === "number" && sleepDeadlineRef\.current !== null && Date\.now\(\) >= sleepDeadlineRef\.current\)/);
+  assert.match(source, /persist\(currentTimeRef\.current, \{ sleepTimer: null, sleepDeadline: null \}\)/);
+});
+
 test("sleep timer expiry pauses without selecting another record", () => {
   const h = harness();
   h.value.setSleepTimer(15); h.render();
@@ -145,10 +251,12 @@ test("sleep timer expiry pauses without selecting another record", () => {
   assert.equal(h.value.sleepTimerMinutes, null);
 });
 
-test("provider restores saved playback state only once", () => {
+test("provider retries a saved restore after the catalog hydrates", () => {
   const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
   assert.match(source, /const didRestoreRef = useRef\(false\)/);
   assert.match(source, /if \(didRestoreRef\.current\) return/);
+  assert.match(source, /if \(!saved\) \{ didRestoreRef\.current = true; return; \}/);
+  assert.match(source, /if \(!getRecord\(saved\.slug\)\) return;/);
   assert.match(source, /didRestoreRef\.current = true/);
 });
 
@@ -160,6 +268,20 @@ test("all delayed playback starts claim cross-tab ownership", () => {
   assert.doesNotMatch(onReady, /target\.playVideo\(\)/);
   assert.match(source, /comparePlaybackClaims/);
   assert.match(source, /PLAYBACK_CLAIM_STORAGE_KEY/);
+});
+
+test("Soundroom commands must originate from the mounted Soundroom iframe", () => {
+  const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
+  assert.match(source, /function isSoundroomFrameSource/);
+  assert.match(source, /if \(!isSoundroomFrameSource\(event\.source\)\) return;/);
+});
+
+test("stale YouTube callbacks cannot mutate a replacement source", () => {
+  const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
+  const youtubeEvents = source.slice(source.indexOf("events: {", source.indexOf("new YT.Player")), source.indexOf("}\n      });", source.indexOf("new YT.Player")));
+  assert.match(source, /const ownsCurrentSession = \(\) => active && youtubeSessionRef\.current === session && sourceKeyRef\.current === activeSourceKey/);
+  assert.match(youtubeEvents, /if \(!ownsCurrentSession\(\)\) return;/);
+  assert.match(source, /if \(sourceKeyRef\.current !== sourceKey\) return null;/);
 });
 
 test("Cloudflare errors do not switch playback providers", () => {
