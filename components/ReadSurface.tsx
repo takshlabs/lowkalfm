@@ -1,35 +1,38 @@
-import type { Metadata } from "next";
+"use client";
+
+import { usePathname } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
+import { ReadArticle } from "@/components/ReadArticle";
 import { ReadFeed } from "@/components/ReadFeed";
-import { UnderConstructionNote } from "@/components/UnderConstructionNote";
-import { journalStories } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 
-export const dynamic = "force-static";
+function readPathSlug(pathname: string) {
+  const cleanPath = pathname.replace(/\/$/, "");
+  const marker = "/read/";
+  const index = cleanPath.indexOf(marker);
+  return index >= 0 ? decodeURIComponent(cleanPath.slice(index + marker.length).split("/")[0]) : "";
+}
 
-export const metadata: Metadata = {
-  title: "Read"
-};
+export function ReadSurface() {
+  const pathname = usePathname();
+  const slug = readPathSlug(pathname);
 
-export default function ReadPage() {
+  if (slug) return <ReadArticle slug={slug} />;
+
   return (
-    <main id="main-content" className="journal-page" tabIndex={-1}>
+    <div className="journal-page">
       <section className="section-page-hero read-hero">
         <MediaFrame variant="hero" frameClassName="section-hero-art read-hero-art" src={sitePath("/art/lotus-collage.jpg")} alt="Red collage with lotus flowers and painted eyes" fill sizes="(max-width: 680px) 64vw, 34vw" priority />
         <span className="section-kicker">02 · Read</span>
         <h1>Stories from<br />the <em>room.</em></h1>
         <p>Conversations and field notes from Lowkal.</p>
       </section>
-      <UnderConstructionNote />
-      <ReadFeed fallback={journalStories.map((story, index) => ({
-        ...story,
-        slug: ["dancefloor-workers", "flyover-rain", "last-bus-home", "sarang-meeting-place"][index] ?? `story-${index + 1}`,
-      }))} />
+      <ReadFeed />
       <section className="journal-note">
         <span className="section-kicker">Pitch Lowkal</span>
         <h2>A good story can begin with one sound.</h2>
         <a href="mailto:hello@lowkal.fm?subject=Story%20pitch">Send a short pitch ↗</a>
       </section>
-    </main>
+    </div>
   );
 }

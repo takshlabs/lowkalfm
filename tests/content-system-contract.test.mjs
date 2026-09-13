@@ -11,14 +11,21 @@ test("Read uses Sanity as the public editorial source", async () => {
   const client = await source("lib/sanity.ts");
   const feed = await source("components/ReadFeed.tsx");
   const article = await source("components/ReadArticle.tsx");
+  const surface = await source("components/ReadSurface.tsx");
+  const page = await source("app/read/[[...slug]]/page.tsx");
 
   assert.match(client, /createClient/);
   assert.match(client, /NEXT_PUBLIC_SANITY_PROJECT_ID/);
   assert.match(client, /editorialStory/);
   assert.match(feed, /sanityClient\.fetch/);
   assert.match(article, /PortableText/);
+  assert.match(surface, /ReadFeed/);
+  assert.match(surface, /ReadArticle/);
+  assert.match(page, /ReadSurface/);
+  assert.match(page, /generateStaticParams/);
   assert.doesNotMatch(feed, /editorial-api/);
   assert.doesNotMatch(article, /editorial-api/);
+  assert.doesNotMatch(page, /UnderConstructionNote/);
 });
 
 test("Studio embeds Sanity and supports flexible editorial fields", async () => {
@@ -63,7 +70,7 @@ test("parked mixes stay in the CMS but are not sent to public listen surfaces", 
 test("published non-parked mixes appear on archive, soundroom, home, and the player", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");
-  const provider = await source("components/ListenContentProvider.tsx");
+  const provider = await source("lib/listen-content.ts");
   const archive = await source("components/SoundroomCatalog.tsx");
   const soundroom = await source("components/SoundroomFrame.tsx");
   const home = await source("components/HomeTransmissionDeck.tsx");

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { SoundRecord } from "@/lib/content";
+import { idleListenRecord, type SoundRecord } from "@/lib/content";
 import { boundPlaybackTime, comparePlaybackClaims, createPlaybackRequests, createShuffleOrder, endedQueueIndex, nextQueueIndex, PLAYBACK_ACTIVITY_STORAGE_KEY, PLAYBACK_CLAIM_STORAGE_KEY, previousQueueIndex, shouldRestartPrevious, type PlaybackClaim, type RepeatMode } from "@/lib/audio-playback";
 import { createAudioAnalysis, isAnalysisSource, startAnalysisBridge, startMixerBridge } from "@/lib/audio-analysis";
 import { sitePath } from "@/lib/site-path";
@@ -127,7 +127,7 @@ function readSavedState(): SavedPlayerState | null {
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const { records, getRecord } = useListenContent();
   const playableRecords = useMemo(() => records.filter((record) => isPlayable(record)), [records]);
-  const firstRecord = playableRecords[0] ?? records[0];
+  const firstRecord = playableRecords[0] ?? records[0] ?? idleListenRecord;
   const [activeSlug, setActiveSlug] = useState(firstRecord.slug);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(firstRecord.duration);

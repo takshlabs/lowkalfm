@@ -4,8 +4,8 @@ import test from 'node:test';
 import { createStaticRoutes } from '../scripts/vercel-static-routes.mjs';
 
 test('RSC requests receive exported payloads before HTML and retain compatibility headers', () => {
-  const routes = createStaticRoutes(['index.rsc', 'listen.rsc', 'listen/archive.rsc', 'artists.rsc'], 'build-test');
-  for (const [path, file] of [['/', '/index.rsc'], ['/listen', '/listen.rsc'], ['/listen/archive', '/listen/archive.rsc'], ['/artists/test', '/artists.rsc']]) {
+  const routes = createStaticRoutes(['index.rsc', 'listen.rsc', 'listen/archive.rsc', 'artists.rsc', 'read.rsc'], 'build-test');
+  for (const [path, file] of [['/', '/index.rsc'], ['/listen', '/listen.rsc'], ['/listen/archive', '/listen/archive.rsc'], ['/artists/test', '/artists.rsc'], ['/read/a-story', '/read.rsc']]) {
     const route = routes.find(r => r.has?.some(h => h.key === 'rsc') && new RegExp(r.src).test(path));
     assert.ok(route, path);
     assert.equal(route.dest, file);
@@ -49,4 +49,17 @@ test('project checks produce the exact Vercel static output before release', () 
   const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   assert.equal(packageJson.scripts['verify:vercel'], 'VERCEL=1 npm run build && node scripts/build-vercel-output.mjs');
   assert.match(packageJson.scripts.check, /npm run verify:vercel/);
+});
+
+test('artist and story deep links reuse the exported shells', () => {
+  const routes = createStaticRoutes(['index.rsc', 'artists.rsc', 'read.rsc'], 'build-test');
+  const artistHtml = routes.find(route => route.src === '^/artists/[^/]+/?$' && route.dest === '/artists.html');
+  const readHtml = routes.find(route => route.src === '^/read/[^/]+/?$' && route.dest === '/read.html');
+  const readRsc = routes.find(route => route.src === '^/read/[^/]+/?$' && route.dest === '/read.rsc');
+  assert.ok(artistHtml);
+  assert.ok(readHtml);
+  assert.ok(readRsc);
+  const vercel = JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8'));
+  assert.ok(vercel.rewrites.some(rule => rule.source === '/artists/:slug' && rule.destination === '/artists'));
+  assert.ok(vercel.rewrites.some(rule => rule.source === '/read/:slug' && rule.destination === '/read'));
 });

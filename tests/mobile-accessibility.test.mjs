@@ -11,7 +11,7 @@ test('shared navigation provides a keyboard skip target', async () => {
 });
 
 test('public routes expose the shared main-content target', async () => {
-  for (const path of ['app/page.tsx', 'app/listen/page.tsx', 'app/listen/archive/page.tsx', 'app/read/page.tsx', 'app/go-out/page.tsx']) {
+  for (const path of ['app/page.tsx', 'app/listen/page.tsx', 'app/listen/archive/page.tsx', 'app/read/[[...slug]]/page.tsx', 'app/go-out/page.tsx']) {
     const source = await read(path);
     assert.match(source, /<main[^>]*id="main-content"/, `${path} must expose the skip target`);
   }

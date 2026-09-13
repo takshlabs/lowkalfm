@@ -21,7 +21,7 @@ test("listen mixes are ordered by release date, newest first", () => {
 
 test("home, soundroom, and archive use the shared newest-first mix list", async () => {
   const query = await source("lib/sanity.ts");
-  const provider = await source("components/ListenContentProvider.tsx");
+  const provider = await source("lib/listen-content.ts");
   const home = await source("components/HomeTransmissionDeck.tsx");
   const archive = await source("components/SoundroomCatalog.tsx");
   const soundroom = await source("components/SoundroomFrame.tsx");

@@ -23,6 +23,9 @@ export function createStaticRoutes(files, compatibilityId) {
   if (files.includes('artists.rsc')) routes.push({
     src: '^/artists/[^/]+/?$', has: [{ type: 'header', key: 'rsc', value: '1' }], dest: '/artists.rsc', headers,
   });
+  if (files.includes('read.rsc')) routes.push({
+    src: '^/read/[^/]+/?$', has: [{ type: 'header', key: 'rsc', value: '1' }], dest: '/read.rsc', headers,
+  });
   routes.push({ src: '^/.*\\.rsc$', headers, continue: true });
   routes.push({
     src: '^/sw\\.js$',
@@ -43,5 +46,6 @@ export function createStaticRoutes(files, compatibilityId) {
     routes.push({ src: `^/${escape(file.slice(0, -4))}/?$`, dest: `/${file.slice(0, -4)}.html` });
   }
   routes.push({ src: '^/artists/[^/]+/?$', dest: '/artists.html' });
+  routes.push({ src: '^/read/[^/]+/?$', dest: '/read.html' });
   return routes;
 }

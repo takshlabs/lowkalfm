@@ -10,7 +10,7 @@ async function source(path) {
 
 test("the floating player preserves its live state with one selected playback source", async () => {
   const provider = await source("components/AudioProvider.tsx");
-  const content = await source("components/ListenContentProvider.tsx");
+  const content = await source("lib/listen-content.ts");
   const query = await source("lib/sanity.ts");
   const player = await source("components/PersistentPlayer.tsx");
 
@@ -106,7 +106,7 @@ test("the original Soundroom opens the vinyl-and-shader archive room", async () 
 test("each mix can control the Soundroom shader palette", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");
-  const provider = await source("components/ListenContentProvider.tsx");
+  const provider = await source("lib/listen-content.ts");
   const frame = await source("components/SoundroomFrame.tsx");
   const soundroom = await source("public/soundroom/index.html");
 
@@ -142,7 +142,7 @@ test("Soundroom displays CMS tracklists and plain-text mix descriptions", async 
 test("CMS YouTube video links remain display links and recover legacy playback-only records", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");
-  const content = await source("components/ListenContentProvider.tsx");
+  const content = await source("lib/listen-content.ts");
   const player = await source("components/PersistentPlayer.tsx");
   const audio = await source("components/AudioProvider.tsx");
   const frame = await source("components/SoundroomFrame.tsx");

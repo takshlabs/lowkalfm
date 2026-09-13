@@ -59,30 +59,46 @@ export function SoundroomCatalog() {
   const { activeRecord, isPlaying, isLoading, error, retryPlayback, playRecord, togglePlayback } = useAudio();
   const selectedIndex = Math.max(0, archiveRecords.findIndex((record) => record.slug === (selectedSlug ?? activeRecord.slug)));
   const selected = archiveRecords[selectedIndex] ?? archiveRecords[0];
-  const group = useMemo(() => getGroup(selected), [selected]);
-  const selectedIsActive = activeRecord.slug === selected.slug;
-  const playable = Boolean(selected.playback);
-  const playLabel = !playable ? "Unavailable" : selectedIsActive && error ? "Retry playback" : selectedIsActive && isLoading ? "Cancel loading" : selectedIsActive && isPlaying ? "Pause" : "Play record";
+  const group = useMemo(() => selected ? getGroup(selected) : archiveGroups[0], [selected]);
+  const selectedIsActive = Boolean(selected) && activeRecord.slug === selected.slug;
+  const playable = Boolean(selected?.playback);
+  const playLabel = !selected ? "Unavailable" : !playable ? "Unavailable" : selectedIsActive && error ? "Retry playback" : selectedIsActive && isLoading ? "Cancel loading" : selectedIsActive && isPlaying ? "Pause" : "Play record";
 
   useEffect(() => {
+    if (!selected) return;
     recordRefs.current.get(selected.slug)?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
       block: "nearest",
       inline: "center"
     });
-  }, [selected.slug]);
+  }, [selected]);
 
   const move = (direction: -1 | 1) => {
+    if (!archiveRecords.length) return;
     const nextIndex = (selectedIndex + direction + archiveRecords.length) % archiveRecords.length;
     setSelectedSlug(archiveRecords[nextIndex].slug);
   };
 
   const handlePlay = () => {
-    if (!playable) return;
+    if (!selected || !playable) return;
     if (selectedIsActive && error) retryPlayback();
     else if (selectedIsActive) togglePlayback();
     else playRecord(selected.slug);
   };
+
+  if (!selected) {
+    return (
+      <section className="archive-room" id="archive" aria-labelledby="archive-title">
+        <header className="archive-room-heading">
+          <div className="archive-room-title">
+            <p className="section-kicker">Lowkal listening archive</p>
+            <h1 id="archive-title">Archive<br />room</h1>
+          </div>
+        </header>
+        <p className="archive-empty">The archive fills when published mixes are available.</p>
+      </section>
+    );
+  }
 
   return (
     <section
