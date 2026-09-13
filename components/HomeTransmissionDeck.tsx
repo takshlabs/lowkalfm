@@ -39,7 +39,7 @@ export function HomeTransmissionDeck() {
                 <MediaFrame variant="editorial" frameClassName="transmission-frame" src={record.artwork} alt={`${record.series} artwork`} fill sizes="(max-width: 760px) 88vw, 31vw" priority={index === 0} />
                 <div className="transmission-channel"><span>●</span> BLR · {String(index + 1).padStart(2, "0")}</div>
                 <button type="button" onClick={() => toggleRecord(record.slug)} aria-label={`${playing ? "Pause" : "Play"} ${record.series}`}>
-                  {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+                  {playing ? <Pause className="lowkal-icon" aria-hidden="true" /> : <Play className="lowkal-icon" aria-hidden="true" />}
                 </button>
                 <div className="transmission-overlay">
                   <p>{record.artist}</p>

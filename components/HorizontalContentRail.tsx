@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 type HorizontalContentRailProps = {
@@ -52,10 +52,10 @@ export function HorizontalContentRail({ ariaLabel, className, children }: Horizo
       {scrollState.canGoBack || scrollState.canGoForward ? (
         <div className="horizontal-content-rail-controls" aria-label={`${ariaLabel} navigation`}>
           <button type="button" onClick={() => move(-1)} disabled={!scrollState.canGoBack} aria-label={`Previous ${ariaLabel}`}>
-            <ChevronLeft aria-hidden="true" />
+            <ArrowLeft className="lowkal-icon" aria-hidden="true" />
           </button>
           <button type="button" onClick={() => move(1)} disabled={!scrollState.canGoForward} aria-label={`Next ${ariaLabel}`}>
-            <ChevronRight aria-hidden="true" />
+            <ArrowRight className="lowkal-icon" aria-hidden="true" />
           </button>
         </div>
       ) : null}

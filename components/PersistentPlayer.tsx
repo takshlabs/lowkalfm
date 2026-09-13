@@ -42,7 +42,7 @@ export function PersistentPlayer() {
         disabled={!isPlayable}
       >
         <span className={`lowkal-player-transport-icon${isLoading ? " is-loading" : ""}`}>
-          {error ? <RotateCcw aria-hidden="true" /> : isLoading ? <LoaderCircle aria-hidden="true" /> : isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+          {error ? <RotateCcw className="lowkal-icon" aria-hidden="true" /> : isLoading ? <LoaderCircle className="lowkal-icon" aria-hidden="true" /> : isPlaying ? <Pause className="lowkal-icon" aria-hidden="true" /> : <Play className="lowkal-icon" aria-hidden="true" />}
         </span>
       </button>
 
@@ -61,7 +61,7 @@ export function PersistentPlayer() {
               aria-label="Watch this mix on YouTube"
               title="Watch on YouTube"
             >
-              <Video aria-hidden="true" />
+              <Video className="lowkal-icon" aria-hidden="true" />
             </a>
           ) : null}
         </div>
@@ -87,7 +87,7 @@ export function PersistentPlayer() {
       </div>
 
       <label className="lowkal-player-volume">
-        <Volume2 aria-hidden="true" />
+        <Volume2 className="lowkal-icon" aria-hidden="true" />
         <span className="sr-only">Volume</span>
         <input
           type="range"
@@ -101,7 +101,7 @@ export function PersistentPlayer() {
         <output className="sr-only">Volume {volumeLabel}</output>
       </label>
       <SiteLink className="lowkal-player-room" href={sitePath("/listen")} aria-label="Open Soundroom">
-        <ArrowUpRight aria-hidden="true" />
+        <ArrowUpRight className="lowkal-icon" aria-hidden="true" />
       </SiteLink>
     </aside>
   );

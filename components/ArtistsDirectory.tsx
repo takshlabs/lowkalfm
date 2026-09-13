@@ -55,7 +55,7 @@ function ArtistFocusPlayer({ record }: { record: SoundRecord }) {
     <div className={`artist-focus-player${playing ? " is-playing" : ""}`}>
       <span className="artist-focus-player-art"><Image src={record.artwork} alt="" fill sizes="88px" /></span>
       <button type="button" onClick={() => isActive ? togglePlayback() : playRecord(record.slug)} aria-label={`${playing ? "Pause" : "Play"} ${record.title}`}>
-        {playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+        {playing ? <Pause className="lowkal-icon" aria-hidden="true" /> : <Play className="lowkal-icon" aria-hidden="true" />}
       </button>
       <div className="artist-focus-player-copy">
         <span><i aria-hidden="true" /> {playing ? "Playing now" : "Artist focus"}</span>
@@ -113,7 +113,7 @@ export function ArtistsDirectory() {
           <div className="artist-profile-bio"><ArtistBio blocks={artist.bio} fallback={artist.shortBio} /></div>
           <aside className="artist-profile-links">
             <SiteLink href={sitePath("/artists")}>All artists ←</SiteLink>
-            {artist.links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer">{link.label} <ArrowUpRight aria-hidden="true" /></a>)}
+            {artist.links.map((link) => <a key={link.url} href={link.url} target="_blank" rel="noreferrer">{link.label} <ArrowUpRight className="lowkal-icon" aria-hidden="true" /></a>)}
           </aside>
         </section>
 
@@ -126,7 +126,7 @@ export function ArtistsDirectory() {
                   <span className="artist-mix-index">LKL—{String(index + 1).padStart(2, "0")}</span>
                   <span className="artist-mix-art"><Image src={record.artwork} alt="" fill sizes="140px" /></span>
                   <div><small>{record.series}</small><strong>{record.title}</strong><em>{record.date} / {record.genres.slice(0, 2).join(" · ")}</em></div>
-                  <SiteLink href={sitePath(`/listen/archive?mix=${encodeURIComponent(record.slug)}`)} aria-label={`Open ${record.title} in the Archive`}><ArrowUpRight aria-hidden="true" /></SiteLink>
+                  <SiteLink href={sitePath(`/listen/archive?mix=${encodeURIComponent(record.slug)}`)} aria-label={`Open ${record.title} in the Archive`}><ArrowUpRight className="lowkal-icon" aria-hidden="true" /></SiteLink>
                 </article>
               ))}
               {artist.externalMixes.map((mix, index) => (
@@ -134,7 +134,7 @@ export function ArtistsDirectory() {
                   <span className="artist-mix-index">EXT—{String(index + 1).padStart(2, "0")}</span>
                   {mix.artwork ? <span className="artist-mix-art"><Image src={mix.artwork} alt="" fill sizes="140px" /></span> : <span className="artist-mix-art artist-mix-art--type">{mix.platform.slice(0, 2)}</span>}
                   <div><small>{mix.platform}</small><strong>{mix.title}</strong><em>{mix.note || "External transmission"}</em></div>
-                  <ArrowUpRight aria-hidden="true" />
+                  <ArrowUpRight className="lowkal-icon" aria-hidden="true" />
                 </a>
               ))}
             </div>
@@ -153,7 +153,7 @@ export function ArtistsDirectory() {
                     <h3>{production.title}</h3>
                     {production.artwork ? <span className="artist-production-art"><Image src={production.artwork} alt="" fill sizes="(max-width: 760px) 100vw, 42vw" /></span> : null}
                     {embedUrl ? <iframe src={embedUrl} title={`Spotify player for ${production.title}`} width="100%" height="152" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" /> : null}
-                    {production.externalUrl ? <a href={production.externalUrl} target="_blank" rel="noreferrer">Open release <ArrowUpRight aria-hidden="true" /></a> : null}
+                    {production.externalUrl ? <a href={production.externalUrl} target="_blank" rel="noreferrer">Open release <ArrowUpRight className="lowkal-icon" aria-hidden="true" /></a> : null}
                   </article>
                 );
               })}
@@ -167,7 +167,7 @@ export function ArtistsDirectory() {
             <div className="artist-field-note-grid">
               {artist.fieldNotes.map((note, index) => (
                 <article key={`${note.placeName}-${index}`}>
-                  <div><span>FN—{String(index + 1).padStart(2, "0")}</span><MapPin aria-hidden="true" /></div>
+                  <div><span>FN—{String(index + 1).padStart(2, "0")}</span><MapPin className="lowkal-icon" aria-hidden="true" /></div>
                   <h3>{note.placeName}</h3><small>{note.area}</small><blockquote>“{note.note}”</blockquote>
                   <div className="artist-field-note-tags">{note.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
                   <footer>{note.goOutSlug ? <SiteLink href={sitePath(`/go-out#${note.goOutSlug}`)}>Open in Go Out ↗</SiteLink> : null}{note.mapUrl ? <a href={note.mapUrl} target="_blank" rel="noreferrer">Map ↗</a> : null}</footer>

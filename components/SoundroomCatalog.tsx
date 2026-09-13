@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Pause, Play } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pause, Play } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatTime, SoundRecord } from "@/lib/content";
@@ -168,9 +168,9 @@ export function SoundroomCatalog() {
         </div>
 
         <div className="archive-controls" aria-label="Archive controls">
-          <button type="button" onClick={() => move(-1)} aria-label="Previous record">←</button>
+          <button type="button" onClick={() => move(-1)} aria-label="Previous record"><ArrowLeft className="lowkal-icon" aria-hidden="true" /></button>
           <span>{String(selectedIndex + 1).padStart(2, "0")} / {String(archiveRecords.length).padStart(2, "0")}</span>
-          <button type="button" onClick={() => move(1)} aria-label="Next record">→</button>
+          <button type="button" onClick={() => move(1)} aria-label="Next record"><ArrowRight className="lowkal-icon" aria-hidden="true" /></button>
         </div>
       </div>
 
