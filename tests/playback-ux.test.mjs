@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import ts from "typescript";
 
-const record = (slug, source = true) => ({ slug, artist: slug, series: "Volume", title: slug, duration: 120, artistSlugs: [], genres: [], artwork: "/art.jpg", archiveSection: "volumes-guests", ...(source ? { playback: { provider: "cloudflare", url: "/mix.mp3" } } : {}) });
+const record = (slug, source = true) => ({ slug, artist: slug, series: "Volume", title: slug, duration: 120, artistSlugs: [], genres: [], artwork: "/art.jpg", archiveSection: "volumes-guests", ...(source ? { playback: { provider: "cloudflare", url: "/mix.mp3" }, waveformPeaksUrl: "/mix.peaks.json" } : {}) });
 const records = [record("first"), record("current"), record("unavailable", false)];
 function mount(name, overrides = {}) {
   const audio = { activeRecord: records[1], currentTime: 30, duration: 120, isPlaying: false, isReady: false, isLoading: false, error: null, volume: 82, isMuted: false, isShuffled: false, repeatMode: "off", sleepTimer: null, togglePlayback() {}, retryPlayback() {}, playNext() {}, playPrevious() {}, seek() {}, seekBy() {}, setVolume() {}, toggleMuted() {}, toggleShuffle() {}, cycleRepeatMode() {}, setSleepTimer() {}, playRecord() {}, ...overrides };
@@ -116,12 +116,12 @@ test("timeline delegates seeking to the waveform only when ready", () => {
   assert.deepEqual(seeks, [75]);
 });
 
-test("timeline removes its source when an unplayable mix is selected", () => {
+test("timeline removes its peak data when an unplayable mix is selected", () => {
   const view = mount("PersistentPlayer", { isReady: true });
   let waveform = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
-  assert.equal(waveform.props.sourceUrl, "/mix.mp3");
+  assert.equal(waveform.props.peaksUrl, "/mix.peaks.json");
   view.audio.activeRecord = records[2];
   waveform = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
-  assert.equal(waveform.props.sourceUrl, undefined);
+  assert.equal(waveform.props.peaksUrl, undefined);
   assert.equal(waveform.props.canSeek, false);
 });

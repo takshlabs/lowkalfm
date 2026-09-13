@@ -17,6 +17,7 @@ type SanityMix = {
   releaseDate: string;
   duration?: number;
   audioDeliveryUrl?: string;
+  audioPeaksUrl?: string;
   audioStartOffset?: number;
   youtubeUrl?: string;
   youtubeVideoUrl?: string;
@@ -73,6 +74,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     duration: mix.duration ?? 0,
     startOffset: getMixStartOffset(mix.audioStartOffset),
     playback,
+    waveformPeaksUrl: mix.audioPeaksUrl,
     youtubeVideoUrl: getYouTubeVideoUrl(mix.youtubeVideoUrl ?? mix.youtubeUrl),
     artwork: mix.artwork,
     genres: mix.genres ?? [],

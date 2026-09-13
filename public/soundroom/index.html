@@ -511,6 +511,7 @@
     let MIXES = [catalogPlaceholder()];
     const hasPlayback = (mix) => Boolean(mix?.playback);
     const cloudflareUrlFor = (mix) => mix?.playback?.provider === 'cloudflare' ? mix.playback.url : null;
+    const peaksUrlFor = (mix) => mix?.playback?.provider === 'cloudflare' ? mix.waveformPeaksUrl : null;
 
     // Shader mood selection
     const SHADER_PALETTES = {
@@ -649,6 +650,9 @@
         this.lastExternalSourceKey = null;
         this.isScrubbing = false;
         this.scrubPercent = 0;
+        this.waveform = null;
+        this.waveformSource = '';
+        this.waveformRequest = 0;
         
         // Core Engines
         this.mediaEngine = new HtmlAudioPlayerEngine(() => this.handleMixFinished());
@@ -815,39 +819,50 @@
 
       setupWaveform(mix = this.activeMix) {
         const container = document.getElementById('main-waveform');
-        const source = cloudflareUrlFor(mix);
-        const sourceKey = source ? `${mix.id}:${source}` : '';
+        const peaksUrl = peaksUrlFor(mix);
+        const sourceKey = peaksUrl ? `${mix.id}:${peaksUrl}` : '';
         if (sourceKey === this.waveformSource) return;
+        const request = ++this.waveformRequest;
         this.waveform?.destroy?.();
         this.waveform = null;
         this.waveformSource = sourceKey;
         container.replaceChildren();
-        container.dataset.state = source ? 'loading' : 'unavailable';
+        container.dataset.state = peaksUrl ? 'loading' : 'unavailable';
         const WaveSurfer = window.WaveSurfer;
-        if (!source || !WaveSurfer?.create) return;
-        this.waveform = WaveSurfer.create({
-          container,
-          url: source,
-          duration: Number(mix.duration) || 0,
-          height: 42,
-          waveColor: 'rgba(229, 226, 225, 0.24)',
-          progressColor: '#55e93b',
-          cursorColor: 'rgba(229, 226, 225, 0.82)',
-          cursorWidth: 1,
-          barWidth: 2,
-          barGap: 1,
-          barRadius: 3,
-          barMinHeight: 1,
-          normalize: true,
-          sampleRate: 8000,
-          interact: false,
-          dragToSeek: false
-        });
-        this.waveform.on('ready', () => {
-          container.dataset.state = 'ready';
-          this.updateWaveform();
-        });
-        this.waveform.on('error', () => { container.dataset.state = 'unavailable'; });
+        if (!peaksUrl || !WaveSurfer?.create || !(Number(mix.duration) > 0)) return;
+        fetch(peaksUrl)
+          .then((response) => {
+            if (!response.ok) throw new Error(`Waveform data failed with ${response.status}`);
+            return response.json();
+          })
+          .then((payload) => {
+            if (request !== this.waveformRequest || !Array.isArray(payload?.peaks) || !payload.peaks.length || !payload.peaks.every((peak) => typeof peak === 'number' && Number.isFinite(peak))) return;
+            this.waveform = WaveSurfer.create({
+              container,
+              duration: Number(mix.duration),
+              peaks: [payload.peaks],
+              height: 42,
+              waveColor: 'rgba(229, 226, 225, 0.24)',
+              progressColor: '#55e93b',
+              cursorColor: 'rgba(229, 226, 225, 0.82)',
+              cursorWidth: 1,
+              barWidth: 2,
+              barGap: 1,
+              barRadius: 3,
+              barMinHeight: 1,
+              normalize: true,
+              interact: false,
+              dragToSeek: false
+            });
+            this.waveform.on('ready', () => {
+              container.dataset.state = 'ready';
+              this.updateWaveform();
+            });
+            this.waveform.on('error', () => { container.dataset.state = 'unavailable'; });
+          })
+          .catch(() => {
+            if (request === this.waveformRequest) container.dataset.state = 'unavailable';
+          });
       }
 
       updateWaveform() {

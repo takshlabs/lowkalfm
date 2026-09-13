@@ -165,14 +165,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
     cursor: pointer !important;
     touch-action: manipulation;
   }
-  #main-waveform::before {
-    position: absolute;
-    inset: 8px 0;
-    z-index: -1;
-    content: "";
-    opacity: .55;
-    background: repeating-linear-gradient(90deg, transparent 0 3px, rgba(229, 226, 225, .18) 3px 5px, transparent 5px 8px);
-  }
+
   #main-waveform[data-state="unavailable"] { cursor: default !important; opacity: .56; }
   #main-waveform:focus-visible { outline: 2px solid rgba(85, 233, 59, .82); outline-offset: 4px; }
   #btn-main-shuffle, #btn-main-replay-10, #btn-main-prev, #btn-main-next, #btn-main-forward-30, #btn-main-repeat, #btn-volume-mute {

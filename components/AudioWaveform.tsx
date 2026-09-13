@@ -5,7 +5,7 @@ import WaveSurfer from "wavesurfer.js";
 import { formatTime } from "@/lib/content";
 
 type AudioWaveformProps = {
-  sourceUrl?: string;
+  peaksUrl?: string;
   currentTime: number;
   duration: number;
   canSeek: boolean;
@@ -33,7 +33,7 @@ function boundedTime(time: number, duration: number) {
   return Math.min(duration, Math.max(0, time));
 }
 
-export function AudioWaveform({ sourceUrl, currentTime, duration, canSeek, onSeek, className }: AudioWaveformProps) {
+export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek, className }: AudioWaveformProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const waveformRef = useRef<WaveSurfer | null>(null);
   const total = Number.isFinite(duration) && duration > 0 ? duration : 0;
@@ -42,30 +42,45 @@ export function AudioWaveform({ sourceUrl, currentTime, duration, canSeek, onSee
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !sourceUrl || !total) return;
+    if (!container) return;
+    container.replaceChildren();
+    container.dataset.state = peaksUrl && total ? "loading" : "unavailable";
+    if (!peaksUrl || !total) return;
 
-    container.dataset.state = "loading";
-    const waveform = WaveSurfer.create({
-      container,
-      duration: total,
-      height: 28,
-      url: sourceUrl,
-      ...waveformOptions
-    });
-    waveformRef.current = waveform;
-    waveform.on("ready", () => {
-      container.dataset.state = "ready";
-      waveform.setTime(positionRef.current);
-    });
-    waveform.on("error", () => {
-      container.dataset.state = "unavailable";
-    });
+    const controller = new AbortController();
+    let waveform: WaveSurfer | null = null;
+    const load = async () => {
+      try {
+        const response = await fetch(peaksUrl, { signal: controller.signal });
+        if (!response.ok) throw new Error(`Waveform data failed with ${response.status}`);
+        const payload = await response.json() as { peaks?: unknown };
+        if (!Array.isArray(payload.peaks) || !payload.peaks.length || !payload.peaks.every((peak) => typeof peak === "number" && Number.isFinite(peak))) throw new Error("Invalid waveform data");
+        if (controller.signal.aborted) return;
+        waveform = WaveSurfer.create({
+          container,
+          duration: total,
+          height: 28,
+          peaks: [payload.peaks],
+          ...waveformOptions
+        });
+        waveformRef.current = waveform;
+        waveform.on("ready", () => {
+          container.dataset.state = "ready";
+          waveform?.setTime(positionRef.current);
+        });
+        waveform.on("error", () => { container.dataset.state = "unavailable"; });
+      } catch {
+        if (!controller.signal.aborted) container.dataset.state = "unavailable";
+      }
+    };
+    void load();
 
     return () => {
-      waveform.destroy();
+      controller.abort();
+      waveform?.destroy();
       if (waveformRef.current === waveform) waveformRef.current = null;
     };
-  }, [sourceUrl, total]);
+  }, [peaksUrl, total]);
 
   useEffect(() => {
     positionRef.current = position;
@@ -100,10 +115,10 @@ export function AudioWaveform({ sourceUrl, currentTime, duration, canSeek, onSee
     <div
       ref={containerRef}
       className={`audio-waveform${className ? ` ${className}` : ""}`}
-      data-state={sourceUrl ? "loading" : "unavailable"}
+      data-state={peaksUrl ? "loading" : "unavailable"}
       role="slider"
       tabIndex={canSeek ? 0 : -1}
-      aria-label={sourceUrl ? "Playback waveform" : "Playback position"}
+      aria-label={peaksUrl ? "Playback waveform" : "Playback position"}
       aria-disabled={!canSeek}
       aria-valuemin={0}
       aria-valuemax={total}

@@ -676,7 +676,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .lowkal-player-timecode span:last-child { text-align: right; }
 .lowkal-player-track { position: relative; display: flex; align-items: center; height: 30px; }
 .audio-waveform { position: relative; width: 100%; min-height: 28px; overflow: hidden; cursor: pointer; touch-action: manipulation; }
-.audio-waveform::before { position: absolute; inset: 3px 0; z-index: -1; content: ""; opacity: 0.72; background: linear-gradient(90deg, rgba(242, 238, 229, 0.08), rgba(242, 238, 229, 0.16)), repeating-linear-gradient(90deg, transparent 0 3px, rgba(242, 238, 229, 0.14) 3px 5px, transparent 5px 8px); }
 .audio-waveform[data-state="unavailable"] { cursor: default; opacity: 0.62; }
 .audio-waveform:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
 .lowkal-player-volume input { position: relative; z-index: 2; width: 100%; margin: 0; appearance: none; border: 0; background: transparent; cursor: pointer; }

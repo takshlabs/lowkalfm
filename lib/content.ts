@@ -22,6 +22,8 @@ export type SoundRecord = {
   /** Seconds skipped at the beginning of the source file. */
   startOffset?: number;
   playback?: MixPlaybackSource;
+  /** URL of compact peak data generated from the Cloudflare master. */
+  waveformPeaksUrl?: string;
   youtubeVideoUrl?: string;
   artwork: string;
   genres: string[];

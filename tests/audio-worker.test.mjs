@@ -84,6 +84,7 @@ test("audio sync derives a missing asset ID and returns a playable delivery URL"
     assert.equal(mutations.length, 1);
     assert.equal(mutations[0].mutations[0].patch.set["audio.sourceAssetId"], "file-aabbcc-wav");
     assert.equal(mutations[0].mutations[0].patch.set["audio.deliveryUrl"], result.deliveryUrl);
+    assert.equal(mutations[0].mutations[0].patch.set["audio.peaksUrl"], undefined);
     assert.equal(mutations[0].mutations[0].patch.set.duration, undefined);
   } finally {
     globalThis.fetch = originalFetch;
@@ -129,7 +130,7 @@ test("audio sync writes mix duration from the uploaded WAV master", async () => 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const url = String(input);
-    if (url === sourceUrl) return new Response(wavHeader(90), { status: 200, headers: { "content-type": "audio/wav", "content-length": "15876440" } });
+    if (url === sourceUrl) return new Response(wavHeader(90), { status: 200, headers: { "content-type": "audio/wav" } });
     if (url.includes("api.sanity.io") && init?.method === "POST") {
       mutations.push(JSON.parse(String(init.body)));
       return new Response("{}", { status: 200 });

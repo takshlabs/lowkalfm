@@ -32,6 +32,7 @@ export function SoundroomFrame() {
       artistUrl: artist ? sitePath(`/artists/${artist.slug}`) : "",
       duration: record.duration,
       startOffset: record.startOffset ?? 0,
+      waveformPeaksUrl: record.waveformPeaksUrl,
       synthStyle: "live",
       tracks: record.tracks,
       cloud: {

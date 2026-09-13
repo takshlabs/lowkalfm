@@ -10,7 +10,7 @@ interface AudioObject {
 
 interface AudioObjectBucket {
   get(key: string, options?: { range?: Headers }): Promise<AudioObject | null>;
-  put(key: string, value: ReadableStream<Uint8Array>, options: { httpMetadata: { contentType: string; cacheControl: string } }): Promise<unknown>;
+  put(key: string, value: ReadableStream<Uint8Array> | string, options: { httpMetadata: { contentType: string; cacheControl: string } }): Promise<unknown>;
 }
 
 interface Env {
@@ -128,9 +128,9 @@ async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">>
   if (!response.ok) throw new Error(`Sanity patch failed with ${response.status}`);
 }
 
-async function syncAudio(request: Request, env: Env) {
+async function syncAudio(request: Request, env: Env, authorize: (rawBody: string) => Promise<boolean> | boolean) {
   const rawBody = await request.text();
-  if (!await validSanitySignature(rawBody, request.headers.get("sanity-webhook-signature"), env.SANITY_WEBHOOK_SECRET)) return new Response("Unauthorized", { status: 401 });
+  if (!await authorize(rawBody)) return new Response("Unauthorized", { status: 401 });
   let payload: AudioSyncPayload;
   try { payload = JSON.parse(rawBody) as AudioSyncPayload; } catch { return new Response("Invalid JSON", { status: 400 }); }
   if (payload._type !== "mix" || !payload._id || !payload.audioMasterUrl) return new Response(null, { status: 204 });
@@ -159,7 +159,7 @@ const worker = {
     const url = new URL(request.url);
     if (url.pathname.startsWith("/audio/") && (request.method === "GET" || request.method === "HEAD")) return serveAudio(request, env);
     if (url.pathname !== "/sanity/audio-sync" || request.method !== "POST") return new Response("Not found", { status: 404 });
-    try { return await syncAudio(request, env); } catch (error) { console.error(error); return new Response("Audio sync failed", { status: 500 }); }
+    try { return await syncAudio(request, env, (rawBody) => validSanitySignature(rawBody, request.headers.get("sanity-webhook-signature"), env.SANITY_WEBHOOK_SECRET)); } catch (error) { console.error(error); return new Response("Audio sync failed", { status: 500 }); }
   }
 };
 

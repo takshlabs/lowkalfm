@@ -49,7 +49,7 @@ function ArtistFocusPlayer({ record }: { record: SoundRecord }) {
   const playing = isActive && isPlaying;
   const total = isActive ? duration || record.duration : record.duration;
   const elapsed = isActive ? currentTime : 0;
-  const waveformSource = isActive && record.playback?.provider === "cloudflare" ? record.playback.url : undefined;
+  const waveformPeaksUrl = isActive && record.playback?.provider === "cloudflare" ? record.waveformPeaksUrl : undefined;
 
   return (
     <div className={`artist-focus-player${playing ? " is-playing" : ""}`}>
@@ -65,7 +65,7 @@ function ArtistFocusPlayer({ record }: { record: SoundRecord }) {
       <div className="artist-focus-player-time">
         <span>{formatTime(elapsed)}</span>
         <AudioWaveform
-          sourceUrl={waveformSource}
+          peaksUrl={waveformPeaksUrl}
           currentTime={elapsed}
           duration={total}
           canSeek={isActive && isReady && total > 0}

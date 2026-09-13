@@ -15,6 +15,8 @@ test("Lowkal player timelines use the shared interactive WaveSurfer surface", as
 
   assert.match(waveform, /from "wavesurfer\.js"/);
   assert.match(waveform, /WaveSurfer\.create/);
+  assert.match(waveform, /fetch\(peaksUrl/);
+  assert.match(waveform, /peaks:\s*\[payload\.peaks\]/);
   assert.match(waveform, /role="slider"/);
   assert.match(waveform, /onClick=\{handleClick\}/);
   assert.match(waveform, /onSeek\(/);
@@ -22,6 +24,7 @@ test("Lowkal player timelines use the shared interactive WaveSurfer surface", as
   assert.match(player, /<AudioWaveform/);
   assert.match(artists, /<AudioWaveform/);
   assert.doesNotMatch(player, /type="range"[\s\S]*?Playback position/);
+  assert.doesNotMatch(waveform, /url:\s*sourceUrl/);
 });
 
 test("Soundroom uses WaveSurfer for the source waveform and parent seeking", async () => {
@@ -30,6 +33,8 @@ test("Soundroom uses WaveSurfer for the source waveform and parent seeking", asy
   assert.match(room, /wavesurfer\.min\.js/);
   assert.match(room, /id="main-waveform"/);
   assert.match(room, /WaveSurfer\.create/);
+  assert.match(room, /fetch\(peaksUrl\)/);
+  assert.match(room, /peaks:\s*\[payload\.peaks\]/);
   assert.match(room, /sendAudioCommand\('seek'/);
   assert.doesNotMatch(room, /id="main-scrubber"/);
 });

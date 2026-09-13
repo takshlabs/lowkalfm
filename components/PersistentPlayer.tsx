@@ -23,7 +23,7 @@ export function PersistentPlayer() {
   const canSeek = isPlayable && isReady && total > 0;
   const volumeStyle = { "--deck-volume": `${volume}%` } as CSSProperties;
   const volumeLabel = Math.round(volume).toString().padStart(2, "0");
-  const waveformSource = activeRecord.playback?.provider === "cloudflare" ? activeRecord.playback.url : undefined;
+  const waveformPeaksUrl = activeRecord.playback?.provider === "cloudflare" ? activeRecord.waveformPeaksUrl : undefined;
 
   if (isUnlistedPath(pathname)) return null;
 
@@ -78,7 +78,7 @@ export function PersistentPlayer() {
         </div>
         <span className="lowkal-player-track">
           <AudioWaveform
-            sourceUrl={waveformSource}
+            peaksUrl={waveformPeaksUrl}
             currentTime={shownPosition}
             duration={total}
             canSeek={canSeek}

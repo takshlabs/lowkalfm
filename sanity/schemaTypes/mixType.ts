@@ -67,6 +67,13 @@ export const mixType = defineType({
           description: "Set automatically after the WAV is copied to the audio CDN."
         }),
         defineField({
+          name: "peaksUrl",
+          title: "Waveform peak data URL",
+          type: "url",
+          readOnly: true,
+          description: "Set automatically with the CDN delivery URL. The player uses this compact data to draw the master waveform."
+        }),
+        defineField({
           name: "sourceAssetId",
           title: "Source asset ID",
           type: "string",

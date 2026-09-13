@@ -37,6 +37,7 @@ export const listenContentQuery = `{
     releaseDate,
     duration,
     "audioDeliveryUrl": audio.deliveryUrl,
+    "audioPeaksUrl": audio.peaksUrl,
     "audioStartOffset": audio.startOffset,
     "youtubeUrl": externalUrl,
     youtubeVideoUrl,

@@ -96,6 +96,18 @@ The account has no Cloudflare DNS zone for `lowkalfm.in`. Keep the current Worke
 
 The Worker streams the Sanity master to R2, reads duration from the WAV header, and writes the Cloudflare CDN URL and duration back to the mix. The browser plays that URL directly. Vercel does not proxy the large audio file.
 
+### Waveform publish step
+
+After `audio.deliveryUrl` is present, generate the compact waveform sidecar before the mix is announced:
+
+```sh
+npm run audio:peaks -- <mix-slug>
+```
+
+The command reads 128 evenly distributed samples from the private master, writes a small `.peaks.json` object to R2, and sets `audio.peaksUrl` in Sanity. The browser reads only this JSON to draw the waveform. It does not download or decode the WAV.
+
+Run this command from a CI job triggered after the Sanity publish webhook, or run it manually from an authenticated project checkout. Keep `SANITY_API_WRITE_TOKEN` local or in the CI secret store; it must not be put in browser code or Vercel.
+
 ## Troubleshooting
 
 - If the CDN URL does not appear, check the Cloudflare Worker logs and the Sanity webhook delivery log.
