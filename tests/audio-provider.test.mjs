@@ -64,6 +64,17 @@ test("toggle cancels loading intent before the playing event", () => {
   assert.equal(h.value.isLoading, false);
 });
 
+test("metadata during a pending native start does not issue another play request", () => {
+  const h = harness();
+  h.value.togglePlayback();
+  assert.equal(h.requests.length, 1);
+
+  h.audio.duration = 100;
+  h.audio.readyState = 1;
+  h.event("onLoadedMetadata");
+  assert.equal(h.requests.length, 1);
+});
+
 test("loading that never completes gives a retry instead of an endless spinner", () => {
   const h = harness();
   h.value.togglePlayback(); h.render(); h.expire(); h.render();

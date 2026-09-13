@@ -371,7 +371,7 @@ test("AudioProvider owns the bridge, sets CORS before src and resumes during pla
   assert.match(provider, /startAnalysisBridge\(window/);
   assert.match(provider, /isAnalysisSource\(cloudflareUrl, window\.location\.origin\)/);
   assert.match(provider, /audio\.crossOrigin = "anonymous"[\s\S]*audio\.removeAttribute\("crossorigin"\)[\s\S]*audio\.src = cloudflareUrl/);
-  assert.match(provider, /if \(!needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(\);\s*void audio\.play\(\)/);
+  assert.match(provider, /if \(!needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(\);[\s\S]*nativeStartRef\.current = nativeStart;[\s\S]*void audio\.play\(\)/);
   assert.match(provider, /record\?\.playback\?\.provider === "cloudflare" && !needsNativeBackgroundAudio\(\)\) getAnalysis\(\)\.activate\(record\.playback\.url\)/);
   assert.match(provider, /key=\{`\$\{activeRecord\.slug\}:\$\{cloudflareUrl\}`\} ref=\{bindAudio\}/);
   assert.match(provider, /queueMicrotask[\s\S]*\.dispose\(\)/);

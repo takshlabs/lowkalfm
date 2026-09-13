@@ -151,6 +151,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const ownerClaimRef = useRef<PlaybackClaim | null>(null);
   const broadcastRef = useRef<BroadcastChannel | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const nativeStartRef = useRef<{ audio: HTMLAudioElement; sourceKey: string } | null>(null);
+  const bufferingTimerRef = useRef<number | null>(null);
   const analysisRef = useRef<ReturnType<typeof createAudioAnalysis> | null>(null);
   const analysisMounted = useRef(false);
   const getAnalysis = useCallback(() => {
@@ -312,6 +314,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       setError("You are offline. Reconnect to stream this mix.");
       return;
     }
+    const pendingNativeStart = nativeStartRef.current;
+    if (cloudflareUrl && audioRef.current && pendingNativeStart?.audio === audioRef.current && pendingNativeStart.sourceKey === activeSourceKey) return;
     const request = requestsRef.current.begin();
     setError(null); setIsLoading(true);
     autoplayRef.current = true;
@@ -325,7 +329,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       // when a phone backgrounds the browser. Keep the native media path on
       // touch devices so playback and system media controls remain available.
       if (!needsNativeBackgroundAudio()) getAnalysis().activate();
-      void audio.play().catch(() => {
+      const nativeStart = { audio, sourceKey: activeSourceKey };
+      nativeStartRef.current = nativeStart;
+      void audio.play().then(() => {
+        if (nativeStartRef.current === nativeStart) nativeStartRef.current = null;
+      }).catch(() => {
+        if (nativeStartRef.current === nativeStart) nativeStartRef.current = null;
         if (!requestsRef.current.isCurrent(request) || audioRef.current !== audio) return;
         setIsPlaying(false); setIsLoading(false); autoplayRef.current = false;
         setError("Audio could not start. Press retry to play.");
@@ -339,9 +348,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     youtubePlayerRef.current?.playVideo?.();
-  }, [activeRecord, claimPlayback, cloudflareUrl, getAnalysis, pauseExternalMedia]);
+  }, [activeRecord, activeSourceKey, claimPlayback, cloudflareUrl, getAnalysis, pauseExternalMedia]);
   const pauseMedia = useCallback(() => {
     requestsRef.current.cancel();
+    nativeStartRef.current = null;
+    if (bufferingTimerRef.current !== null) {
+      window.clearTimeout(bufferingTimerRef.current);
+      bufferingTimerRef.current = null;
+    }
     autoplayRef.current = false;
     setIsLoading(false); setIsPlaying(false);
     audioRef.current?.pause();
@@ -377,6 +391,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const retryPlayback = useCallback(() => {
     requestsRef.current.cancel();
+    nativeStartRef.current = null;
+    if (bufferingTimerRef.current !== null) {
+      window.clearTimeout(bufferingTimerRef.current);
+      bufferingTimerRef.current = null;
+    }
     setError(null); setIsLoading(true); setIsReady(false);
     autoplayRef.current = true;
     resumeAtRef.current = currentTimeRef.current;
@@ -397,6 +416,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (!isPlayable(record)) return;
     if (slug === activeRecord.slug) { if (shouldPlay) playMedia(); else pauseMedia(); return; }
     requestsRef.current.cancel();
+    nativeStartRef.current = null;
+    if (bufferingTimerRef.current !== null) {
+      window.clearTimeout(bufferingTimerRef.current);
+      bufferingTimerRef.current = null;
+    }
     sourceKeyRef.current = playbackSourceKey(record);
     pendingSeekRef.current = null;
     audioRef.current?.pause();
@@ -765,19 +789,42 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           onPlaying={(event) => {
             const audio = event.currentTarget;
             if (!isCurrentNativeEvent(audio, activeSourceKey)) return;
+            nativeStartRef.current = null;
+            if (bufferingTimerRef.current !== null) {
+              window.clearTimeout(bufferingTimerRef.current);
+              bufferingTimerRef.current = null;
+            }
             if (!autoplayRef.current) { audio.pause(); return; }
             setIsPlaying(true); setIsLoading(false); setError(null);
           }}
-          onWaiting={(event) => { if (isCurrentNativeEvent(event.currentTarget, activeSourceKey) && autoplayRef.current) setIsLoading(true); }}
+          onWaiting={(event) => {
+            if (!isCurrentNativeEvent(event.currentTarget, activeSourceKey) || !autoplayRef.current || !stateRef.current.isPlaying || bufferingTimerRef.current !== null) return;
+            // Short waiting/playing pairs are normal while buffered audio covers
+            // mobile network jitter. Do not flash the loading state for them.
+            bufferingTimerRef.current = window.setTimeout(() => {
+              bufferingTimerRef.current = null;
+              if (autoplayRef.current && stateRef.current.isPlaying) setIsLoading(true);
+            }, 300);
+          }}
           onPause={(event) => {
             const audio = event.currentTarget;
             if (!isCurrentNativeEvent(audio, activeSourceKey)) return;
+            nativeStartRef.current = null;
+            if (bufferingTimerRef.current !== null) {
+              window.clearTimeout(bufferingTimerRef.current);
+              bufferingTimerRef.current = null;
+            }
             autoplayRef.current = false;
             setIsPlaying(false); setIsLoading(false); persist(audio.currentTime);
           }}
           onEnded={(event) => { if (isCurrentNativeEvent(event.currentTarget, activeSourceKey)) onEnded(); }}
           onError={(event) => {
             if (!isCurrentNativeEvent(event.currentTarget, activeSourceKey)) return;
+            nativeStartRef.current = null;
+            if (bufferingTimerRef.current !== null) {
+              window.clearTimeout(bufferingTimerRef.current);
+              bufferingTimerRef.current = null;
+            }
             requestsRef.current.cancel(); autoplayRef.current = false; setIsReady(false); setIsPlaying(false); setIsLoading(false); setError("Audio could not load. Check your connection and retry.");
           }}>
           <track kind="captions" srcLang="en" label="No spoken content" src="data:text/vtt,WEBVTT" />
