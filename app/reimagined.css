@@ -373,12 +373,9 @@ html { scroll-behavior: smooth; }
 .lowkal-player--compact .lowkal-player-record { margin-top: 4px; font-size: 0.48rem; }
 .lowkal-player--compact .lowkal-player-timeline { grid-row: 1; grid-column: 4; align-self: center; padding: 0 7px; }
 .lowkal-player--compact .lowkal-player-timecode { margin-bottom: 5px; font-size: 0.47rem; }
-.lowkal-player--compact .lowkal-player-track input::-webkit-slider-runnable-track,
 .lowkal-player--compact .lowkal-player-volume input::-webkit-slider-runnable-track { height: 3px; background: linear-gradient(to right, var(--lowkal-red) 0 var(--deck-progress, 0%), rgba(241, 234, 219, 0.18) var(--deck-progress, 0%) 100%); }
 .lowkal-player--compact .lowkal-player-volume input::-webkit-slider-runnable-track { background: linear-gradient(to right, var(--lowkal-red) 0 var(--deck-volume, 0%), rgba(241, 234, 219, 0.18) var(--deck-volume, 0%) 100%); }
-.lowkal-player--compact .lowkal-player-track input::-webkit-slider-thumb,
 .lowkal-player--compact .lowkal-player-volume input::-webkit-slider-thumb { border-color: var(--lowkal-black); background: var(--lowkal-red); box-shadow: none; }
-.lowkal-player--compact .lowkal-player-track input::-moz-range-progress,
 .lowkal-player--compact .lowkal-player-volume input::-moz-range-progress { background: var(--lowkal-red); }
 .lowkal-player--compact .lowkal-player-volume { grid-row: 1; grid-column: 5; display: grid; grid-template-columns: 14px 1fr; align-items: center; gap: 8px; padding: 0 8px; border: 0; border-left: 1px solid rgba(241, 234, 219, 0.16); }
 .lowkal-player--compact .lowkal-player-volume svg { width: 14px; height: 14px; color: rgba(241, 234, 219, 0.62); }
@@ -1017,7 +1014,7 @@ html { scroll-behavior: smooth; }
 .artist-focus-player-copy strong { overflow: hidden; font-family: var(--font-lowkal-display), Arial Black, sans-serif; font-size: clamp(1.25rem, 2vw, 2rem); text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .artist-focus-player-copy small { overflow: hidden; color: rgba(241, 234, 219, 0.58); font-size: 0.56rem; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
 .artist-focus-player-time { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; font-size: 0.55rem; font-variant-numeric: tabular-nums; }
-.artist-focus-player-time i { height: 3px; background: linear-gradient(90deg, var(--lowkal-red) 0 var(--artist-player-progress), rgba(241, 234, 219, 0.18) var(--artist-player-progress)); }
+.artist-focus-player-time .audio-waveform { min-height: 20px; }
 @keyframes artist-signal-pulse { 50% { opacity: 0.28; transform: scale(0.76); } }
 
 .artist-profile-body { display: grid; grid-template-columns: minmax(210px, 0.26fr) minmax(0, 1fr) minmax(190px, 0.24fr); color: var(--lowkal-black); border: 0; border-bottom: 1px solid var(--lowkal-black); background: var(--lowkal-paper); }
@@ -1485,7 +1482,7 @@ body:has(.link-desk) {
   .lowkal-player--compact .lowkal-player-title { font-size: 1rem; }
   .lowkal-player--compact .lowkal-player-timeline { min-height: 28px; }
   .lowkal-player--compact .lowkal-player-track { display: block; height: 28px; }
-  .lowkal-player--compact .lowkal-player-track input { height: 28px; }
+  .lowkal-player--compact .lowkal-player-track .audio-waveform { height: 28px; }
   .lowkal-player--compact .lowkal-player-room { border-left: 1px solid rgba(241, 234, 219, .16); border-radius: 5px; }
 
   .archive-room-heading { padding-top: 24px; }

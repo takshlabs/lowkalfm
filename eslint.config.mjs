@@ -8,7 +8,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores([".next/**", ".vercel/**", ".wrangler/**", "dist/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", ".vercel/**", ".wrangler/**", "dist/**", "out/**", "build/**", "next-env.d.ts", "public/soundroom/wavesurfer.min.js"]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   react.configs.flat.recommended,

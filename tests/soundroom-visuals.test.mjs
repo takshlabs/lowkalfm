@@ -46,7 +46,7 @@ test('the room restores the original split player and moves controls into settin
   for (const id of ['btn-settings-open', 'modal-settings', 'visual-motion', 'visual-intensity', 'signal-bass', 'signal-mid', 'signal-treble']) {
     assert.ok(html.includes(`id="${id}"`), `Missing ${id}`);
   }
-  assert.match(html, /aria-label="Playback position"/);
+  assert.match(html, /aria-label="Playback waveform"/);
   assert.match(html, /aria-label="Volume"/);
   assert.match(html, /room-visuals\.js/);
   assert.match(html, /href="\.\/tailwind\.css"/);

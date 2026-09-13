@@ -75,19 +75,20 @@ test("mini-player can start before ready and retry an error", () => {
 
 test("seek uses bounded accessible time and requires a ready seekable source", () => {
   const view = mount("PersistentPlayer");
-  const seekInput = () => all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
-  assert.equal(seekInput().props.disabled, true);
+  const waveform = () => all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
+  assert.equal(waveform().props.canSeek, false);
   view.audio.isReady = true;
   view.audio.isLoading = true;
-  assert.equal(seekInput().props.disabled, false, "buffering alone must not block seeking");
-  assert.equal(seekInput().props["aria-valuetext"], "0:30 of 2:00");
+  assert.equal(waveform().props.canSeek, true, "buffering alone must not block seeking");
+  assert.equal(waveform().props.currentTime, 30);
+  assert.equal(waveform().props.duration, 120);
   view.audio.currentTime = -10;
-  assert.equal(seekInput().props.value, 0);
+  assert.equal(waveform().props.currentTime, 0);
   view.audio.duration = Infinity;
-  assert.ok(Number.isFinite(seekInput().props.max));
+  assert.ok(Number.isFinite(waveform().props.duration));
   view.audio.duration = 0;
   view.audio.activeRecord = { ...records[1], duration: 0 };
-  assert.equal(seekInput().props.disabled, true);
+  assert.equal(waveform().props.canSeek, false);
   view.audio.activeRecord = records[2];
   assert.equal(byClass(view.render(), "lowkal-player-transport")[0].props.disabled, true);
   assert.match(text(view.render()), /Unavailable/);
@@ -106,24 +107,21 @@ test("persistent player preserves the compact production shell", () => {
   assert.equal(byClass(tree, "lowkal-player-quick-tools").length, 0);
 });
 
-test("timeline previews a scrub and commits one seek when released", () => {
+test("timeline delegates seeking to the waveform only when ready", () => {
   const seeks = [];
   const view = mount("PersistentPlayer", { isReady: true, seek: (seconds) => seeks.push(seconds) });
-  let input = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
-  input.props.onChange({ currentTarget: { value: "75" } });
-  assert.deepEqual(seeks, []);
-  input = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
-  input.props.onPointerUp();
+  const waveform = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
+  assert.equal(waveform.props.canSeek, true);
+  waveform.props.onSeek(75);
   assert.deepEqual(seeks, [75]);
 });
 
-test("timeline does not commit a scrub to a newly selected mix", () => {
-  const seeks = [];
-  const view = mount("PersistentPlayer", { isReady: true, seek: (seconds) => seeks.push(seconds) });
-  let input = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
-  input.props.onChange({ currentTarget: { value: "75" } });
-  view.audio.activeRecord = records[0];
-  input = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "input")[0];
-  input.props.onPointerUp();
-  assert.deepEqual(seeks, []);
+test("timeline removes its source when an unplayable mix is selected", () => {
+  const view = mount("PersistentPlayer", { isReady: true });
+  let waveform = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
+  assert.equal(waveform.props.sourceUrl, "/mix.mp3");
+  view.audio.activeRecord = records[2];
+  waveform = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
+  assert.equal(waveform.props.sourceUrl, undefined);
+  assert.equal(waveform.props.canSeek, false);
 });

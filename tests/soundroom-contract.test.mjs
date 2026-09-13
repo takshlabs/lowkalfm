@@ -28,8 +28,8 @@ test("the floating player preserves its live state with one selected playback so
   assert.doesNotMatch(provider, /react-youtube/);
   assert.match(provider, /const \[isPlaying, setIsPlaying\] = useState\(false\)/);
   assert.match(provider, /const autoplayRef = useRef\(false\)/);
-  assert.match(player, /onChange=\{\(event\) => previewSeek\(event\.currentTarget\.value\)\}/);
-  assert.match(player, /onPointerUp=\{commitSeek\}/);
+  assert.match(player, /<AudioWaveform/);
+  assert.match(player, /onSeek=\{seek\}/);
   assert.doesNotMatch(provider, /lowkal\.player\.playback-intent\.v1/);
   assert.doesNotMatch(provider, /sessionStorage/);
   assert.doesNotMatch(player, /Live signal/i);

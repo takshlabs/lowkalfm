@@ -305,7 +305,7 @@
               <span id="main-time-current">45:12</span>
               <span id="main-time-total">1:00:00</span>
             </div>
-            <input class="w-full mb-5" id="main-scrubber" aria-label="Playback position" max="100" min="0" type="range" value="0"/>
+            <div class="soundroom-waveform mb-5" id="main-waveform" role="slider" tabindex="-1" aria-label="Playback waveform" aria-disabled="true" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
             
             <!-- Dynamic Controls Strip -->
             <div class="flex items-center justify-between px-2 mb-6">
@@ -490,6 +490,8 @@
   <!-- room-visuals.js owns u_paletteBase, u_paletteMid and u_paletteAccent. -->
   <script type="module" src="room-visuals.js"></script>
   <script type="module" src="room-settings.js"></script>
+  <!-- WaveSurfer.js v7.12.1, BSD-3-Clause. Its local license is beside this asset. -->
+  <script src="./wavesurfer.min.js"></script>
 
   <!-- Playback and same-origin parent bridges. -->
   <script>
@@ -811,6 +813,63 @@
         this.bindHoverCursor = addHoverEvents;
       }
 
+      setupWaveform(mix = this.activeMix) {
+        const container = document.getElementById('main-waveform');
+        const source = cloudflareUrlFor(mix);
+        const sourceKey = source ? `${mix.id}:${source}` : '';
+        if (sourceKey === this.waveformSource) return;
+        this.waveform?.destroy?.();
+        this.waveform = null;
+        this.waveformSource = sourceKey;
+        container.replaceChildren();
+        container.dataset.state = source ? 'loading' : 'unavailable';
+        const WaveSurfer = window.WaveSurfer;
+        if (!source || !WaveSurfer?.create) return;
+        this.waveform = WaveSurfer.create({
+          container,
+          url: source,
+          duration: Number(mix.duration) || 0,
+          height: 42,
+          waveColor: 'rgba(229, 226, 225, 0.24)',
+          progressColor: '#55e93b',
+          cursorColor: 'rgba(229, 226, 225, 0.82)',
+          cursorWidth: 1,
+          barWidth: 2,
+          barGap: 1,
+          barRadius: 3,
+          barMinHeight: 1,
+          normalize: true,
+          sampleRate: 8000,
+          interact: false,
+          dragToSeek: false
+        });
+        this.waveform.on('ready', () => {
+          container.dataset.state = 'ready';
+          this.updateWaveform();
+        });
+        this.waveform.on('error', () => { container.dataset.state = 'unavailable'; });
+      }
+
+      updateWaveform() {
+        const container = document.getElementById('main-waveform');
+        const duration = this.getEffectiveDuration();
+        const canSeek = Boolean(this.activeMix?.id && hasPlayback(this.activeMix) && this.isReady && !this.error && duration > 0);
+        container.tabIndex = canSeek ? 0 : -1;
+        container.setAttribute('aria-disabled', String(!canSeek));
+        container.setAttribute('aria-valuemax', String(duration));
+        container.setAttribute('aria-valuenow', String(this.playbackTime));
+        container.setAttribute('aria-valuetext', `${formatTime(this.playbackTime)} of ${formatTime(duration)}`);
+        if (this.waveform && duration > 0) this.waveform.setTime(Math.min(duration, Math.max(0, this.playbackTime)));
+      }
+
+      seekFromWaveform(clientX) {
+        const duration = this.getEffectiveDuration();
+        if (!this.isReady || this.error || !(duration > 0)) return;
+        const bounds = document.getElementById('main-waveform').getBoundingClientRect();
+        if (!bounds.width) return;
+        this.scrubPlayback(Math.min(duration, Math.max(0, ((clientX - bounds.left) / bounds.width) * duration)) / duration * 100);
+      }
+
       // Setup DOM elements for Archive nodes
       setupArchiveNodes() {
         const container = document.getElementById('archive-canvas');
@@ -1003,18 +1062,19 @@
         document.getElementById('btn-mini-maximize').addEventListener('click', () => this.navigate('home'));
         document.getElementById('mini-player-info-click').addEventListener('click', () => this.navigate('home'));
 
-        // Scrubber range changes
-        const scrubber = document.getElementById('main-scrubber');
-        scrubber.addEventListener('input', (e) => {
-          this.previewScrub(e.target.value);
-        });
-        scrubber.addEventListener('change', () => this.commitScrub());
-        scrubber.addEventListener('pointerup', () => this.commitScrub());
-        scrubber.addEventListener('pointercancel', () => this.cancelScrub());
-        scrubber.addEventListener('blur', () => this.commitScrub());
-        scrubber.addEventListener('keyup', () => this.commitScrub());
-        scrubber.addEventListener('keydown', (event) => {
-          if (event.key === 'Escape') this.cancelScrub();
+        const waveform = document.getElementById('main-waveform');
+        waveform.addEventListener('click', (event) => this.seekFromWaveform(event.clientX));
+        waveform.addEventListener('keydown', (event) => {
+          const duration = this.getEffectiveDuration();
+          const step = event.shiftKey ? 30 : 5;
+          const target = event.key === 'Home' ? 0
+            : event.key === 'End' ? duration
+              : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? this.playbackTime - step
+                : event.key === 'ArrowRight' || event.key === 'ArrowUp' ? this.playbackTime + step
+                  : null;
+          if (target === null || !(duration > 0)) return;
+          event.preventDefault();
+          this.scrubPlayback(Math.min(duration, Math.max(0, target)) / duration * 100);
         });
         
         window.addEventListener('resize', () => {
@@ -1215,14 +1275,9 @@
         artistLink.hidden = !mix.artistUrl;
         document.getElementById('main-details-scroll').scrollTop = 0;
 
-        if (resetTime) {
-          const scrubber = document.getElementById('main-scrubber');
-          scrubber.value = 0;
-          scrubber.style.setProperty('--progress', '0%');
-          scrubber.style.background = 'linear-gradient(to right, #55e93b 0%, #87957e 0%)';
-          document.getElementById('main-time-current').textContent = '00:00';
-        }
+        if (resetTime) document.getElementById('main-time-current').textContent = '00:00';
         document.getElementById('main-time-total').textContent = formatTime(mix.duration);
+        this.setupWaveform(mix);
       }
       
       loadMixToPlayer(mix, startImmediately = false) {
@@ -1588,7 +1643,7 @@
         for (const id of ['btn-main-prev', 'btn-main-next', 'btn-main-shuffle', 'btn-main-repeat']) {
           document.getElementById(id).disabled = !MIXES.some((mix) => mix.id);
         }
-        for (const id of ['main-scrubber', 'btn-main-replay-10', 'btn-main-forward-30']) {
+        for (const id of ['btn-main-replay-10', 'btn-main-forward-30']) {
           document.getElementById(id).disabled = !playable || !this.isReady || Boolean(this.error) || !(this.getEffectiveDuration() > 0);
         }
         
@@ -1619,13 +1674,7 @@
         document.getElementById('main-time-current').textContent = formatTime(this.playbackTime);
         const dur = this.getEffectiveDuration();
         document.getElementById('main-time-total').textContent = formatTime(dur);
-        const percent = dur > 0 ? Math.floor((this.playbackTime / dur) * 100) : 0;
-        
-        const scrubber = document.getElementById('main-scrubber');
-        scrubber.value = percent;
-        scrubber.setAttribute('aria-valuetext', `${formatTime(this.playbackTime)} of ${formatTime(dur)}`);
-        scrubber.style.setProperty('--progress', `${percent}%`);
-        scrubber.style.background = `linear-gradient(to right, #55e93b ${percent}%, #87957e ${percent}%)`;
+        this.updateWaveform();
         
         // Sync the volume controls without sending a command back to the parent.
         const volumeSlider = document.getElementById('main-volume-slider');

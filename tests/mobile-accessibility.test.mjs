@@ -62,7 +62,7 @@ test('Soundroom mobile chrome uses safe areas and touch-sized controls', async (
 
 test('Soundroom keeps the production mobile control geometry', async () => {
   const source = await read('public/soundroom/room.css');
-  assert.match(source, /#main-scrubber, #main-volume-slider\s*\{[\s\S]*?min-height:\s*28px/);
+  assert.match(source, /#main-waveform\s*\{[\s\S]*?min-height:\s*48px/);
   assert.match(source, /#btn-main-shuffle,[\s\S]*?width:\s*40px;[\s\S]*?min-width:\s*40px/);
   assert.match(source, /#mini-youtube-video,[\s\S]*?width:\s*42px[^\n]*height:\s*42px[^\n]*min-width:\s*42px/);
   assert.match(source, /@media \(max-width: 380px\)[\s\S]*?#btn-main-shuffle, #btn-main-repeat \{ display: none; \}/);

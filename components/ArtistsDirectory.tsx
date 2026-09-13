@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { ArrowUpRight, MapPin, Pause, Play } from "lucide-react";
 import { usePathname } from "next/navigation";
-import type { CSSProperties } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
+import { AudioWaveform } from "@/components/AudioWaveform";
 import { SiteLink } from "@/components/SiteLink";
 import { UnderConstructionNote } from "@/components/UnderConstructionNote";
 import { formatTime, type SoundRecord } from "@/lib/content";
@@ -44,13 +44,12 @@ function ArtistBio({ blocks, fallback }: { blocks: unknown[]; fallback: string }
 }
 
 function ArtistFocusPlayer({ record }: { record: SoundRecord }) {
-  const { activeRecord, currentTime, duration, isPlaying, playRecord, togglePlayback } = useAudio();
+  const { activeRecord, currentTime, duration, isPlaying, isReady, playRecord, seek, togglePlayback } = useAudio();
   const isActive = activeRecord.slug === record.slug;
   const playing = isActive && isPlaying;
   const total = isActive ? duration || record.duration : record.duration;
   const elapsed = isActive ? currentTime : 0;
-  const progress = total > 0 ? Math.min(100, (elapsed / total) * 100) : 0;
-  const progressStyle = { "--artist-player-progress": `${progress}%` } as CSSProperties;
+  const waveformSource = isActive && record.playback?.provider === "cloudflare" ? record.playback.url : undefined;
 
   return (
     <div className={`artist-focus-player${playing ? " is-playing" : ""}`}>
@@ -63,9 +62,15 @@ function ArtistFocusPlayer({ record }: { record: SoundRecord }) {
         <strong>{record.title}</strong>
         <small>{record.series}</small>
       </div>
-      <div className="artist-focus-player-time" style={progressStyle}>
+      <div className="artist-focus-player-time">
         <span>{formatTime(elapsed)}</span>
-        <i aria-hidden="true" />
+        <AudioWaveform
+          sourceUrl={waveformSource}
+          currentTime={elapsed}
+          duration={total}
+          canSeek={isActive && isReady && total > 0}
+          onSeek={seek}
+        />
         <span>{formatTime(total)}</span>
       </div>
     </div>
