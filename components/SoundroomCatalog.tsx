@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Pause, Play } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatTime, SoundRecord } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
@@ -52,7 +53,8 @@ function getGroup(record: SoundRecord) {
 export function SoundroomCatalog() {
   const { records } = useListenContent();
   const archiveRecords = records;
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(() => searchParams.get("mix"));
   const recordRefs = useRef(new Map<string, HTMLButtonElement>());
   const { activeRecord, isPlaying, isLoading, error, retryPlayback, playRecord, togglePlayback } = useAudio();
   const selectedIndex = Math.max(0, archiveRecords.findIndex((record) => record.slug === (selectedSlug ?? activeRecord.slug)));

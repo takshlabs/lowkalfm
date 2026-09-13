@@ -96,7 +96,7 @@ export const mixType = defineType({
       title: "YouTube video link",
       type: "url",
       group: "playback",
-      description: "Display only. This link adds a small YouTube video button to the mini player and Soundroom. It does not supply audio or change playback.",
+      description: "Display link for the mini player and Soundroom. If this is the only source on an older published mix, Lowkal uses it as the YouTube playback source. Use YouTube audio source for new mixes.",
       validation: (rule) => rule.uri({ scheme: ["http", "https"], allowRelative: false }).custom((value) => (
         !value || getYouTubeVideoUrl(value) ? true : "Enter a valid YouTube video link."
       ))

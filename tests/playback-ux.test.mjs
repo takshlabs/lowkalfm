@@ -23,7 +23,7 @@ function mount(name, overrides = {}) {
     if (id === "react/jsx-runtime") return { jsx, jsxs: jsx };
     if (id.endsWith("AudioProvider")) return { useAudio: () => audio };
     if (id.endsWith("ListenContentProvider")) return { useListenContent: () => ({ records }) };
-    if (id === "next/navigation") return { usePathname: () => "/listen/archive" };
+    if (id === "next/navigation") return { usePathname: () => "/listen/archive", useSearchParams: () => new URLSearchParams(overrides.search ?? "") };
     if (id.endsWith("site-chrome")) return { isUnlistedPath: () => false };
     if (id.endsWith("site-path")) return { sitePath: (path) => path };
     if (id.endsWith("content")) return { formatTime: (seconds) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}` };
@@ -49,6 +49,12 @@ test("archive follows restored active selection until the listener browses and c
   assert.ok(back);
   back.props.onClick();
   assert.match(selected().props["aria-label"], /current/);
+});
+
+test("archive selects the record named by an artist mix link", () => {
+  const view = mount("SoundroomCatalog", { search: "mix=first" });
+  const selected = byClass(view.render(), "archive-record").find((node) => node.props["aria-pressed"]);
+  assert.match(selected.props["aria-label"], /first/);
 });
 
 const text = (tree) => typeof tree === "string" ? tree : Array.isArray(tree) ? tree.map(text).join("") : tree?.props ? text(tree.props.children) : "";

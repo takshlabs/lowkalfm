@@ -57,7 +57,10 @@ function mapMix(mix: SanityMix): SoundRecord | null {
   if (!mix.slug || !mix.artwork) return null;
   const artistNames = mix.artists?.map((artist) => artist.name).filter(Boolean) ?? [];
   const format: SoundFormat = mix.format === "volume" ? "weekly" : "live-set";
-  const playback = resolveMixPlayback({ deliveryUrl: mix.audioDeliveryUrl, youtubeUrl: mix.youtubeUrl });
+  // Older published records can contain only the video-link field. Treat it as
+  // the YouTube source only when no dedicated audio source is present.
+  const youtubeSourceUrl = mix.youtubeUrl ?? mix.youtubeVideoUrl;
+  const playback = resolveMixPlayback({ deliveryUrl: mix.audioDeliveryUrl, youtubeUrl: youtubeSourceUrl });
   return {
     slug: mix.slug,
     format,
@@ -70,7 +73,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     duration: mix.duration ?? 0,
     startOffset: getMixStartOffset(mix.audioStartOffset),
     playback,
-    youtubeVideoUrl: getYouTubeVideoUrl(mix.youtubeVideoUrl),
+    youtubeVideoUrl: getYouTubeVideoUrl(mix.youtubeVideoUrl ?? mix.youtubeUrl),
     artwork: mix.artwork,
     genres: mix.genres ?? [],
     description: mix.description ?? "",

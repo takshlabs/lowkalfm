@@ -121,7 +121,7 @@ export function ArtistsDirectory() {
                   <span className="artist-mix-index">LKL—{String(index + 1).padStart(2, "0")}</span>
                   <span className="artist-mix-art"><Image src={record.artwork} alt="" fill sizes="140px" /></span>
                   <div><small>{record.series}</small><strong>{record.title}</strong><em>{record.date} / {record.genres.slice(0, 2).join(" · ")}</em></div>
-                  <SiteLink href={sitePath("/listen/archive")} aria-label={`Open ${record.title} in the Archive`}><ArrowUpRight aria-hidden="true" /></SiteLink>
+                  <SiteLink href={sitePath(`/listen/archive?mix=${encodeURIComponent(record.slug)}`)} aria-label={`Open ${record.title} in the Archive`}><ArrowUpRight aria-hidden="true" /></SiteLink>
                 </article>
               ))}
               {artist.externalMixes.map((mix, index) => (

@@ -21,7 +21,8 @@ test("the floating player preserves its live state with one selected playback so
   assert.match(provider, /activeRecord\.startOffset/);
   assert.match(provider, /resumeAtRef\.current = record\?\.startOffset/);
   assert.doesNotMatch(provider, /failedAudioUrl|setFailedAudioUrl/);
-  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, youtubeUrl: mix\.youtubeUrl \}\)/);
+  assert.match(content, /const youtubeSourceUrl = mix\.youtubeUrl \?\? mix\.youtubeVideoUrl/);
+  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, youtubeUrl: youtubeSourceUrl \}\)/);
   assert.match(content, /playback,/);
   assert.match(query, /"youtubeUrl": externalUrl/);
   assert.doesNotMatch(provider, /react-youtube/);
@@ -138,7 +139,7 @@ test("Soundroom displays CMS tracklists and plain-text mix descriptions", async 
   assert.doesNotMatch(soundroom, /id="detail-mix-desc"[^>]*\bitalic\b/);
 });
 
-test("CMS YouTube video links only open video buttons and never control audio playback", async () => {
+test("CMS YouTube video links remain display links and recover legacy playback-only records", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");
   const content = await source("components/ListenContentProvider.tsx");
@@ -148,9 +149,9 @@ test("CMS YouTube video links only open video buttons and never control audio pl
   const soundroom = await source("public/soundroom/index.html");
 
   assert.match(schema, /name:\s*"youtubeVideoUrl"/);
-  assert.match(schema, /Display only/);
+  assert.match(schema, /only source on an older published mix/);
   assert.match(query, /youtubeVideoUrl/);
-  assert.match(content, /youtubeVideoUrl:\s*getYouTubeVideoUrl\(mix\.youtubeVideoUrl\)/);
+  assert.match(content, /youtubeVideoUrl:\s*getYouTubeVideoUrl\(mix\.youtubeVideoUrl \?\? mix\.youtubeUrl\)/);
   assert.match(player, /activeRecord\.youtubeVideoUrl/);
   assert.match(player, /aria-label="Watch this mix on YouTube"/);
   assert.match(frame, /youtubeVideoUrl:\s*record\.youtubeVideoUrl/);
@@ -159,7 +160,8 @@ test("CMS YouTube video links only open video buttons and never control audio pl
   assert.match(soundroom, /videoLink\.href = mix\.youtubeVideoUrl/);
   assert.match(soundroom, /videoLink\.hidden = !mix\.youtubeVideoUrl/);
   assert.doesNotMatch(audio, /youtubeVideoUrl/);
-  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, youtubeUrl: mix\.youtubeUrl \}\)/);
+  assert.match(content, /const youtubeSourceUrl = mix\.youtubeUrl \?\? mix\.youtubeVideoUrl/);
+  assert.match(content, /resolveMixPlayback\(\{ deliveryUrl: mix\.audioDeliveryUrl, youtubeUrl: youtubeSourceUrl \}\)/);
 });
 
 test("the floating player and embedded Soundroom use one audio authority", async () => {
