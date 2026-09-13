@@ -46,6 +46,7 @@ test("Listen artist profiles are managed in Sanity", async () => {
   assert.match(query, /featuredMixSlug/);
   assert.match(query, /goOutSlug/);
   assert.match(profile, /ArtistFocusPlayer/);
+  assert.match(profile, /listen\/archive\?mix=\$\{encodeURIComponent\(record\.slug\)\}/);
   assert.match(profile, /open\.spotify\.com\/embed/);
   assert.match(profile, /Open in Go Out/);
 });
