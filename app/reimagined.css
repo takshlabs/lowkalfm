@@ -341,10 +341,10 @@ html { scroll-behavior: smooth; }
 .lowkal-player.lowkal-player--compact {
   bottom: 12px;
   display: grid;
-  grid-template-columns: 58px 48px minmax(210px, 1fr) minmax(230px, 0.9fr) 120px 42px;
+  grid-template-columns: 58px 48px minmax(220px, 280px) minmax(320px, 1fr) 108px 34px;
   grid-template-rows: 60px;
   gap: 8px;
-  width: min(960px, calc(100vw - 24px));
+  width: min(1180px, calc(100vw - 24px));
   padding: 8px;
   overflow: hidden;
   border: 1px solid rgba(241, 234, 219, 0.26);
@@ -365,11 +365,13 @@ html { scroll-behavior: smooth; }
 .lowkal-player--compact .lowkal-player-transport:hover,
 .lowkal-player--compact .lowkal-player-transport:focus-visible { color: var(--lowkal-paper); background: transparent; }
 .lowkal-player--compact .lowkal-player-transport-icon { width: 42px; height: 42px; color: var(--lowkal-paper); background: var(--lowkal-red); box-shadow: none; }
-.lowkal-player--compact .lowkal-player-program { grid-row: 1; grid-column: 3; align-self: center; padding: 0 4px; }
+.lowkal-player--compact .lowkal-player-program { grid-row: 1; grid-column: 3; align-self: center; min-width: 0; padding: 0 4px; }
 .lowkal-player--compact .lowkal-player-status { font-size: 0.48rem; }
 .lowkal-player--compact .lowkal-player-status span:first-child { color: var(--lowkal-red); }
+.lowkal-player--compact .lowkal-player-status[data-state="playing"] i { animation: signal-pulse 1.2s steps(2, end) infinite; }
 .lowkal-player--compact .lowkal-player-title { margin-top: 5px; font-family: "Arial Black", Arial, sans-serif; font-size: 1.28rem; line-height: 0.9; letter-spacing: -0.04em; text-transform: uppercase; }
 .lowkal-player--compact .lowkal-player-title:hover { color: var(--lowkal-red); }
+.lowkal-player--compact .lowkal-player-video { align-self: center; width: 28px; height: 28px; transform: translateY(1px); }
 .lowkal-player--compact .lowkal-player-record { margin-top: 4px; font-size: 0.48rem; }
 .lowkal-player--compact .lowkal-player-timeline { grid-row: 1; grid-column: 4; align-self: center; padding: 0 7px; }
 .lowkal-player--compact .lowkal-player-timecode { margin-bottom: 5px; font-size: 0.47rem; }
@@ -379,10 +381,14 @@ html { scroll-behavior: smooth; }
 .lowkal-player--compact .lowkal-player-volume input::-moz-range-progress { background: var(--lowkal-red); }
 .lowkal-player--compact .lowkal-player-volume { grid-row: 1; grid-column: 5; display: grid; grid-template-columns: 14px 1fr; align-items: center; gap: 8px; padding: 0 8px; border: 0; border-left: 1px solid rgba(241, 234, 219, 0.16); }
 .lowkal-player--compact .lowkal-player-volume svg { width: 14px; height: 14px; color: rgba(241, 234, 219, 0.62); }
-.lowkal-player--compact .lowkal-player-room { grid-row: 1; grid-column: 6; display: grid; place-items: center; padding: 0; border-left: 1px solid rgba(241, 234, 219, 0.16); }
+.lowkal-player--compact .lowkal-player-room { grid-row: 1; grid-column: 6; display: grid; min-width: 34px; min-height: 34px; place-items: center; padding: 0; border-left: 1px solid rgba(241, 234, 219, 0.16); }
 .lowkal-player--compact .lowkal-player-room:hover,
 .lowkal-player--compact .lowkal-player-room:focus-visible { color: var(--lowkal-paper); background: var(--lowkal-red); }
-.lowkal-player--compact .lowkal-player-room svg { width: 18px; height: 18px; color: currentColor; }
+.lowkal-player--compact .lowkal-player-room svg { width: 16px; height: 16px; color: currentColor; }
+.lowkal-player--compact .lowkal-player-transport-icon.is-loading svg { animation: player-loading-spin 800ms linear infinite; }
+.lowkal-player--compact .lowkal-player-art .media-frame-image { object-position: center 38%; transform: scale(1.26); }
+
+@keyframes player-loading-spin { to { transform: rotate(360deg); } }
 
 /* Shared footer */
 .site-footer {

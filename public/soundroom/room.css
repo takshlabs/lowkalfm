@@ -114,9 +114,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
   #main-title { max-height: none !important; font-size: clamp(28px, 9vw, 38px) !important; line-height: .98 !important; overflow-wrap: anywhere; }
   #main-host-date { font-size: 12px !important; }
   #main-volume-slider {
-    min-height: 28px;
-    margin-top: -8px;
-    margin-bottom: 8px !important;
+    min-height: 44px;
+    margin-top: -4px;
+    margin-bottom: 4px !important;
     background: transparent !important;
     touch-action: pan-x;
   }
@@ -132,11 +132,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
     box-shadow: none;
   }
   #main-volume-slider::-webkit-slider-thumb {
-    width: 3px;
+    width: 16px;
     height: 16px;
     margin-top: -7px;
-    border: 0;
-    border-radius: 1px;
+    border: 2px solid #0c0c0c;
+    border-radius: 50%;
     background: #e5e2e1;
     box-shadow: 0 0 0 1px rgba(12, 12, 12, .72);
   }
@@ -147,10 +147,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
   }
   #main-volume-slider::-moz-range-progress { background: rgba(229, 226, 225, .68); }
   #main-volume-slider::-moz-range-thumb {
-    width: 3px;
+    width: 16px;
     height: 16px;
-    border: 0;
-    border-radius: 1px;
+    border: 2px solid #0c0c0c;
+    border-radius: 50%;
     background: #e5e2e1;
   }
   #main-volume-slider { --range-value: var(--volume, 60%); }

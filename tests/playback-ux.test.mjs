@@ -73,6 +73,25 @@ test("mini-player can start before ready and retry an error", () => {
   assert.ok(all(tree, (node) => node.props.role === "status").length);
 });
 
+test("player state text and transport icon reflect loading, playback, and errors", () => {
+  const view = mount("PersistentPlayer", { isLoading: true });
+  let tree = view.render();
+  assert.match(text(tree), /Loading/);
+  assert.equal(byClass(tree, "lowkal-player-transport-icon")[0].props.className, "lowkal-player-transport-icon is-loading");
+
+  view.audio.isLoading = false;
+  view.audio.isPlaying = true;
+  tree = view.render();
+  assert.match(text(tree), /Playing/);
+  assert.equal(byClass(tree, "lowkal-player-status")[0].props["data-state"], "playing");
+
+  view.audio.isPlaying = false;
+  view.audio.error = "Connection lost";
+  tree = view.render();
+  assert.match(text(tree), /Playback error/);
+  assert.equal(byClass(tree, "lowkal-player-status")[0].props["data-state"], "error");
+});
+
 test("seek uses bounded accessible time and requires a ready seekable source", () => {
   const view = mount("PersistentPlayer");
   const waveform = () => all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];

@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { ArrowUpRight, Pause, Play, RotateCcw, Video, Volume2 } from "lucide-react";
+import { ArrowUpRight, LoaderCircle, Pause, Play, RotateCcw, Video, Volume2 } from "lucide-react";
 import { AudioWaveform } from "@/components/AudioWaveform";
 import { usePathname } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
@@ -41,15 +41,14 @@ export function PersistentPlayer() {
         aria-describedby="lowkal-playback-status"
         disabled={!isPlayable}
       >
-        <span className="lowkal-player-transport-icon">
-          {error ? <RotateCcw aria-hidden="true" /> : isPlaying || isLoading ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+        <span className={`lowkal-player-transport-icon${isLoading ? " is-loading" : ""}`}>
+          {error ? <RotateCcw aria-hidden="true" /> : isLoading ? <LoaderCircle aria-hidden="true" /> : isPlaying ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
         </span>
       </button>
 
       <div className="lowkal-player-program" aria-live="polite">
-        <div className="lowkal-player-status">
+        <div className="lowkal-player-status" data-state={isLoading ? "loading" : isPlaying ? "playing" : error ? "error" : "paused"}>
           <span id="lowkal-playback-status" role="status" title={error ?? undefined}><i aria-hidden="true" /> {status}<span className="sr-only">{error ? `: ${error}` : ""}</span></span>
-          <span>{activeRecord.format === "weekly" ? "Weekly volume" : "Programme set"}</span>
         </div>
         <div className="lowkal-player-title-row">
           <SiteLink className="lowkal-player-title" href={sitePath(activeRecord.artistSlugs[0] ? `/artists/${activeRecord.artistSlugs[0]}` : "/listen")}>{activeRecord.artist}</SiteLink>

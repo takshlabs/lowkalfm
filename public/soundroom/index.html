@@ -350,7 +350,7 @@
               <button class="focus:outline-none hover:text-primary" id="btn-volume-mute" title="Mute/Unmute" aria-label="Mute">
                 <span class="material-symbols-outlined text-lg" id="icon-volume-low">volume_mute</span>
               </button>
-              <input class="w-full" id="main-volume-slider" aria-label="Volume" max="100" min="0" type="range" value="60"/>
+              <input class="w-full" id="main-volume-slider" aria-label="Volume" aria-valuetext="60 percent" max="100" min="0" type="range" value="60"/>
               <span class="material-symbols-outlined text-lg">volume_up</span>
             </div>
           </div>
@@ -1067,9 +1067,12 @@
 
         // Volume controls
         const volSlider = document.getElementById('main-volume-slider');
-        volSlider.addEventListener('input', (e) => {
-          this.setVolume(e.target.value);
-        });
+        const updateVolume = (event) => {
+          const nextVolume = Number(event.target.value);
+          if (Number.isFinite(nextVolume) && nextVolume !== this.volumeLevel) this.setVolume(nextVolume);
+        };
+        volSlider.addEventListener('input', updateVolume);
+        volSlider.addEventListener('change', updateVolume);
         document.getElementById('btn-volume-mute').addEventListener('click', () => this.toggleMute());
 
         // Archive Mini player controls
@@ -1560,6 +1563,7 @@
         
         const volSlider = document.getElementById('main-volume-slider');
         volSlider.value = numericVolume;
+        volSlider.setAttribute('aria-valuetext', `${Math.round(numericVolume)} percent`);
         volSlider.style.setProperty('--volume', `${numericVolume}%`);
         volSlider.style.background = `linear-gradient(to right, #55e93b ${numericVolume}%, #87957e ${numericVolume}%)`;
         
@@ -1694,6 +1698,7 @@
         // Sync the volume controls without sending a command back to the parent.
         const volumeSlider = document.getElementById('main-volume-slider');
         volumeSlider.value = this.volumeLevel;
+        volumeSlider.setAttribute('aria-valuetext', `${Math.round(this.volumeLevel)} percent`);
         volumeSlider.style.setProperty('--volume', `${this.volumeLevel}%`);
         volumeSlider.style.background = `linear-gradient(to right, #55e93b ${this.volumeLevel}%, #87957e ${this.volumeLevel}%)`;
         this.updateVolumeUI();

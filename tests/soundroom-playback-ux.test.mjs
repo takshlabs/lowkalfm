@@ -81,14 +81,17 @@ test('errors expose retry on both surfaces and clear on older state messages', (
 });
 
 test('transport and mute commands defer to the parent playback authority', () => {
-  const { app, messages, state } = harness();
+  const { app, get, messages, state } = harness();
   state({ isMuted: false, repeatMode: 'one' });
   assert.equal(app.isMuted, false);
   assert.equal(app.repeatMode, 'one');
   app.nextTrack();
   app.previousTrack();
   app.toggleMute();
-  assert.deepEqual(messages.slice(-3).map(message => message.command.action), ['next', 'previous', 'mute']);
+  app.setVolume(37);
+  assert.deepEqual(messages.slice(-4).map(message => message.command.action), ['next', 'previous', 'mute', 'volume']);
+  assert.equal(messages.at(-1).command.volume, 37);
+  assert.equal(get('main-volume-slider').attrs['aria-valuetext'], '37 percent');
 });
 
 test('Soundroom keeps a local scrub preview while parent progress updates arrive', () => {
