@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from "react";
+import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type CSSProperties, type MouseEvent } from "react";
 import WaveSurfer from "wavesurfer.js";
 import { formatTime } from "@/lib/content";
 
@@ -11,6 +11,7 @@ type AudioWaveformProps = {
   canSeek: boolean;
   onSeek: (seconds: number) => void;
   className?: string;
+  deck?: boolean;
 };
 
 const waveformOptions = {
@@ -33,8 +34,9 @@ function boundedTime(time: number, duration: number) {
   return Math.min(duration, Math.max(0, time));
 }
 
-export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek, className }: AudioWaveformProps) {
+export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek, className, deck = false }: AudioWaveformProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
   const waveformRef = useRef<WaveSurfer | null>(null);
   const total = Number.isFinite(duration) && duration > 0 ? duration : 0;
   const position = boundedTime(currentTime, total);
@@ -61,7 +63,36 @@ export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek
           duration: total,
           height: 28,
           peaks: [payload.peaks],
-          ...waveformOptions
+          ...waveformOptions,
+          ...(deck ? {
+            height: 44,
+            waveColor: "#777872",
+            progressColor: "#ff503d",
+            cursorColor: "#f1eadb",
+            renderFunction: (channels: Array<Float32Array | number[]>, ctx: CanvasRenderingContext2D) => {
+              const samples = channels[0];
+              const { width, height } = ctx.canvas;
+              const pixelRatio = window.devicePixelRatio || 1;
+              const step = 4 * pixelRatio;
+              const count = Math.ceil(width / step);
+              let max = 0;
+              for (const sample of samples) max = Math.max(max, Math.abs(sample));
+              max ||= 1;
+              const baseline = height * .74;
+              for (let i = 0; i < count; i++) {
+                const start = Math.floor(i * samples.length / count);
+                const end = Math.max(start + 1, Math.floor((i + 1) * samples.length / count));
+                let peak = 0;
+                for (let j = start; j < end; j++) peak = Math.max(peak, Math.abs(samples[j] || 0));
+                const bar = Math.max(pixelRatio, peak / max * (baseline - 3 * pixelRatio));
+                ctx.globalAlpha = 1;
+                ctx.fillRect(i * step, baseline - bar, 2 * pixelRatio, bar);
+                ctx.globalAlpha = .25;
+                ctx.fillRect(i * step, baseline + 2 * pixelRatio, 2 * pixelRatio, bar * .25);
+              }
+              ctx.globalAlpha = 1;
+            }
+          } : {})
         });
         waveformRef.current = waveform;
         waveform.on("ready", () => {
@@ -80,7 +111,7 @@ export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek
       waveform?.destroy();
       if (waveformRef.current === waveform) waveformRef.current = null;
     };
-  }, [peaksUrl, total]);
+  }, [peaksUrl, total, deck]);
 
   useEffect(() => {
     positionRef.current = position;
@@ -93,6 +124,17 @@ export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek
     if (!bounds?.width) return;
     onSeek(boundedTime(((clientX - bounds.left) / bounds.width) * total, total));
   };
+
+  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (!canSeek || event.button !== 0) return;
+    draggingRef.current = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    seekFromPointer(event.clientX);
+  };
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (draggingRef.current) seekFromPointer(event.clientX);
+  };
+  const handlePointerEnd = () => { draggingRef.current = false; };
 
   const handleClick = (event: MouseEvent<HTMLDivElement>) => {
     seekFromPointer(event.clientX);
@@ -114,7 +156,7 @@ export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek
   return (
     <div
       ref={containerRef}
-      className={`audio-waveform${className ? ` ${className}` : ""}`}
+      className={`audio-waveform${deck ? " audio-waveform--deck" : ""}${className ? ` ${className}` : ""}`}
       data-state={peaksUrl ? "loading" : "unavailable"}
       role="slider"
       tabIndex={canSeek ? 0 : -1}
@@ -124,6 +166,12 @@ export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek
       aria-valuemax={total}
       aria-valuenow={position}
       aria-valuetext={`${formatTime(position)} of ${formatTime(total)}`}
+      style={{ "--wave-progress": `${total ? position / total * 100 : 0}%` } as CSSProperties}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerEnd}
+      onPointerCancel={handlePointerEnd}
+      onLostPointerCapture={handlePointerEnd}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     />
