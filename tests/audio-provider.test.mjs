@@ -45,7 +45,6 @@ function harness() {
     if (name === "react/jsx-runtime") return { jsx, jsxs: jsx };
     if (name === "@/lib/audio-playback") return playback;
     if (name === "@/lib/audio-analysis") return { createAudioAnalysis: () => analysis, isAnalysisSource: () => false, startAnalysisBridge: () => () => {}, startMixerBridge: () => () => {} };
-    if (name === "@/lib/content") return { idleListenRecord: { slug: "idle", duration: 0 } };
     if (name === "@/lib/site-path") return { sitePath: path => path };
     if (name === "./ListenContentProvider") return { useListenContent: () => ({ records, getRecord }) };
     throw new Error(name);

@@ -43,7 +43,7 @@ export type SoundRecord = {
 export type ArtistLink = { label: string; url: string };
 export type ArtistExternalMix = { title: string; platform: string; url: string; note: string; artwork?: string };
 export type ArtistProduction = { title: string; releaseType: string; year?: number; spotifyUrl?: string; externalUrl?: string; artwork?: string };
-export type ArtistFieldNote = { placeName: string; area: string; note: string; mapUrl?: string; goOutSlug?: string; tags: string[]; latitude?: number; longitude?: number };
+export type ArtistFieldNote = { placeName: string; area: string; note: string; mapUrl?: string; goOutSlug?: string; tags: string[] };
 
 export type ArtistProfile = {
   slug: string;
@@ -287,27 +287,6 @@ export type CityEvent = {
 export const journalStories: JournalStory[] = [];
 
 export const cityEvents: CityEvent[] = [];
-
-export const idleListenRecord: SoundRecord = {
-  slug: "lowkal-idle",
-  format: "live-set",
-  series: "Lowkal",
-  title: "No session loaded",
-  artist: "Lowkal",
-  date: "",
-  dateISO: "",
-  duration: 0,
-  artwork: sitePath("/lowkal-logo.jpg"),
-  genres: [],
-  description: "",
-  artistSlugs: [],
-  archiveSection: "volumes-guests",
-  showInPlayer: true,
-  showInSoundroom: true,
-  showInArchive: true,
-  showOnHome: true,
-  tracks: []
-};
 
 export function formatTime(seconds: number) {
   const safeSeconds = Number.isFinite(seconds) ? Math.max(0, Math.floor(seconds)) : 0;

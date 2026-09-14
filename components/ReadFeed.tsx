@@ -48,7 +48,7 @@ function toStory(post: SanityStory): Story {
   };
 }
 
-export function ReadFeed({ fallback = [] }: { fallback?: Story[] }) {
+export function ReadFeed({ fallback }: { fallback: Story[] }) {
   const [stories, setStories] = useState(fallback);
 
   useEffect(() => {

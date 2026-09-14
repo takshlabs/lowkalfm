@@ -108,9 +108,7 @@ export const artistType = defineType({
           defineField({ name: "note", title: "Artist note", type: "text", rows: 3, validation: (rule) => rule.required().max(280) }),
           defineField({ name: "tags", title: "Tags", type: "array", of: [defineArrayMember({ type: "string" })], options: { layout: "tags" } }),
           defineField({ name: "mapUrl", title: "Map URL", type: "url" }),
-          defineField({ name: "latitude", title: "Latitude", type: "number", validation: (rule) => rule.min(-90).max(90), description: "Places this hangout on the Go out map. Leave empty if the map URL already contains coordinates." }),
-          defineField({ name: "longitude", title: "Longitude", type: "number", validation: (rule) => rule.min(-180).max(180) }),
-          defineField({ name: "goOutSlug", title: "Go Out slug", type: "slug", description: "Optional shared ID for the Go Out map pin." })
+          defineField({ name: "goOutSlug", title: "Go Out slug", type: "slug", description: "Optional shared ID for the Go Out guide." })
         ],
         preview: { select: { title: "placeName", subtitle: "area" } }
       })]

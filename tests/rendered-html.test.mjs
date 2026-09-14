@@ -24,10 +24,10 @@ async function render(pathname) {
 }
 
 const routes = [
-  ["/", /The city has a frequency/i],
+  ["/", /Garden City Gallivanting/i],
   ["/listen", /Lowkal Soundroom/i],
   ["/read", /Stories from/i],
-  ["/go-out", /hang out/i],
+  ["/go-out", /Selected by Lowkal/i],
 ];
 
 for (const [pathname, expectedText] of routes) {

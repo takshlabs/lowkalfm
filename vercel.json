@@ -7,7 +7,6 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/artists/:slug", "destination": "/artists" },
-    { "source": "/read/:slug", "destination": "/read" }
+    { "source": "/artists/:slug", "destination": "/artists" }
   ]
 }
