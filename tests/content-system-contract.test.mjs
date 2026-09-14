@@ -12,13 +12,16 @@ test("Read uses Sanity as the public editorial source", async () => {
   const feed = await source("components/ReadFeed.tsx");
   const article = await source("components/ReadArticle.tsx");
 
-  assert.match(client, /createClient/);
+  assert.match(client, /apicdn\.sanity\.io/);
+  assert.match(client, /auto.*format/);
+  assert.match(client, /fit.*max/);
   assert.match(client, /NEXT_PUBLIC_SANITY_PROJECT_ID/);
   assert.match(client, /editorialStory/);
-  assert.match(feed, /sanityClient\.fetch/);
+  assert.match(feed, /sanityFetch/);
   assert.match(article, /PortableText/);
   assert.doesNotMatch(feed, /editorial-api/);
   assert.doesNotMatch(article, /editorial-api/);
+  assert.doesNotMatch(client, /@sanity\/client/);
 });
 
 test("Studio embeds Sanity and supports flexible editorial fields", async () => {

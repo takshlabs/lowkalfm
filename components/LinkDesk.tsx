@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { MediaFrame } from "@/components/MediaFrame";
-import { deskLinkHost, deskPreviewSources, toDeskBoard, type DeskBoard, type DeskLink } from "@/lib/link-board";
-import { isSanityConfigured, linkBoardQuery, sanityClient } from "@/lib/sanity";
+import { deskLinkHost, deskPreviewSources, toDeskBoard, type DeskBoard, type DeskBoardRecord, type DeskLink } from "@/lib/link-board";
+import { isSanityConfigured, linkBoardQuery, sanityFetch } from "@/lib/sanity";
 import { sitePath } from "@/lib/site-path";
 
 const emptyBoard = toDeskBoard(null);
@@ -44,7 +44,7 @@ export function LinkDesk({ fallback = emptyBoard }: { fallback?: DeskBoard }) {
     if (!isSanityConfigured) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void sanityClient.fetch(linkBoardQuery, {}, { signal: controller.signal })
+      void sanityFetch<DeskBoardRecord>(linkBoardQuery, { signal: controller.signal })
         .then((record) => setBoard(toDeskBoard(record)))
         .catch(() => undefined);
     }, 0);
@@ -58,7 +58,7 @@ export function LinkDesk({ fallback = emptyBoard }: { fallback?: DeskBoard }) {
     <main className="link-desk">
       <header className="link-desk-brand">
         <span className="link-desk-lockup">
-          <MediaFrame variant="mark" src={sitePath("/lowkal-logo.jpg")} alt="" width={52} height={52} priority />
+          <MediaFrame variant="mark" src={sitePath("/icons/icon-192.png")} alt="" width={52} height={52} priority />
           <span className="brand-name">LOWKAL.FM</span>
         </span>
         <span className="brand-scripts" aria-hidden="true">लोकल / ಲೋಕಲ್ / লোকাল</span>

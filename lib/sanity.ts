@@ -1,17 +1,40 @@
-import { createClient } from "@sanity/client";
-
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "";
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
+const apiVersion = "2026-08-24";
 
 export const isSanityConfigured = projectId.length > 0;
+export const sanityCdnOrigin = isSanityConfigured ? `https://${projectId}.apicdn.sanity.io` : "";
 
-export const sanityClient = createClient({
-  projectId: projectId || "placeholder",
-  dataset,
-  apiVersion: "2026-08-24",
-  useCdn: true,
-  perspective: "published"
-});
+export function sanityImageUrl(source: string, width = 1200) {
+  try {
+    const url = new URL(source);
+    if (url.hostname !== "cdn.sanity.io" || !url.pathname.startsWith("/images/")) return source;
+    url.searchParams.set("auto", "format");
+    url.searchParams.set("fit", "max");
+    url.searchParams.set("q", "82");
+    url.searchParams.set("w", String(Math.max(64, Math.round(width))));
+    return url.toString();
+  } catch {
+    return source;
+  }
+}
+
+export async function sanityFetch<Result>(query: string, options: { signal?: AbortSignal } = {}) {
+  if (!isSanityConfigured) throw new Error("Sanity is not configured");
+  const url = new URL(`/v${apiVersion}/data/query/${encodeURIComponent(dataset)}`, sanityCdnOrigin);
+  url.searchParams.set("query", query);
+  url.searchParams.set("perspective", "published");
+  url.searchParams.set("returnQuery", "false");
+  const response = await fetch(url, {
+    cache: "default",
+    credentials: "omit",
+    signal: options.signal
+  });
+  if (!response.ok) throw new Error(`Sanity request failed with ${response.status}`);
+  const payload = await response.json() as { result?: Result };
+  if (!("result" in payload)) throw new Error("Sanity returned no result");
+  return payload.result as Result;
+}
 
 export const storiesQuery = `*[_type == "editorialStory" && defined(publishedAt)] | order(publishedAt desc) {
   "slug": slug.current,

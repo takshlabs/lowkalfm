@@ -12,6 +12,8 @@ test('RSC requests receive exported payloads before HTML and retain compatibilit
     assert.equal(route.headers['Content-Type'], 'text/x-component');
     assert.equal(route.headers['X-Vinext-RSC-Compatibility-Id'], 'build-test');
     assert.ok(route.headers.Vary.includes('RSC'));
+    assert.match(route.headers['Cache-Control'], /max-age=300/);
+    assert.match(route.headers['Cache-Control'], /stale-while-revalidate/);
   }
   assert.ok(routes.findIndex(r => r.handle === 'filesystem') > routes.findIndex(r => r.has));
 });
@@ -43,6 +45,18 @@ test('static output applies baseline browser security headers before asset deliv
   assert.equal(routes[securityIndex].headers['Referrer-Policy'], 'strict-origin-when-cross-origin');
   assert.equal(routes[securityIndex].headers['Permissions-Policy'], 'camera=(), geolocation=(), microphone=()');
   assert.equal(routes[securityIndex].headers['X-Frame-Options'], 'SAMEORIGIN');
+});
+
+test('static assets use long browser cache lifetimes', () => {
+  const routes = createStaticRoutes(['index.rsc', 'index.html'], 'build-test');
+  const immutable = routes.find(route => route.src === '^/_next/static/.*$');
+  const fonts = routes.find(route => route.src === '^/fonts/.*\\.woff2$');
+  const pages = routes.find(route => route.src === '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive)?|read(?:/[^/]+)?)/?$');
+  assert.match(immutable.headers['Cache-Control'], /immutable/);
+  assert.match(fonts.headers['Cache-Control'], /31536000/);
+  assert.match(pages.headers['Cache-Control'], /stale-while-revalidate/);
+  assert.ok(new RegExp(pages.src).test('/listen/archive'));
+  assert.equal(new RegExp(pages.src).test('/studio'), false);
 });
 
 test('project checks produce the exact Vercel static output before release', () => {

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, stat } from 'node:fs/promises';
 import test from 'node:test';
 import { createServiceWorker } from '../scripts/pwa-service-worker.mjs';
 
@@ -50,6 +50,9 @@ test('service worker serves every precached shell asset and stores opened pages'
   assert.ok(source.indexOf('PRECACHE_SET.has(url.pathname)') < source.indexOf("request.destination === 'image'"));
   assert.match(source, /cache\.put\(documentFallbackPath\(url\.pathname\), response\.clone\(\)\)/);
   assert.match(source, /cache\.put\(rscFallbackPath\(url\.pathname\), response\.clone\(\)\)/);
+  assert.match(source, /cached \|\| \(await network\)/);
+  assert.match(source, /staleWhileRevalidateDocument/);
+  assert.match(source, /staleWhileRevalidateRsc/);
   assert.match(source, /if \(clean.endsWith\('\.html'\)\) return clean;/);
   assert.match(source, /PRECACHE_SET.has\(`\$\{clean\}\/index\.html`\)/);
 
@@ -94,4 +97,5 @@ test('Soundroom does not depend on runtime third-party utility CSS', async () =>
   assert.match(html, /href="\.\/material-symbols\.css"/);
   await access(new URL('public/soundroom/tailwind.css', root));
   await access(new URL('public/soundroom/material-symbols.woff2', root));
+  assert.ok((await stat(new URL('public/soundroom/material-symbols.woff2', root))).size < 50_000);
 });

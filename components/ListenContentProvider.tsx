@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getMixStartOffset, getYouTubeVideoUrl, resolveMixPlayback } from "@/lib/audio-source";
 import { artistProfiles, livePrograms, soundRecords, type ArchiveSection, type ArtistProfile, type LiveProgram, type SoundFormat, type SoundRecord } from "@/lib/content";
 import { sortMixesByLatest } from "@/lib/listen-order";
-import { isSanityConfigured, listenContentQuery, sanityClient } from "@/lib/sanity";
+import { isSanityConfigured, listenContentQuery, sanityFetch, sanityImageUrl } from "@/lib/sanity";
 
 type SanityArtist = ArtistProfile;
 type SanityMix = {
@@ -48,6 +48,25 @@ type ListenContentValue = {
 };
 
 const ListenContentContext = createContext<ListenContentValue | null>(null);
+const LISTEN_CACHE_KEY = "lowkal:listen-content:v1";
+const LISTEN_CACHE_MAX_AGE = 24 * 60 * 60 * 1_000;
+
+function readListenCache() {
+  try {
+    const cached = JSON.parse(window.sessionStorage.getItem(LISTEN_CACHE_KEY) ?? "null") as { savedAt?: number; content?: SanityListenContent } | null;
+    return cached?.content && Date.now() - Number(cached.savedAt) < LISTEN_CACHE_MAX_AGE ? cached.content : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeListenCache(content: SanityListenContent) {
+  try {
+    window.sessionStorage.setItem(LISTEN_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), content }));
+  } catch {
+    // Storage can be unavailable in private browsing modes.
+  }
+}
 
 function formatDate(dateISO: string) {
   const date = new Date(`${dateISO}T00:00:00Z`);
@@ -76,7 +95,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     playback,
     waveformPeaksUrl: mix.audioPeaksUrl,
     youtubeVideoUrl: getYouTubeVideoUrl(mix.youtubeVideoUrl ?? mix.youtubeUrl),
-    artwork: mix.artwork,
+    artwork: sanityImageUrl(mix.artwork),
     genres: mix.genres ?? [],
     description: mix.description ?? "",
     shaderMoodPrompt: mix.shaderMoodPrompt?.trim() || undefined,
@@ -97,10 +116,17 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     if (!isSanityConfigured) return;
     let active = true;
-    sanityClient.fetch<SanityListenContent>(listenContentQuery)
-      .then((result) => { if (active) setContent(result); })
+    const cached = readListenCache();
+    if (cached) queueMicrotask(() => { if (active) setContent(cached); });
+    const controller = new AbortController();
+    sanityFetch<SanityListenContent>(listenContentQuery, { signal: controller.signal })
+      .then((result) => {
+        if (!active) return;
+        setContent(result);
+        writeListenCache(result);
+      })
       .catch(() => { /* The local catalogue keeps Listen available if Sanity is unavailable. */ });
-    return () => { active = false; };
+    return () => { active = false; controller.abort(); };
   }, []);
 
   const value = useMemo<ListenContentValue>(() => {

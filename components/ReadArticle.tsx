@@ -6,7 +6,7 @@ import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
-import { isSanityConfigured, sanityClient, storiesQuery } from "@/lib/sanity";
+import { isSanityConfigured, sanityFetch, storiesQuery } from "@/lib/sanity";
 
 type Post = {
   slug: string;
@@ -40,7 +40,7 @@ export function ReadArticle() {
     if (!isSanityConfigured) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
-      void sanityClient.fetch<Post[]>(storiesQuery, {}, { signal: controller.signal })
+      void sanityFetch<Post[]>(storiesQuery, { signal: controller.signal })
         .then((posts) => {
           const found = posts.find((item) => item.slug === slug) ?? null;
           setPost(found);

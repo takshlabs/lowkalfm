@@ -278,6 +278,8 @@ a:focus-visible .lowkal-icon { transform: translate(1px, -1px); stroke-width: 2.
 .lowkal-player--compact .lowkal-player-transport-icon,
 .lowkal-player--compact .lowkal-player-room { transition: color 160ms ease, background-color 160ms ease, transform 160ms var(--lowkal-ease); }
 .lowkal-player--compact .lowkal-player-transport:hover .lowkal-player-transport-icon { transform: scale(1.05); }
+.lowkal-player--compact .lowkal-player-room:hover .lowkal-icon,
+.lowkal-player--compact .lowkal-player-room:focus-visible .lowkal-icon { transform: rotate(28deg) scale(1.08); }
 
 .site-footer { border-top-color: rgba(241, 234, 219, 0.22); }
 .site-footer nav a { position: relative; padding-bottom: 5px; }

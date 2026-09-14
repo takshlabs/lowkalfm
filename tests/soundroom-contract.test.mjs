@@ -30,6 +30,8 @@ test("the floating player preserves its live state with one selected playback so
   assert.match(provider, /const autoplayRef = useRef\(false\)/);
   assert.match(player, /<AudioWaveform/);
   assert.match(player, /onSeek=\{seek\}/);
+  assert.match(player, /<Disc3/);
+  assert.doesNotMatch(player, /ArrowUpRight/);
   assert.doesNotMatch(provider, /lowkal\.player\.playback-intent\.v1/);
   assert.doesNotMatch(provider, /sessionStorage/);
   assert.doesNotMatch(player, /Live signal/i);

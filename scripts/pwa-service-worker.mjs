@@ -70,26 +70,26 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-async function networkFirstDocument(request, url) {
+async function staleWhileRevalidateDocument(request, url) {
   const cache = await caches.open(DOC_CACHE);
-  try {
-    const response = await fetch(request);
+  const fallbackPath = documentFallbackPath(url.pathname);
+  const cached = await cache.match(fallbackPath);
+  const network = fetch(request).then(async (response) => {
     if (response.ok) await cache.put(documentFallbackPath(url.pathname), response.clone());
     return response;
-  } catch {
-    return (await cache.match(documentFallbackPath(url.pathname))) || (await cache.match('/offline.html')) || Response.error();
-  }
+  }).catch(() => null);
+  return cached || (await network) || (await cache.match('/offline.html')) || Response.error();
 }
 
-async function networkFirstRsc(request, url) {
+async function staleWhileRevalidateRsc(request, url) {
   const cache = await caches.open(RSC_CACHE);
-  try {
-    const response = await fetch(request);
+  const fallbackPath = rscFallbackPath(url.pathname);
+  const cached = await cache.match(fallbackPath);
+  const network = fetch(request).then(async (response) => {
     if (response.ok) await cache.put(rscFallbackPath(url.pathname), response.clone());
     return response;
-  } catch {
-    return (await cache.match(rscFallbackPath(url.pathname))) || Response.error();
-  }
+  }).catch(() => null);
+  return cached || (await network) || Response.error();
 }
 
 async function cacheFirst(request) {
@@ -116,11 +116,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (isBypassedRequest(request, url)) return;
   if (isRscRequest(request)) {
-    event.respondWith(networkFirstRsc(request, url));
+    event.respondWith(staleWhileRevalidateRsc(request, url));
     return;
   }
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirstDocument(request, url));
+    event.respondWith(staleWhileRevalidateDocument(request, url));
     return;
   }
   if (PRECACHE_SET.has(url.pathname)) {

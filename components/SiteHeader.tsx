@@ -23,7 +23,7 @@ export function SiteHeader() {
     <SiteLink className="skip-link" href="#main-content">Skip to content</SiteLink>
     <header className="site-header">
       <SiteLink className="brand-lockup" href={sitePath("/")} aria-label="Lowkal FM home">
-        <MediaFrame variant="mark" src={sitePath("/lowkal-logo.jpg")} alt="" width={52} height={52} priority />
+        <MediaFrame variant="mark" src={sitePath("/icons/icon-192.png")} alt="" width={52} height={52} priority />
         <span className="brand-name">LOWKAL.FM</span>
       </SiteLink>
       <span className="brand-scripts" aria-hidden="true">लोकल / ಲೋಕಲ್ / লোকাল</span>

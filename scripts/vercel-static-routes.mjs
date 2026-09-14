@@ -11,7 +11,7 @@ export function createStaticRoutes(files, compatibilityId) {
   const headers = {
     'Content-Type': 'text/x-component',
     'X-Vinext-RSC-Compatibility-Id': compatibilityId,
-    'Cache-Control': 'public, max-age=0, must-revalidate',
+    'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
     Vary: 'RSC, Accept',
   };
   const routes = [{ src: '^/.*$', headers: securityHeaders, continue: true }, ...files.filter(file => file.endsWith('.rsc')).map(file => ({
@@ -25,6 +25,31 @@ export function createStaticRoutes(files, compatibilityId) {
   });
   routes.push({ src: '^/.*\\.rsc$', headers, continue: true });
   routes.push({
+    src: '^/_next/static/.*$',
+    headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
+    continue: true,
+  });
+  routes.push({
+    src: '^/fonts/.*\\.woff2$',
+    headers: { 'Cache-Control': 'public, max-age=31536000, immutable' },
+    continue: true,
+  });
+  routes.push({
+    src: '^/(?:art|icons)/.*$',
+    headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' },
+    continue: true,
+  });
+  routes.push({
+    src: '^/.*\\.(?:avif|gif|jpe?g|png|webp)$',
+    headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' },
+    continue: true,
+  });
+  routes.push({
+    src: '^/soundroom/.*\\.(?:css|js)$',
+    headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' },
+    continue: true,
+  });
+  routes.push({
     src: '^/sw\\.js$',
     headers: {
       'Cache-Control': 'public, max-age=0, must-revalidate',
@@ -35,6 +60,11 @@ export function createStaticRoutes(files, compatibilityId) {
   routes.push({
     src: '^/manifest\\.webmanifest$',
     headers: { 'Cache-Control': 'public, max-age=300, must-revalidate' },
+    continue: true,
+  });
+  routes.push({
+    src: '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive)?|read(?:/[^/]+)?)/?$',
+    headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' },
     continue: true,
   });
   routes.push({ handle: 'filesystem' });

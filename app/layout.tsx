@@ -7,6 +7,7 @@ import { PersistentPlayer } from "@/components/PersistentPlayer";
 import { PwaLifecycle } from "@/components/PwaLifecycle";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { sanityCdnOrigin } from "@/lib/sanity";
 import { sitePath } from "@/lib/site-path";
 import "./globals.css";
 import "./reimagined.css";
@@ -54,6 +55,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
+      <head>
+        {sanityCdnOrigin ? <link rel="preconnect" href={sanityCdnOrigin} crossOrigin="anonymous" /> : null}
+        <link rel="preconnect" href="https://lowkal-audio-sync.lowkal-audio-737a.workers.dev" crossOrigin="anonymous" />
+      </head>
       <body>
         <ListenContentProvider>
           <AudioProvider>

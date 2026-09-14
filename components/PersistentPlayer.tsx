@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { ArrowUpRight, LoaderCircle, Pause, Play, RotateCcw, Video, Volume2 } from "lucide-react";
+import { Disc3, LoaderCircle, Pause, Play, RotateCcw, Video, Volume2 } from "lucide-react";
 import { AudioWaveform } from "@/components/AudioWaveform";
 import { usePathname } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
@@ -30,7 +30,7 @@ export function PersistentPlayer() {
   return (
     <aside className={`lowkal-player lowkal-player--compact${isPlaying ? " is-playing" : ""}`} aria-label="Lowkal audio player">
       <div className="lowkal-player-art">
-        <MediaFrame variant="record" src={activeRecord.artwork} alt="" fill sizes="56px" />
+        <MediaFrame variant="record" src={activeRecord.artwork} alt="" fill sizes="56px" sourceWidth={168} />
       </div>
 
       <button
@@ -100,8 +100,8 @@ export function PersistentPlayer() {
         />
         <output className="sr-only">Volume {volumeLabel}</output>
       </label>
-      <SiteLink className="lowkal-player-room" href={sitePath("/listen")} aria-label="Open Soundroom">
-        <ArrowUpRight className="lowkal-icon" aria-hidden="true" />
+      <SiteLink className="lowkal-player-room" href={sitePath("/listen")} aria-label="Open Soundroom" title="Open Soundroom">
+        <Disc3 className="lowkal-icon" aria-hidden="true" />
       </SiteLink>
     </aside>
   );
