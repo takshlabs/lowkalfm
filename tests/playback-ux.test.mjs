@@ -59,23 +59,34 @@ test("archive selects the record named by an artist mix link", () => {
 
 const text = (tree) => typeof tree === "string" ? tree : Array.isArray(tree) ? tree.map(text).join("") : tree?.props ? text(tree.props.children) : "";
 const byClass = (tree, name) => all(tree, (node) => node.props.className?.split(" ").includes(name));
+const expand = (view) => { byClass(view.render(), "lowkal-mini-expand")[0].props.onClick(); return view.render(); };
 
 test("mini-player can start before ready and retry an error", () => {
   let retried = false;
   const view = mount("PersistentPlayer", { retryPlayback: () => { retried = true; } });
-  assert.equal(byClass(view.render(), "lowkal-player-transport")[0].props.disabled, false);
+  assert.equal(byClass(view.render(), "lowkal-mini-play")[0].props.disabled, false);
   view.audio.error = "Connection lost";
   const tree = view.render();
-  const button = byClass(tree, "lowkal-player-transport")[0];
+  const button = byClass(tree, "lowkal-mini-play")[0];
   assert.match(button.props["aria-label"], /Retry/);
   button.props.onClick();
   assert.equal(retried, true);
   assert.ok(all(tree, (node) => node.props.role === "status").length);
 });
 
+test("the mini player expands into the compact production shell", () => {
+  const view = mount("PersistentPlayer");
+  assert.ok(byClass(view.render(), "lowkal-player--mini")[0], "the floating player opens in the compact mini form");
+  const tree = expand(view);
+  assert.ok(byClass(tree, "lowkal-player--compact")[0], "the mini player widens into the compact shell");
+  assert.equal(byClass(tree, "lowkal-player--mini").length, 0);
+  byClass(tree, "lowkal-player-collapse")[0].props.onClick();
+  assert.ok(byClass(view.render(), "lowkal-player--mini")[0], "collapsing returns to the mini form");
+});
+
 test("player state text and transport icon reflect loading, playback, and errors", () => {
   const view = mount("PersistentPlayer", { isLoading: true });
-  let tree = view.render();
+  let tree = expand(view);
   assert.match(text(tree), /Loading/);
   assert.equal(byClass(tree, "lowkal-player-transport-icon")[0].props.className, "lowkal-player-transport-icon is-loading");
 
@@ -94,6 +105,7 @@ test("player state text and transport icon reflect loading, playback, and errors
 
 test("seek uses bounded accessible time and requires a ready seekable source", () => {
   const view = mount("PersistentPlayer");
+  expand(view);
   const waveform = () => all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
   assert.equal(waveform().props.canSeek, false);
   view.audio.isReady = true;
@@ -115,7 +127,7 @@ test("seek uses bounded accessible time and requires a ready seekable source", (
 
 test("persistent player preserves the compact production shell", () => {
   const view = mount("PersistentPlayer");
-  const tree = view.render();
+  const tree = expand(view);
   const player = byClass(tree, "lowkal-player--compact")[0];
   assert.ok(player, "the production compact player class must remain active");
   for (const className of ["lowkal-player-program", "lowkal-player-title-row", "lowkal-player-title", "lowkal-player-record", "lowkal-player-timecode", "lowkal-player-track", "lowkal-player-room", "lowkal-player-transport-icon"]) {
@@ -129,6 +141,7 @@ test("persistent player preserves the compact production shell", () => {
 test("timeline delegates seeking to the waveform only when ready", () => {
   const seeks = [];
   const view = mount("PersistentPlayer", { isReady: true, seek: (seconds) => seeks.push(seconds) });
+  expand(view);
   const waveform = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
   assert.equal(waveform.props.canSeek, true);
   waveform.props.onSeek(75);
@@ -137,6 +150,7 @@ test("timeline delegates seeking to the waveform only when ready", () => {
 
 test("timeline removes its peak data when an unplayable mix is selected", () => {
   const view = mount("PersistentPlayer", { isReady: true });
+  expand(view);
   let waveform = all(byClass(view.render(), "lowkal-player-timeline")[0], (node) => node.type === "AudioWaveform")[0];
   assert.equal(waveform.props.peaksUrl, "/mix.peaks.json");
   view.audio.activeRecord = records[2];
