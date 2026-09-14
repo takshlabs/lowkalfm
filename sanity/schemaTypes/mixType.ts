@@ -15,7 +15,15 @@ export const mixType = defineType({
   ],
   fields: [
     defineField({ name: "title", title: "Mix title", type: "string", group: "identity", validation: (rule) => rule.required() }),
-    defineField({ name: "slug", title: "Mix URL", type: "slug", group: "identity", options: { source: "title", maxLength: 96 }, validation: (rule) => rule.required() }),
+    defineField({
+      name: "slug",
+      title: "Public share URL",
+      type: "slug",
+      group: "identity",
+      options: { source: "title", maxLength: 96 },
+      description: "Edit this to set the end of the public link: lowkalfm.in/listen/archive/this-value. Keep it stable after sharing. Publish and deploy Lowkal after a change so social previews use the new URL.",
+      validation: (rule) => rule.required()
+    }),
     defineField({ name: "series", title: "Series or programme label", type: "string", group: "identity", validation: (rule) => rule.required() }),
     defineField({
       name: "format",
