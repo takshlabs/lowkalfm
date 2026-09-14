@@ -63,7 +63,7 @@ export function createStaticRoutes(files, compatibilityId) {
     continue: true,
   });
   routes.push({
-    src: '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive)?|read(?:/[^/]+)?|soundroom)/?$',
+    src: '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive(?:/[^/]+)?)?|read(?:/[^/]+)?|soundroom)/?$',
     headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' },
     continue: true,
   });

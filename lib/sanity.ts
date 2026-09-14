@@ -105,6 +105,41 @@ export const listenContentQuery = `{
   }
 }`;
 
+export type SharedMix = {
+  slug: string;
+  title: string;
+  series: string;
+  artistDisplayName?: string;
+  artists?: Array<{ name?: string }>;
+  description?: string;
+  artwork?: string;
+  thumbnail?: string;
+};
+
+const sharedMixFields = `{
+  "slug": slug.current,
+  title,
+  series,
+  artistDisplayName,
+  "artists": artists[]->{name},
+  description,
+  "artwork": artwork.asset->url,
+  "thumbnail": thumbnail.asset->url
+}`;
+
+export const sharedMixBySlugQuery = `*[_type == "mix" && published == true && parked != true && slug.current == $slug][0]${sharedMixFields}`;
+export const sharedMixSlugsQuery = `*[_type == "mix" && published == true && parked != true && defined(slug.current)].slug.current`;
+
+export async function getSharedMix(slug: string) {
+  if (!isSanityConfigured || !slug) return null;
+  return sanityFetch<SharedMix | null>(sharedMixBySlugQuery.replace("$slug", JSON.stringify(slug)));
+}
+
+export async function getSharedMixSlugs() {
+  if (!isSanityConfigured) return [];
+  return sanityFetch<string[]>(sharedMixSlugsQuery);
+}
+
 export const linkBoardQuery = `*[_id == "linkBoard" && published == true][0]{
   title,
   kicker,

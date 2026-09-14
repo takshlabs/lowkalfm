@@ -50,11 +50,16 @@ function getGroup(record: SoundRecord) {
   return archiveGroups.find((group) => group.includes(record)) ?? archiveGroups[0];
 }
 
-export function SoundroomCatalog() {
+function mixPath(slug: string) {
+  return sitePath(`/listen/archive/${encodeURIComponent(slug)}`);
+}
+
+export function SoundroomCatalog({ initialMixSlug, autoplay = false }: { initialMixSlug?: string; autoplay?: boolean } = {}) {
   const { records } = useListenContent();
   const archiveRecords = records;
   const searchParams = useSearchParams();
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(() => searchParams.get("mix"));
+  const requestedSlug = initialMixSlug ?? searchParams.get("mix");
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(() => requestedSlug);
   const recordRefs = useRef(new Map<string, HTMLButtonElement>());
   const { activeRecord, isPlaying, isLoading, error, retryPlayback, playRecord, togglePlayback } = useAudio();
   const selectedIndex = Math.max(0, archiveRecords.findIndex((record) => record.slug === (selectedSlug ?? activeRecord.slug)));
@@ -72,9 +77,19 @@ export function SoundroomCatalog() {
     });
   }, [selected.slug]);
 
+  useEffect(() => {
+    if (!autoplay || !initialMixSlug || selected.slug !== initialMixSlug || !selected.playback) return;
+    playRecord(selected.slug, true);
+  }, [autoplay, initialMixSlug, playRecord, selected.playback, selected.slug]);
+
+  const selectRecord = (slug: string) => {
+    setSelectedSlug(slug);
+    if (typeof window !== "undefined") window.history.replaceState(null, "", mixPath(slug));
+  };
+
   const move = (direction: -1 | 1) => {
     const nextIndex = (selectedIndex + direction + archiveRecords.length) % archiveRecords.length;
-    setSelectedSlug(archiveRecords[nextIndex].slug);
+    selectRecord(archiveRecords[nextIndex].slug);
   };
 
   const handlePlay = () => {
@@ -110,7 +125,7 @@ export function SoundroomCatalog() {
                 key={item.id}
                 onClick={() => {
                   const firstRecord = archiveRecords.find(item.includes);
-                  if (firstRecord) setSelectedSlug(firstRecord.slug);
+                  if (firstRecord) selectRecord(firstRecord.slug);
                 }}
               >
                 <span className="archive-nav-mark" aria-hidden="true" />
@@ -140,12 +155,12 @@ export function SoundroomCatalog() {
                   if (element) recordRefs.current.set(record.slug, element);
                   else recordRefs.current.delete(record.slug);
                 }}
-                onClick={() => setSelectedSlug(record.slug)}
+                onClick={() => selectRecord(record.slug)}
                 onKeyDown={(event) => {
                   if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
                   event.preventDefault();
                   const next = event.key === "Home" ? 0 : event.key === "End" ? archiveRecords.length - 1 : (index + (event.key === "ArrowLeft" ? -1 : 1) + archiveRecords.length) % archiveRecords.length;
-                  setSelectedSlug(archiveRecords[next].slug);
+                  selectRecord(archiveRecords[next].slug);
                   recordRefs.current.get(archiveRecords[next].slug)?.focus({ preventScroll: true });
                 }}
               >
