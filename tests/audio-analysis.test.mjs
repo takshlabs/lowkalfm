@@ -351,7 +351,7 @@ test("mixer bridge authenticates the current Soundroom and sends source and read
 
 test("AudioProvider starts and stops the mixer bridge", async () => {
   const provider = await readFile(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
-  assert.match(provider, /startMixerBridge\(window, getAnalysis\(\), sitePath\("\/soundroom\/index.html"\)\)/);
+  assert.match(provider, /startMixerBridge\(window, getAnalysis\(\), sitePath\("\/soundroom"\)\)/);
   assert.match(provider, /stopMixer\(\)/);
 });
 

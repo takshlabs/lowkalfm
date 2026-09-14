@@ -103,7 +103,7 @@ function needsNativeBackgroundAudio() {
 }
 
 function isSoundroomFrameSource(source: MessageEventSource | null) {
-  const soundroomPath = new URL(sitePath("/soundroom/index.html"), window.location.origin).pathname;
+  const soundroomPath = new URL(sitePath("/soundroom"), window.location.origin).pathname;
   return [...document.querySelectorAll<HTMLIFrameElement>("iframe")].some((frame) => {
     if (frame.contentWindow !== source) return false;
     const frameUrl = new URL(frame.src, window.location.href);
@@ -210,8 +210,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const stop = startAnalysisBridge(window, () => getAnalysis().read(), () => {
       const audio = audioRef.current;
       return Boolean(audio && !audio.paused && !audio.ended && audio.readyState >= 2);
-    }, sitePath("/soundroom/index.html"));
-    const stopMixer = startMixerBridge(window, getAnalysis(), sitePath("/soundroom/index.html"));
+    }, sitePath("/soundroom"));
+    const stopMixer = startMixerBridge(window, getAnalysis(), sitePath("/soundroom"));
     return () => {
       stop();
       stopMixer();

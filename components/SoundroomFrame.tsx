@@ -74,7 +74,7 @@ export function SoundroomFrame() {
   return (
     <iframe
       ref={frameRef}
-      src={sitePath("/soundroom/index.html")}
+      src={sitePath("/soundroom")}
       title="Lowkal Soundroom"
       onLoad={sendCatalog}
       style={{ display: "block", width: "100%", height: "100%", border: 0 }}

@@ -51,11 +51,12 @@ test('static assets use long browser cache lifetimes', () => {
   const routes = createStaticRoutes(['index.rsc', 'index.html'], 'build-test');
   const immutable = routes.find(route => route.src === '^/_next/static/.*$');
   const fonts = routes.find(route => route.src === '^/fonts/.*\\.woff2$');
-  const pages = routes.find(route => route.src === '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive)?|read(?:/[^/]+)?)/?$');
+  const pages = routes.find(route => route.src === '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive)?|read(?:/[^/]+)?|soundroom)/?$');
   assert.match(immutable.headers['Cache-Control'], /immutable/);
   assert.match(fonts.headers['Cache-Control'], /31536000/);
   assert.match(pages.headers['Cache-Control'], /stale-while-revalidate/);
   assert.ok(new RegExp(pages.src).test('/listen/archive'));
+  assert.ok(new RegExp(pages.src).test('/soundroom'));
   assert.equal(new RegExp(pages.src).test('/studio'), false);
 });
 

@@ -45,7 +45,7 @@ export function createStaticRoutes(files, compatibilityId) {
     continue: true,
   });
   routes.push({
-    src: '^/soundroom/.*\\.(?:css|js)$',
+    src: '^/soundroom/.*\\.(?:css|js|woff2)$',
     headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' },
     continue: true,
   });
@@ -63,7 +63,7 @@ export function createStaticRoutes(files, compatibilityId) {
     continue: true,
   });
   routes.push({
-    src: '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive)?|read(?:/[^/]+)?)/?$',
+    src: '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive)?|read(?:/[^/]+)?|soundroom)/?$',
     headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' },
     continue: true,
   });

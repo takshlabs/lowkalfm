@@ -92,7 +92,7 @@ test("the original Soundroom opens the vinyl-and-shader archive room", async () 
 
   assert.match(page, /<SoundroomFrame/);
   assert.match(frame, /<iframe/);
-  assert.match(frame, /soundroom\/index\.html/);
+  assert.match(frame, /sitePath\("\/soundroom"\)/);
   assert.match(soundroom, /href="\.\.\/listen\/archive"[^>]*target="_top"/i);
   assert.match(archivePage, /SoundroomCatalog/);
   assert.match(catalog, /Lowkal scene programme/i);
