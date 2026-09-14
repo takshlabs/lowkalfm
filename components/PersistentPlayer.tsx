@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { Disc3, LoaderCircle, Pause, Play, RotateCcw, Video, Volume2 } from "lucide-react";
+import { LoaderCircle, Pause, Play, Plus, RotateCcw, Video, Volume2 } from "lucide-react";
 import { AudioWaveform } from "@/components/AudioWaveform";
 import { usePathname } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
@@ -101,7 +101,7 @@ export function PersistentPlayer() {
         <output className="sr-only">Volume {volumeLabel}</output>
       </label>
       <SiteLink className="lowkal-player-room" href={sitePath("/listen")} aria-label="Open Soundroom" title="Open Soundroom">
-        <Disc3 className="lowkal-icon" aria-hidden="true" />
+        <Plus className="lowkal-icon" aria-hidden="true" />
       </SiteLink>
     </aside>
   );
