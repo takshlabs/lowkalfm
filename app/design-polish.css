@@ -28,46 +28,6 @@ button:focus-visible .lowkal-icon,
 a:hover .lowkal-icon,
 a:focus-visible .lowkal-icon { transform: translate(1px, -1px); stroke-width: 2.6; }
 
-.horizontal-content-rail-controls button,
-.archive-controls button,
-.transmission-media > button,
-.artist-focus-player > button,
-.artist-mix-card > a,
-.lowkal-player--compact .lowkal-player-room {
-  border-radius: 8px;
-}
-
-.horizontal-content-rail-controls button,
-.archive-controls button,
-.artist-mix-card > a,
-.lowkal-player--compact .lowkal-player-room {
-  position: relative;
-  overflow: hidden;
-}
-
-.horizontal-content-rail-controls button::before,
-.archive-controls button::before,
-.artist-mix-card > a::before,
-.lowkal-player--compact .lowkal-player-room::before {
-  position: absolute;
-  inset: 5px;
-  border: 1px solid currentColor;
-  border-top-color: transparent;
-  border-right-color: transparent;
-  content: "";
-  opacity: 0.42;
-  pointer-events: none;
-}
-
-.horizontal-content-rail-controls button:hover::before,
-.horizontal-content-rail-controls button:focus-visible::before,
-.archive-controls button:hover::before,
-.archive-controls button:focus-visible::before,
-.artist-mix-card > a:hover::before,
-.artist-mix-card > a:focus-visible::before,
-.lowkal-player--compact .lowkal-player-room:hover::before,
-.lowkal-player--compact .lowkal-player-room:focus-visible::before { opacity: 0; }
-
 /* The header works as a compact station ident, not a generic site bar. */
 .site-header {
   isolation: isolate;

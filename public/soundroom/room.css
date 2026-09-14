@@ -4,36 +4,6 @@
 #btn-settings-open:focus-visible, #modal-settings :focus-visible { outline: 2px solid #55e93b !important; outline-offset: 4px; }
 button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focus-visible { outline: 2px solid #55e93b !important; outline-offset: 4px; }
 
-/* The room uses the same sharp signal controls as the site shell. */
-#btn-tracklist-open,
-#btn-settings-open,
-#main-youtube-video,
-#mini-youtube-video,
-#btn-mini-maximize {
-  border-radius: 8px !important;
-}
-#btn-main-shuffle,
-#btn-main-replay-10,
-#btn-main-prev,
-#btn-main-next,
-#btn-main-forward-30,
-#btn-main-repeat,
-#btn-volume-mute {
-  border: 1px solid rgba(229, 226, 225, .14);
-  border-radius: 7px;
-  background: rgba(255, 255, 255, .035);
-}
-#btn-main-shuffle:hover,
-#btn-main-replay-10:hover,
-#btn-main-prev:hover,
-#btn-main-next:hover,
-#btn-main-forward-30:hover,
-#btn-main-repeat:hover,
-#btn-volume-mute:hover { border-color: rgba(85, 233, 59, .7); background: rgba(85, 233, 59, .1); }
-#btn-main-play,
-#btn-mini-play { border: 2px solid rgba(229, 226, 225, .56); box-shadow: 4px 4px 0 rgba(85, 233, 59, .36); }
-#btn-main-play:hover,
-#btn-mini-play:hover { box-shadow: 2px 2px 0 rgba(85, 233, 59, .72); }
 #main-waveform { height: 42px; min-height: 42px; }
 #modal-settings[hidden] { display: none !important; }
 #modal-tracklist[hidden] { display: none !important; }
