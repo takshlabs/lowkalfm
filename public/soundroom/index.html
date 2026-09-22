@@ -1315,7 +1315,7 @@
       async copyMixLink() {
         if (!this.activeMix?.id) return;
         const roomBase = window.location.pathname.replace(/\/soundroom\/?$/, '');
-        const url = new URL(`${roomBase}/listen/archive/${encodeURIComponent(this.activeMix.id)}`, window.location.origin).toString();
+        const url = new URL(`${roomBase}/listen?mix=${encodeURIComponent(this.activeMix.id)}`, window.location.origin).toString();
         const button = document.getElementById('btn-share-mix');
         const label = document.getElementById('share-mix-label');
         try {

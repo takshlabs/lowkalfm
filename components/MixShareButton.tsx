@@ -38,7 +38,10 @@ export function MixShareButton({ slug, title, variant }: MixShareButtonProps) {
   const copyLink = async () => {
     if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
     try {
-      const path = sitePath(`/listen/archive/${encodeURIComponent(slug)}`);
+      const encodedSlug = encodeURIComponent(slug);
+      const path = variant === "player"
+        ? sitePath(`/?mix=${encodedSlug}`)
+        : sitePath(`/listen/archive/${encodedSlug}`);
       await copyText(new URL(path, window.location.origin).toString());
       setStatus("copied");
     } catch {

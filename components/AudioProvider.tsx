@@ -242,6 +242,19 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { stateRef.current = { activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, isLoading, error, volume, isMuted, isShuffled, repeatMode, sleepTimer }; }, [activeRecord.slug, currentTime, duration, isPlaying, isReady, isLoading, error, volume, isMuted, isShuffled, repeatMode, sleepTimer]);
   useEffect(() => {
     if (didRestoreRef.current) return;
+    const requestedSlug = new URLSearchParams(window.location.search).get("mix")?.trim();
+    if (requestedSlug) {
+      const requestedRecord = getRecord(requestedSlug);
+      // The CMS catalogue can arrive after the fallback catalogue. Keep the
+      // URL selection pending until that record is available.
+      if (!requestedRecord) return;
+      didRestoreRef.current = true;
+      resumeAtRef.current = requestedRecord.startOffset ?? 0;
+      // Selecting a shared mix must not start audio without user input.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActiveSlug(requestedRecord.slug); setCurrentTime(0); setDuration(requestedRecord.duration);
+      return;
+    }
     const saved = readSavedState();
     if (!saved) { didRestoreRef.current = true; return; }
     // The initial fallback catalog can arrive before Sanity. Keep the saved
@@ -250,7 +263,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     didRestoreRef.current = true;
     resumeAtRef.current = saved.currentTime;
     // This client-only value is available only after hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveSlug(saved.slug); setCurrentTime(saved.currentTime); setVolumeState(saved.volume); setIsMuted(saved.muted); setIsShuffled(saved.shuffled); setQueueOrder(saved.shuffled ? createShuffleOrder(canonicalQueue, saved.slug) : canonicalQueue); setRepeatMode(saved.repeatMode); setDuration(getRecord(saved.slug)?.duration ?? 0);
     if (saved.sleepTimer === "end" || saved.sleepDeadline !== null) {
       sleepDeadlineRef.current = saved.sleepDeadline;

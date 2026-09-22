@@ -7,7 +7,7 @@ import * as playback from "../lib/audio-playback.ts";
 
 // Exercise the real provider callbacks without a browser or network. React hooks
 // retain state between explicit renders; media promises and events are controlled.
-function harness() {
+function harness(search = "") {
   const slots = []; let cursor = 0; let effects = []; let value; let tree;
   const records = [
     { slug: "one", title: "One", artist: "Test", artwork: "/one.png", series: "Test", duration: 100, startOffset: 10, playback: { provider: "cloudflare", url: "/one.mp3" } },
@@ -34,7 +34,7 @@ function harness() {
     play() { this.paused = false; return new Promise((resolve, reject) => requests.push({ resolve, reject })); },
     pause() { this.paused = true; }, load() { this.readyState = 0; },
   };
-  const window = { location: { origin: "https://lowkalfm.in" }, localStorage: { getItem: key => storage.get(key) ?? null, setItem(key, value) { storage.set(key, value); } }, screen: { width: 390, height: 844 }, matchMedia: () => ({ matches: true }), frames: [{ postMessage: message => messages.push(message) }],
+  const window = { location: { origin: "https://lowkalfm.in", search }, localStorage: { getItem: key => storage.get(key) ?? null, setItem(key, value) { storage.set(key, value); } }, screen: { width: 390, height: 844 }, matchMedia: () => ({ matches: true }), frames: [{ postMessage: message => messages.push(message) }],
     addEventListener: (name, fn) => { listeners[name] = fn; }, removeEventListener() {}, setTimeout: fn => { timers.set(++timerId, fn); return timerId; }, clearTimeout: id => timers.delete(id), setInterval: fn => { timers.set(++timerId, fn); return timerId; }, clearInterval: id => timers.delete(id) };
   const analysis = { setElement() {}, activate() {}, dispose() {}, read() {} };
   const compiled = { exports: {} };
@@ -48,12 +48,20 @@ function harness() {
     if (name === "@/lib/site-path") return { sitePath: path => path };
     if (name === "./ListenContentProvider") return { useListenContent: () => ({ records, getRecord }) };
     throw new Error(name);
-  }, window, navigator: { maxTouchPoints: 1 }, document: { addEventListener: (name, fn) => { (documentListeners[name] ??= []).push(fn); }, removeEventListener() {} }, HTMLMediaElement: MediaElement, queueMicrotask, console, setTimeout, clearTimeout });
+  }, window, navigator: { maxTouchPoints: 1 }, document: { addEventListener: (name, fn) => { (documentListeners[name] ??= []).push(fn); }, removeEventListener() {} }, HTMLMediaElement: MediaElement, URLSearchParams, queueMicrotask, console, setTimeout, clearTimeout });
   function render() { cursor = 0; effects = []; tree = compiled.exports.AudioProvider({ children: null }); const media = tree.props.children.find?.(child => child?.type === "audio"); media?.props.ref(audio); effects.forEach(fn => fn()); return value; }
   render(); render();
   const mediaProps = () => tree.props.children.find(child => child?.type === "audio")?.props;
   return { render, audio, requests, messages, storage, listeners, documentListeners, MediaElement, expire() { [...timers.values()].forEach(fn => fn()); timers.clear(); }, get value() { return value; }, mediaProps, event(name, target = audio) { mediaProps()?.[name]?.({ currentTarget: target }); } };
 }
+
+test("a shared page URL selects its mix without starting playback", () => {
+  const h = harness("?mix=two");
+
+  assert.equal(h.value.activeRecord.slug, "two");
+  assert.equal(h.value.isPlaying, false);
+  assert.equal(h.requests.length, 0);
+});
 
 test("toggle cancels loading intent before the playing event", () => {
   const h = harness();
