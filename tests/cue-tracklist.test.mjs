@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseRekordboxCueFile } from "../lib/cue-tracklist.ts";
 
-test("Rekordbox CUE files create tracks in order with INDEX 01 times", () => {
+test("Rekordbox CUE files create untimed tracks in order", () => {
   const cue = `\uFEFFPERFORMER "Lowkal FM"
 FILE "Lowkal Recording.wav" WAVE
   TRACK 01 AUDIO
@@ -15,8 +15,8 @@ FILE "Lowkal Recording.wav" WAVE
     INDEX 01 03:42:38`;
 
   assert.deepEqual(parseRekordboxCueFile(cue), [
-    { time: 0, title: "First Track", artist: "Maya K" },
-    { time: 223, title: "Second Track", artist: "Nila" }
+    { title: "First Track", artist: "Maya K" },
+    { title: "Second Track", artist: "Nila" }
   ]);
 });
 
@@ -24,24 +24,18 @@ test("CUE import uses a disc performer and can split artist and title", () => {
   const cue = `PERFORMER "Nila"
 TRACK 01 AUDIO
 TITLE "First Track"
-INDEX 01 00:00:00
 TRACK 02 AUDIO
-TITLE "Maya K - Second Track"
-INDEX 01 00:05:38`;
+TITLE "Maya K - Second Track"`;
 
   assert.deepEqual(parseRekordboxCueFile(cue), [
-    { time: 0, title: "First Track", artist: "Nila" },
-    { time: 6, title: "Second Track", artist: "Maya K" }
+    { title: "First Track", artist: "Nila" },
+    { title: "Second Track", artist: "Maya K" }
   ]);
 });
 
-test("CUE import rejects tracks without a start time or artist", () => {
+test("CUE import rejects tracks without an artist", () => {
   assert.throws(
-    () => parseRekordboxCueFile('TRACK 01 AUDIO\nTITLE "First Track"\nPERFORMER "Maya K"'),
-    /no INDEX 01 start time/
-  );
-  assert.throws(
-    () => parseRekordboxCueFile('TRACK 01 AUDIO\nTITLE "First Track"\nINDEX 01 00:00:00'),
+    () => parseRekordboxCueFile('TRACK 01 AUDIO\nTITLE "First Track"'),
     /no artist was found/
   );
 });

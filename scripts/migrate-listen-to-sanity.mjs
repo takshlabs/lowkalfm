@@ -50,16 +50,16 @@ const artists = [
 
 const tracklists = {
   takezo: [
-    { _key: "t1", _type: "track", time: 0, title: "Intro (Atmosphere)", artist: "Unknown" },
-    { _key: "t2", _type: "track", time: 255, title: "Sub-bass Frequency", artist: "Autechre" },
-    { _key: "t3", _type: "track", time: 750, title: "Glitch Sequence 01", artist: "Aphex Twin" },
-    { _key: "t4", _type: "track", time: 2712, title: "Neon Drift", artist: "Overmono" }
+    { _key: "t1", _type: "track", title: "Intro (Atmosphere)", artist: "Unknown" },
+    { _key: "t2", _type: "track", title: "Sub-bass Frequency", artist: "Autechre" },
+    { _key: "t3", _type: "track", title: "Glitch Sequence 01", artist: "Aphex Twin" },
+    { _key: "t4", _type: "track", title: "Neon Drift", artist: "Overmono" }
   ],
   sarang: [
-    { _key: "s1", _type: "track", time: 0, title: "La Real", artist: "Surgeon" },
-    { _key: "s2", _type: "track", time: 270, title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },
-    { _key: "s3", _type: "track", time: 555, title: "Pace Yourself", artist: "Karenn" },
-    { _key: "s4", _type: "track", time: 945, title: "Penny & Pound", artist: "Ansome" }
+    { _key: "s1", _type: "track", title: "La Real", artist: "Surgeon" },
+    { _key: "s2", _type: "track", title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },
+    { _key: "s3", _type: "track", title: "Pace Yourself", artist: "Karenn" },
+    { _key: "s4", _type: "track", title: "Penny & Pound", artist: "Ansome" }
   ]
 };
 

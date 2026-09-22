@@ -13,27 +13,22 @@
     "synthStyle": "garage",
     "tracks": [
       {
-        "time": 0,
         "title": "Intro (Atmosphere)",
         "artist": "Unknown"
       },
       {
-        "time": 255,
         "title": "Sub-bass Frequency",
         "artist": "Autechre"
       },
       {
-        "time": 750,
         "title": "Glitch Sequence 01",
         "artist": "Aphex Twin"
       },
       {
-        "time": 2712,
         "title": "Neon Drift",
         "artist": "Overmono"
       },
       {
-        "time": 3160,
         "title": "Outro (Static)",
         "artist": "Burial"
       }
@@ -64,32 +59,26 @@
     "synthStyle": "techno",
     "tracks": [
       {
-        "time": 0,
         "title": "La Real",
         "artist": "Surgeon"
       },
       {
-        "time": 270,
         "title": "Why They Hide Their Bodies Under My Garage",
         "artist": "Blawan"
       },
       {
-        "time": 555,
         "title": "Pace Yourself",
         "artist": "Karenn"
       },
       {
-        "time": 945,
         "title": "Penny & Pound",
         "artist": "Ansome"
       },
       {
-        "time": 1280,
         "title": "Look What Your Love Has Done To Me",
         "artist": "Perc"
       },
       {
-        "time": 1685,
         "title": "Fist",
         "artist": "British Murder Boys"
       }
@@ -120,27 +109,22 @@
     "synthStyle": "glitch",
     "tracks": [
       {
-        "time": 0,
         "title": "Gantz Graf",
         "artist": "Autechre"
       },
       {
-        "time": 322,
         "title": "Vordhosbn",
         "artist": "Aphex Twin"
       },
       {
-        "time": 645,
         "title": "Rubber Johnny",
         "artist": "Aphex Twin"
       },
       {
-        "time": 970,
         "title": "Glitch 03",
         "artist": "Alva Noto"
       },
       {
-        "time": 1350,
         "title": "Untitled",
         "artist": "Ryoji Ikeda"
       }
@@ -171,22 +155,18 @@
     "synthStyle": "ambient",
     "tracks": [
       {
-        "time": 0,
         "title": "Drone Pad I",
         "artist": "Brian Eno"
       },
       {
-        "time": 360,
         "title": "Ambient Waves",
         "artist": "Stars of the Lid"
       },
       {
-        "time": 840,
         "title": "Monolithic Deep",
         "artist": "Tim Hecker"
       },
       {
-        "time": 1500,
         "title": "Space Drone",
         "artist": "William Basinski"
       }

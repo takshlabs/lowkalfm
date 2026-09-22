@@ -5,7 +5,6 @@ export type SoundFormat = "weekly" | "live-set";
 export type ArchiveSection = "scene-programmes" | "volumes-residents" | "volumes-guests";
 
 export type Track = {
-  time: number;
   title: string;
   artist: string;
 };
@@ -120,10 +119,10 @@ export const soundRecords: SoundRecord[] = [
     showInArchive: true,
     showOnHome: true,
     tracks: [
-      { time: 0, title: "Intro (Atmosphere)", artist: "Unknown" },
-      { time: 255, title: "Sub-bass Frequency", artist: "Autechre" },
-      { time: 750, title: "Glitch Sequence 01", artist: "Aphex Twin" },
-      { time: 2712, title: "Neon Drift", artist: "Overmono" }
+      { title: "Intro (Atmosphere)", artist: "Unknown" },
+      { title: "Sub-bass Frequency", artist: "Autechre" },
+      { title: "Glitch Sequence 01", artist: "Aphex Twin" },
+      { title: "Neon Drift", artist: "Overmono" }
     ]
   },
   {
@@ -147,10 +146,10 @@ export const soundRecords: SoundRecord[] = [
     showInArchive: true,
     showOnHome: true,
     tracks: [
-      { time: 0, title: "La Real", artist: "Surgeon" },
-      { time: 270, title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },
-      { time: 555, title: "Pace Yourself", artist: "Karenn" },
-      { time: 945, title: "Penny & Pound", artist: "Ansome" }
+      { title: "La Real", artist: "Surgeon" },
+      { title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },
+      { title: "Pace Yourself", artist: "Karenn" },
+      { title: "Penny & Pound", artist: "Ansome" }
     ]
   },
   {
@@ -175,10 +174,10 @@ export const soundRecords: SoundRecord[] = [
     showInArchive: true,
     showOnHome: true,
     tracks: [
-      { time: 0, title: "Intro (Atmosphere)", artist: "Unknown" },
-      { time: 255, title: "Sub-bass Frequency", artist: "Autechre" },
-      { time: 750, title: "Glitch Sequence 01", artist: "Aphex Twin" },
-      { time: 2712, title: "Neon Drift", artist: "Overmono" }
+      { title: "Intro (Atmosphere)", artist: "Unknown" },
+      { title: "Sub-bass Frequency", artist: "Autechre" },
+      { title: "Glitch Sequence 01", artist: "Aphex Twin" },
+      { title: "Neon Drift", artist: "Overmono" }
     ]
   },
   {
@@ -202,9 +201,9 @@ export const soundRecords: SoundRecord[] = [
     showInArchive: true,
     showOnHome: true,
     tracks: [
-      { time: 0, title: "La Real", artist: "Surgeon" },
-      { time: 270, title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },
-      { time: 555, title: "Pace Yourself", artist: "Karenn" }
+      { title: "La Real", artist: "Surgeon" },
+      { title: "Why They Hide Their Bodies Under My Garage", artist: "Blawan" },
+      { title: "Pace Yourself", artist: "Karenn" }
     ]
   }
 ];

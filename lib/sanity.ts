@@ -91,7 +91,7 @@ export const listenContentQuery = `{
     showInSoundroom,
     showInArchive,
     showOnHome,
-    tracks[]{time, title, artist},
+    tracks[]{title, artist},
     "programmeSlug": *[_type == "programme" && references(^._id)][0].slug.current
   },
   "programmes": *[_type == "programme" && published == true] | order(sortOrder asc, date desc) {

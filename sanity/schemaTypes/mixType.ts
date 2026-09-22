@@ -180,14 +180,13 @@ export const mixType = defineType({
       title: "Tracklist",
       type: "array",
       group: "tracklist",
-      description: "Add tracks in play order. Soundroom shows each start time, title, and artist.",
+      description: "Add tracks in play order. Soundroom shows each track title and artist.",
       components: { input: CueTracklistInput },
       of: [defineArrayMember({
         name: "track",
         title: "Track",
         type: "object",
         fields: [
-          defineField({ name: "time", title: "Start time in seconds", type: "number", validation: (rule) => rule.required().integer().min(0) }),
           defineField({ name: "title", title: "Track title", type: "string", validation: (rule) => rule.required() }),
           defineField({ name: "artist", title: "Track artist", type: "string", validation: (rule) => rule.required() })
         ],

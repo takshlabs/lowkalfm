@@ -138,11 +138,14 @@ test("Soundroom displays CMS tracklists and plain-text mix descriptions", async 
 
   assert.match(schema, /name:\s*"tracks"/);
   assert.match(schema, /title:\s*"Tracklist"/);
-  assert.match(query, /tracks\[\]\{time, title, artist\}/);
+  assert.match(query, /tracks\[\]\{title, artist\}/);
+  assert.doesNotMatch(schema, /name:\s*"time"/);
+  assert.doesNotMatch(query, /tracks\[\]\{[^}]*time/);
   assert.match(frame, /tracks:\s*record\.tracks/);
   assert.match(soundroom, /btn-tracklist-open/);
   assert.match(soundroom, /modal-tracklist/);
   assert.match(soundroom, /renderTracklist\(mix\)/);
+  assert.doesNotMatch(soundroom, /track\.time/);
   assert.match(soundroom, /detail-mix-description.*hidden = !description/s);
   assert.doesNotMatch(soundroom, /id="detail-mix-desc"[^>]*\bitalic\b/);
 });

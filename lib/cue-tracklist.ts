@@ -1,5 +1,4 @@
 export type ParsedCueTrack = {
-  time: number;
   title: string;
   artist: string;
 };
@@ -7,8 +6,6 @@ export type ParsedCueTrack = {
 type CueTrackFields = {
   title?: string;
   performer?: string;
-  index01?: string;
-  index01Line?: number;
   number: string;
 };
 
@@ -21,22 +18,6 @@ function cueValue(value: string) {
     }
   }
   return trimmed;
-}
-
-function secondsFromCueIndex(value: string, lineNumber: number) {
-  const match = /^(\d+):(\d{2}):(\d{2})$/.exec(value.trim());
-  if (!match) {
-    throw new Error(`Line ${lineNumber}: expected a cue time in minutes:seconds:frames format.`);
-  }
-
-  const minutes = Number(match[1]);
-  const seconds = Number(match[2]);
-  const frames = Number(match[3]);
-  if (seconds > 59 || frames > 74) {
-    throw new Error(`Line ${lineNumber}: cue time has an invalid seconds or frames value.`);
-  }
-
-  return Math.round((minutes * 60 * 75 + seconds * 75 + frames) / 75);
 }
 
 function splitArtistAndTitle(value: string) {
@@ -54,12 +35,11 @@ export function parseRekordboxCueFile(contents: string): ParsedCueTrack[] {
   let currentTrack: CueTrackFields | undefined;
   let albumPerformer = "";
 
-  for (const [index, line] of lines.entries()) {
-    const match = /^\s*(TITLE|PERFORMER|TRACK|INDEX)\b\s*(.*)$/i.exec(line);
+  for (const line of lines) {
+    const match = /^\s*(TITLE|PERFORMER|TRACK)\b\s*(.*)$/i.exec(line);
     if (!match) continue;
 
     const [, command, rest] = match;
-    const lineNumber = index + 1;
     const commandName = command.toUpperCase();
 
     if (commandName === "TRACK") {
@@ -83,13 +63,6 @@ export function parseRekordboxCueFile(contents: string): ParsedCueTrack[] {
       continue;
     }
 
-    if (commandName === "INDEX" && currentTrack) {
-      const indexMatch = /^01\s+(\S+)/.exec(rest.trim());
-      if (indexMatch) {
-        currentTrack.index01 = indexMatch[1];
-        currentTrack.index01Line = lineNumber;
-      }
-    }
   }
 
   if (tracks.length === 0) {
@@ -103,18 +76,14 @@ export function parseRekordboxCueFile(contents: string): ParsedCueTrack[] {
     const artist = performer || splitTitle?.artist || albumPerformer.trim();
     const trackTitle = splitTitle?.title || title;
 
-    if (!track.index01) {
-      throw new Error(`Track ${track.number}: no INDEX 01 start time was found.`);
-    }
     if (!trackTitle) {
       throw new Error(`Track ${track.number}: no title was found.`);
     }
     if (!artist) {
-      throw new Error(`Track ${track.number}: no artist was found. Add a PERFORMER line or use “Artist - Title” in TITLE.`);
+      throw new Error(`Track ${track.number}: no artist was found. Add a PERFORMER line or use "Artist - Title" in TITLE.`);
     }
 
     return {
-      time: secondsFromCueIndex(track.index01, track.index01Line || 1),
       title: trackTitle,
       artist
     };
