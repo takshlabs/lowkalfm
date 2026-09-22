@@ -556,6 +556,8 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       youtubePlayerRef.current?.destroy?.();
       youtubePlayerRef.current = null;
     };
+  // The scalar record fields prevent a listen-count update from rebuilding the player.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRecord.duration, activeRecord.slug, activeRecord.startOffset, activeSourceKey, isYouTubeSource, playMedia, retryKey, youtubeId]);
 
   useEffect(() => {

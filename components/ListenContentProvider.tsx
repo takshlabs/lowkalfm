@@ -139,10 +139,14 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
   }, []);
 
   useEffect(() => {
+    let active = true;
     try {
       const saved = JSON.parse(window.localStorage.getItem(LISTEN_COUNT_CACHE_KEY) ?? "{}");
-      if (saved && typeof saved === "object" && !Array.isArray(saved)) setListenCounts(saved as Record<string, number>);
+      if (saved && typeof saved === "object" && !Array.isArray(saved)) {
+        queueMicrotask(() => { if (active) setListenCounts(saved as Record<string, number>); });
+      }
     } catch { /* Counts use their baseline when storage is unavailable. */ }
+    return () => { active = false; };
   }, []);
 
   const recordListen = useCallback((record: SoundRecord) => {
