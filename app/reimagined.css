@@ -1258,9 +1258,9 @@ html { scroll-behavior: smooth; }
 .mix-share-button--artist:hover,
 .mix-share-button--artist:focus-visible,
 .mix-share-button--artist[data-state="copied"] { color: var(--lowkal-paper); background: var(--lowkal-red); outline: none; }
-.mix-listen-count { display: inline-flex; align-items: center; gap: 5px; width: max-content; margin-top: 5px; color: currentColor; font-size: 0.54rem; font-style: normal; font-weight: 700; letter-spacing: 0.1em; line-height: 1; text-transform: uppercase; opacity: 0.54; }
-.mix-listen-count i { width: 5px; height: 5px; border: 1px solid currentColor; border-radius: 50%; }
-.transmission-overlay .mix-listen-count { margin-top: 9px; color: var(--lowkal-paper); }
+.mix-listen-count { display: inline-flex; align-items: center; gap: 6px; width: max-content; margin-top: 6px; color: currentColor; font-size: 0.54rem; font-style: normal; font-weight: 700; letter-spacing: 0.08em; line-height: 1.2; text-transform: uppercase; opacity: 0.54; }
+.mix-listen-count i { flex: 0 0 auto; width: 5px; height: 5px; border: 1px solid currentColor; border-radius: 50%; }
+.transmission-overlay .mix-listen-count { margin-top: 10px; color: var(--lowkal-paper); opacity: 0.6; }
 
 .artist-productions { display: grid; grid-template-columns: minmax(300px, 0.7fr) minmax(0, 1.3fr); color: var(--lowkal-paper); border-bottom: 1px solid rgba(241, 234, 219, 0.2); background: var(--lowkal-black); }
 .artist-section-heading--night { border-color: rgba(241, 234, 219, 0.2); }

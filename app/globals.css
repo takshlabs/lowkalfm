@@ -1308,7 +1308,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .transmission-media > button svg { width: 17px; height: 17px; fill: currentColor; }
 .transmission-overlay { position: absolute; right: 18px; bottom: 17px; left: 18px; z-index: 2; }
 .transmission-overlay p,
-.transmission-overlay span { margin: 0; font-size: 0.76rem; }
+.transmission-overlay > span { margin: 0; font-size: 0.76rem; }
 .transmission-overlay h3 { margin: 5px 0 2px; font-family: var(--font-lowkal-editorial), serif; font-size: clamp(1.45rem, 2.15vw, 2.3rem); font-weight: 400; line-height: 0.92; letter-spacing: -0.04em; }
 .transmission-tags { display: flex; flex-wrap: wrap; gap: 7px; padding-top: 12px; }
 .transmission-tags span {
