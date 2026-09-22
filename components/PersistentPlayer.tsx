@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { ChevronDown, LoaderCircle, Pause, Play, Plus, RotateCcw, Video, Volume2 } from "lucide-react";
+import { ArrowUpRight, ChevronDown, LoaderCircle, Pause, Play, Plus, RotateCcw, Video, Volume2 } from "lucide-react";
 import { AudioWaveform } from "@/components/AudioWaveform";
 import { usePathname } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
@@ -123,6 +123,7 @@ export function PersistentPlayer() {
               title="Watch on YouTube"
             >
               <Video className="lowkal-icon" aria-hidden="true" />
+              <span aria-hidden="true">Watch</span>
             </a>
           ) : null}
         </div>
@@ -147,22 +148,26 @@ export function PersistentPlayer() {
       </div>
 
       <label className="lowkal-player-volume">
-        <Volume2 className="lowkal-icon" aria-hidden="true" />
-        <span className="sr-only">Volume</span>
+        <span className="lowkal-player-volume-head">
+          <Volume2 className="lowkal-icon" aria-hidden="true" />
+          <span>Volume</span>
+          <output aria-hidden="true">{volumeLabel}</output>
+        </span>
         <input
           type="range"
           min={0}
           max={100}
           value={volume}
+          aria-label="Volume"
           aria-valuetext={`${Math.round(volume)} percent`}
           style={volumeStyle}
           onChange={(event) => setVolume(Number(event.target.value))}
         />
-        <output className="sr-only">Volume {volumeLabel}</output>
       </label>
       <MixShareButton slug={activeRecord.slug} title={activeRecord.title} variant="player" />
       <SiteLink className="lowkal-player-room" href={sitePath("/listen")} aria-label="Open Soundroom" title="Open Soundroom">
-        <Plus className="lowkal-icon" aria-hidden="true" />
+        <ArrowUpRight className="lowkal-icon" aria-hidden="true" />
+        <span aria-hidden="true">Room</span>
       </SiteLink>
       <button
         className="lowkal-player-collapse"
@@ -173,6 +178,7 @@ export function PersistentPlayer() {
         title="Collapse player"
       >
         <ChevronDown className="lowkal-icon" aria-hidden="true" />
+        <span aria-hidden="true">Collapse</span>
       </button>
     </aside>
   );

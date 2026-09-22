@@ -50,15 +50,16 @@ export function MixShareButton({ slug, title, variant }: MixShareButtonProps) {
     resetTimer.current = window.setTimeout(() => setStatus("idle"), 2200);
   };
 
-  const feedback = status === "copied" ? "Copied" : status === "error" ? "Try again" : "Copy link";
+  const feedback = status === "copied" ? "Copied" : status === "error" ? "Try again" : variant === "player" ? "Share" : "Copy link";
+  const actionLabel = status === "idle" ? `Copy link for ${title}` : `${feedback} for ${title}`;
 
   return (
     <button
       type="button"
       className={`mix-share-button mix-share-button--${variant}`}
       onClick={copyLink}
-      aria-label={`${feedback} for ${title}`}
-      title={`${feedback} for ${title}`}
+      aria-label={actionLabel}
+      title={actionLabel}
       data-state={status}
     >
       {status === "copied" ? <Check className="lowkal-icon" aria-hidden="true" /> : <Share2 className="lowkal-icon" aria-hidden="true" />}

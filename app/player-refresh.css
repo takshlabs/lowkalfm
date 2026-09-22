@@ -1,10 +1,10 @@
 /* The expanded player is a small record sleeve with a clear transport. */
 .lowkal-player.lowkal-player--compact {
-  grid-template-columns: 96px minmax(0, 1fr) 56px 112px 44px 44px 44px;
+  grid-template-columns: 96px minmax(0, 1fr) 56px 128px 62px 62px 70px;
   grid-template-rows: 62px 34px;
   align-items: center;
   gap: 8px 12px;
-  width: min(920px, calc(100vw - 24px));
+  width: min(980px, calc(100vw - 24px));
   padding: 12px;
   border: 1px solid rgba(241, 234, 219, .34);
   border-radius: 10px;
@@ -48,6 +48,29 @@
 }
 .lowkal-player--compact .lowkal-player-record { margin-top: 5px; color: rgba(241, 234, 219, .62); font-size: .62rem; }
 .lowkal-player--compact .lowkal-player-record i { color: var(--lowkal-red); }
+.lowkal-player--compact .lowkal-player-video {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: auto;
+  min-width: 72px;
+  height: 28px;
+  padding: 0 8px;
+  border-color: rgba(241, 234, 219, .34);
+  border-radius: 4px;
+  color: var(--lowkal-paper);
+  background: rgba(241, 234, 219, .06);
+  font-size: .6rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  transform: none;
+}
+.lowkal-player--compact .lowkal-player-video svg { width: 14px; height: 14px; color: var(--lowkal-red); }
+.lowkal-player--compact .lowkal-player-video:hover,
+.lowkal-player--compact .lowkal-player-video:focus-visible { border-color: var(--lowkal-red); color: #11110f; background: var(--lowkal-red); }
+.lowkal-player--compact .lowkal-player-video:hover svg,
+.lowkal-player--compact .lowkal-player-video:focus-visible svg { color: currentColor; }
 
 .lowkal-player--compact .lowkal-player-transport {
   grid-row: 1;
@@ -102,9 +125,33 @@
 .lowkal-player--compact .lowkal-player-volume {
   grid-row: 1;
   grid-column: 4;
-  height: 44px;
-  padding: 0 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  height: 54px;
+  padding: 7px 12px;
+  border: 1px solid rgba(241, 234, 219, .22);
+  border-radius: 4px;
+  background: rgba(241, 234, 219, .035);
 }
+.lowkal-player--compact .lowkal-player-volume-head {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  align-items: center;
+  gap: 5px;
+  color: rgba(241, 234, 219, .78);
+  font-size: .625rem;
+  letter-spacing: .05em;
+  line-height: 1;
+}
+.lowkal-player--compact .lowkal-player-volume-head svg { color: var(--lowkal-paper); }
+.lowkal-player--compact .lowkal-player-volume-head output { color: var(--lowkal-paper); font-variant-numeric: tabular-nums; }
+.lowkal-player--compact .lowkal-player-volume input::-webkit-slider-runnable-track { height: 4px; background: linear-gradient(to right, var(--lowkal-red) 0 var(--deck-volume), rgba(241, 234, 219, .24) var(--deck-volume) 100%); }
+.lowkal-player--compact .lowkal-player-volume input::-webkit-slider-thumb { width: 13px; height: 13px; margin-top: -4.5px; border: 2px solid #11110f; background: var(--lowkal-paper); }
+.lowkal-player--compact .lowkal-player-volume input::-moz-range-track { height: 4px; }
+.lowkal-player--compact .lowkal-player-volume input::-moz-range-progress { height: 4px; }
+.lowkal-player--compact .lowkal-player-volume input::-moz-range-thumb { width: 11px; height: 11px; background: var(--lowkal-paper); }
 .lowkal-player--compact .mix-share-button--player,
 .lowkal-player--compact .lowkal-player-room,
 .lowkal-player--compact .lowkal-player-collapse {
@@ -114,30 +161,48 @@
   grid-row: 1;
   align-self: center;
   justify-self: center;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 54px;
+  min-width: 0;
+  min-height: 54px;
   padding: 0;
   border: 1px solid rgba(241, 234, 219, .22);
-  border-radius: 50%;
+  border-radius: 4px;
   color: var(--lowkal-paper);
-  background: transparent;
+  background: rgba(241, 234, 219, .035);
+  font-family: Arial, sans-serif;
+  font-size: .625rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 .lowkal-player--compact .mix-share-button--player { grid-column: 5; }
-.lowkal-player--compact .lowkal-player-room { grid-column: 6; }
+.lowkal-player--compact .lowkal-player-room { grid-column: 6; border-color: var(--lowkal-red); color: #11110f; background: var(--lowkal-red); }
 .lowkal-player--compact .lowkal-player-collapse { grid-column: 7; cursor: pointer; }
 .lowkal-player--compact .lowkal-player-room::after { display: none; }
+.lowkal-player--compact .mix-share-button--player > span:not(.sr-only) { display: block; }
+.lowkal-player--compact .mix-share-button--player svg,
+.lowkal-player--compact .lowkal-player-room svg,
+.lowkal-player--compact .lowkal-player-collapse svg { width: 18px; height: 18px; color: currentColor; }
+.lowkal-player--compact .mix-share-button--player:hover,
+.lowkal-player--compact .mix-share-button--player:focus-visible,
+.lowkal-player--compact .mix-share-button--player[data-state="copied"] { border-color: var(--lowkal-paper); color: #11110f; background: var(--lowkal-paper); }
 .lowkal-player--compact .lowkal-player-collapse:hover,
 .lowkal-player--compact .lowkal-player-collapse:focus-visible,
 .lowkal-player--compact .lowkal-player-room:hover,
 .lowkal-player--compact .lowkal-player-room:focus-visible { border-color: var(--lowkal-paper); color: #11110f; background: var(--lowkal-paper); }
-.lowkal-player--compact .lowkal-player-collapse svg { width: 20px; height: 20px; }
+.lowkal-player--compact .mix-share-button--player:focus-visible,
+.lowkal-player--compact .lowkal-player-room:focus-visible,
+.lowkal-player--compact .lowkal-player-collapse:focus-visible { outline: 2px solid var(--lowkal-paper); outline-offset: 2px; }
 
 @media (max-width: 900px) {
-  .lowkal-player.lowkal-player--compact { grid-template-columns: 80px minmax(0, 1fr) 52px 44px 44px 44px; }
+  .lowkal-player.lowkal-player--compact { grid-template-columns: 80px minmax(0, 1fr) 52px 52px 52px 52px; }
   .lowkal-player--compact .lowkal-player-art { width: 80px; height: 104px; }
   .lowkal-player--compact .lowkal-player-transport { width: 52px; height: 52px; }
   .lowkal-player--compact .lowkal-player-transport-icon { width: 52px; height: 52px; }
@@ -145,6 +210,9 @@
   .lowkal-player--compact .mix-share-button--player { grid-column: 4; }
   .lowkal-player--compact .lowkal-player-room { grid-column: 5; }
   .lowkal-player--compact .lowkal-player-collapse { grid-column: 6; }
+  .lowkal-player--compact .mix-share-button--player,
+  .lowkal-player--compact .lowkal-player-room,
+  .lowkal-player--compact .lowkal-player-collapse { height: 52px; min-height: 52px; font-size: .5rem; }
 }
 
 @media (max-width: 680px) {
@@ -169,8 +237,16 @@
   .lowkal-player--compact .lowkal-player-timeline { grid-row: 2; grid-column: 1 / 3; gap: 6px; }
   .lowkal-player--compact .lowkal-player-timecode { font-size: .54rem; gap: 4px; }
   .lowkal-player--compact .lowkal-player-timecode span:last-child::before { margin-right: 4px; }
-  .lowkal-player--compact .mix-share-button--player { grid-row: 2; grid-column: 3; width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
-  .lowkal-player--compact .lowkal-player-room { grid-row: 2; grid-column: 4; width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+  .lowkal-player--compact .mix-share-button--player { grid-row: 2; grid-column: 3; }
+  .lowkal-player--compact .lowkal-player-room { grid-row: 2; grid-column: 4; }
+  .lowkal-player--compact .mix-share-button--player,
+  .lowkal-player--compact .lowkal-player-room { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+  .lowkal-player--compact .lowkal-player-collapse { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+  .lowkal-player--compact .mix-share-button--player > span:not(.sr-only),
+  .lowkal-player--compact .lowkal-player-room span,
+  .lowkal-player--compact .lowkal-player-collapse span,
+  .lowkal-player--compact .lowkal-player-video span { display: none; }
+  .lowkal-player--compact .lowkal-player-video { display: grid; width: 30px; min-width: 30px; padding: 0; }
 }
 
 @media (max-width: 390px) {
@@ -180,4 +256,5 @@
   .lowkal-player--compact .lowkal-player-transport-icon,
   .lowkal-player--compact .lowkal-player-collapse { width: 40px; height: 40px; min-width: 40px; min-height: 40px; }
   .lowkal-player--compact .lowkal-player-title { font-size: .96rem; }
+  .lowkal-player--compact .lowkal-player-video { display: none; }
 }
