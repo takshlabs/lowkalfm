@@ -20,9 +20,13 @@ test("each mix route publishes complete social metadata", async () => {
 test("the social image uses the CMS thumbnail without a generated treatment", async () => {
   const page = await source("app/listen/archive/[slug]/page.tsx");
   const sharedMix = await source("lib/shared-mix.ts");
+  const sanity = await source("lib/sanity.ts");
 
   assert.match(page, /const socialImage = mix\.imageUrl/);
-  assert.match(sharedMix, /imageUrl: mix\?\.thumbnail \?\? mix\?\.artwork/);
+  assert.match(sharedMix, /sanitySocialImageUrl\(mix\?\.thumbnail \?\? mix\?\.artwork/);
+  assert.match(sanity, /url\.searchParams\.set\("fit", "crop"\)/);
+  assert.match(sanity, /url\.searchParams\.set\("w", "1200"\)/);
+  assert.match(sanity, /url\.searchParams\.set\("h", "630"\)/);
   assert.doesNotMatch(page, /\/social\/mixes\//);
   await assert.rejects(source("scripts/generate-mix-social-images.mjs"));
 });

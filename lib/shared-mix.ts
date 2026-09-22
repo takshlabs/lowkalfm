@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { soundRecords } from "@/lib/content";
-import { getSharedMix } from "@/lib/sanity";
+import { getSharedMix, sanitySocialImageUrl } from "@/lib/sanity";
 
 export type SharedMixView = {
   slug: string;
@@ -36,6 +36,6 @@ export const resolveSharedMix = cache(async (slug: string): Promise<SharedMixVie
     series,
     artist,
     description: mix?.description ?? fallback?.description ?? `Listen to ${title} by ${artist} on Lowkal.fm.`,
-    imageUrl: mix?.thumbnail ?? mix?.artwork ?? fallback?.artwork ?? "/lowkal-logo.jpg"
+    imageUrl: sanitySocialImageUrl(mix?.thumbnail ?? mix?.artwork ?? fallback?.artwork ?? "/lowkal-logo.jpg")
   };
 });

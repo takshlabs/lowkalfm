@@ -19,6 +19,22 @@ export function sanityImageUrl(source: string, width = 1200) {
   }
 }
 
+export function sanitySocialImageUrl(source: string) {
+  try {
+    const url = new URL(source);
+    if (url.hostname !== "cdn.sanity.io" || !url.pathname.startsWith("/images/")) return source;
+    url.searchParams.set("auto", "format");
+    url.searchParams.set("fit", "crop");
+    url.searchParams.set("crop", "center");
+    url.searchParams.set("q", "88");
+    url.searchParams.set("w", "1200");
+    url.searchParams.set("h", "630");
+    return url.toString();
+  } catch {
+    return source;
+  }
+}
+
 export async function sanityFetch<Result>(query: string, options: { signal?: AbortSignal } = {}) {
   if (!isSanityConfigured) throw new Error("Sanity is not configured");
   const url = new URL(`/v${apiVersion}/data/query/${encodeURIComponent(dataset)}`, sanityCdnOrigin);
