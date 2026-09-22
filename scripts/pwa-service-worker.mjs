@@ -70,26 +70,28 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
-async function staleWhileRevalidateDocument(request, url) {
+async function networkFirstDocument(request, url) {
   const cache = await caches.open(DOC_CACHE);
   const fallbackPath = documentFallbackPath(url.pathname);
-  const cached = await cache.match(fallbackPath);
-  const network = fetch(request).then(async (response) => {
-    if (response.ok) await cache.put(documentFallbackPath(url.pathname), response.clone());
+  try {
+    const response = await fetch(request);
+    if (response.ok) await cache.put(fallbackPath, response.clone());
     return response;
-  }).catch(() => null);
-  return cached || (await network) || (await cache.match('/offline.html')) || Response.error();
+  } catch {
+    return (await cache.match(fallbackPath)) || (await cache.match('/offline.html')) || Response.error();
+  }
 }
 
-async function staleWhileRevalidateRsc(request, url) {
+async function networkFirstRsc(request, url) {
   const cache = await caches.open(RSC_CACHE);
   const fallbackPath = rscFallbackPath(url.pathname);
-  const cached = await cache.match(fallbackPath);
-  const network = fetch(request).then(async (response) => {
-    if (response.ok) await cache.put(rscFallbackPath(url.pathname), response.clone());
+  try {
+    const response = await fetch(request);
+    if (response.ok) await cache.put(fallbackPath, response.clone());
     return response;
-  }).catch(() => null);
-  return cached || (await network) || Response.error();
+  } catch {
+    return (await cache.match(fallbackPath)) || Response.error();
+  }
 }
 
 async function cacheFirst(request) {
@@ -116,11 +118,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (isBypassedRequest(request, url)) return;
   if (isRscRequest(request)) {
-    event.respondWith(staleWhileRevalidateRsc(request, url));
+    event.respondWith(networkFirstRsc(request, url));
     return;
   }
   if (request.mode === 'navigate') {
-    event.respondWith(staleWhileRevalidateDocument(request, url));
+    event.respondWith(networkFirstDocument(request, url));
     return;
   }
   if (PRECACHE_SET.has(url.pathname)) {

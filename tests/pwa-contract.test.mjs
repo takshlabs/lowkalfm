@@ -41,18 +41,20 @@ test('service worker separates documents from RSC and bypasses streamed media', 
   assert.doesNotMatch(source, /skipWaiting\(\).*install/s);
 });
 
-test('service worker serves every precached shell asset and stores opened pages', async () => {
+test('service worker uses live documents and RSC before offline cache fallbacks', async () => {
   const source = createServiceWorker({
     version: 'test-build',
     precache: ['/index.html', '/offline.html', '/soundroom/index.html', '/fonts/lowkal.woff2', '/_next/static/app.js'],
   });
   assert.match(source, /const PRECACHE_SET = new Set\(PRECACHE\)/);
   assert.ok(source.indexOf('PRECACHE_SET.has(url.pathname)') < source.indexOf("request.destination === 'image'"));
-  assert.match(source, /cache\.put\(documentFallbackPath\(url\.pathname\), response\.clone\(\)\)/);
-  assert.match(source, /cache\.put\(rscFallbackPath\(url\.pathname\), response\.clone\(\)\)/);
-  assert.match(source, /cached \|\| \(await network\)/);
-  assert.match(source, /staleWhileRevalidateDocument/);
-  assert.match(source, /staleWhileRevalidateRsc/);
+  assert.match(source, /await cache\.put\(fallbackPath, response\.clone\(\)\)/);
+  assert.match(source, /async function networkFirstDocument/);
+  assert.match(source, /async function networkFirstRsc/);
+  assert.match(source, /return \(await cache\.match\(fallbackPath\)\) \|\| \(await cache\.match\('\/offline\.html'\)\)/);
+  assert.match(source, /return \(await cache\.match\(fallbackPath\)\) \|\| Response\.error\(\)/);
+  assert.doesNotMatch(source, /staleWhileRevalidateDocument/);
+  assert.doesNotMatch(source, /staleWhileRevalidateRsc/);
   assert.match(source, /if \(clean.endsWith\('\.html'\)\) return clean;/);
   assert.match(source, /PRECACHE_SET.has\(`\$\{clean\}\/index\.html`\)/);
 

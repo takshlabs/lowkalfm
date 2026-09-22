@@ -66,3 +66,9 @@ test('project checks produce the exact Vercel static output before release', () 
   assert.equal(packageJson.scripts['verify:vercel'], 'VERCEL=1 npm run build && node scripts/build-vercel-output.mjs');
   assert.match(packageJson.scripts.check, /npm run verify:vercel/);
 });
+
+test('production configuration is Vercel-only', () => {
+  const config = readFileSync(new URL('../next.config.ts', import.meta.url), 'utf8');
+  assert.match(config, /process\.env\.VERCEL === "1"/);
+  assert.doesNotMatch(config, /GITHUB_PAGES|github\.io/i);
+});
