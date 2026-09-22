@@ -5,12 +5,13 @@ import { HorizontalContentRail } from "@/components/HorizontalContentRail";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
 import { sitePath } from "@/lib/site-path";
+import { formatMixListenCount, getMixListenCount } from "@/lib/mix-listens";
 import { useAudio } from "./AudioProvider";
 import { useListenContent } from "./ListenContentProvider";
 
 export function HomeTransmissionDeck() {
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
-  const { records } = useListenContent();
+  const { records, listenCounts } = useListenContent();
   const homeRecords = records;
 
   const toggleRecord = (slug: string) => {
@@ -45,6 +46,7 @@ export function HomeTransmissionDeck() {
                   <p>{record.artist}</p>
                   <h3>{record.series}</h3>
                   <span>{record.title}</span>
+                  <small className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} listens`}><i aria-hidden="true" />{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))} listens</small>
                 </div>
               </div>
               <div className="transmission-tags" role="list" aria-label="Genres">

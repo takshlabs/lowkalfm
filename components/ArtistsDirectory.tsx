@@ -9,6 +9,7 @@ import { SiteLink } from "@/components/SiteLink";
 import { UnderConstructionNote } from "@/components/UnderConstructionNote";
 import { formatTime, type SoundRecord } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
+import { formatMixListenCount, getMixListenCount } from "@/lib/mix-listens";
 import { useAudio } from "./AudioProvider";
 import { useListenContent } from "./ListenContentProvider";
 
@@ -79,7 +80,7 @@ function ArtistFocusPlayer({ record }: { record: SoundRecord }) {
 
 export function ArtistsDirectory() {
   const pathname = usePathname();
-  const { artists, records } = useListenContent();
+  const { artists, records, listenCounts } = useListenContent();
   const slug = profilePathSlug(pathname);
   const artist = slug ? artists.find((item) => item.slug === slug) : undefined;
 
@@ -125,7 +126,7 @@ export function ArtistsDirectory() {
                 <article className="artist-mix-card" key={record.slug}>
                   <span className="artist-mix-index">LKL—{String(index + 1).padStart(2, "0")}</span>
                   <span className="artist-mix-art"><Image src={record.artwork} alt="" fill sizes="140px" /></span>
-                  <div><small>{record.series}</small><strong>{record.title}</strong><em>{record.date} / {record.genres.slice(0, 2).join(" · ")}</em></div>
+                  <div><small>{record.series}</small><strong>{record.title}</strong><em>{record.date} / {record.genres.slice(0, 2).join(" · ")}</em><span className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} listens`}><i aria-hidden="true" />{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))} listens</span></div>
                   <SiteLink href={sitePath(`/listen/archive?mix=${encodeURIComponent(record.slug)}`)} aria-label={`Open ${record.title} in the Archive`}><ArrowUpRight className="lowkal-icon" aria-hidden="true" /></SiteLink>
                 </article>
               ))}

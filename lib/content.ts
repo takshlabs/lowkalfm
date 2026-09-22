@@ -19,6 +19,7 @@ export type SoundRecord = {
   date: string;
   dateISO: string;
   duration: number;
+  listenCount?: number;
   /** Seconds skipped at the beginning of the source file. */
   startOffset?: number;
   playback?: MixPlaybackSource;

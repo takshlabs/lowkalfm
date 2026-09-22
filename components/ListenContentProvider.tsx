@@ -1,9 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { track } from "@vercel/analytics";
 import { getMixStartOffset, getYouTubeVideoUrl, resolveMixPlayback } from "@/lib/audio-source";
 import { artistProfiles, livePrograms, soundRecords, type ArchiveSection, type ArtistProfile, type LiveProgram, type SoundFormat, type SoundRecord } from "@/lib/content";
 import { sortMixesByLatest } from "@/lib/listen-order";
+import { getMixListenCount } from "@/lib/mix-listens";
 import { isSanityConfigured, listenContentQuery, sanityFetch, sanityImageUrl } from "@/lib/sanity";
 
 type SanityArtist = ArtistProfile;
@@ -16,6 +18,7 @@ type SanityMix = {
   artists?: Array<{ name: string; slug: string }>;
   releaseDate: string;
   duration?: number;
+  listenCount?: number;
   audioDeliveryUrl?: string;
   audioPeaksUrl?: string;
   audioStartOffset?: number;
@@ -45,11 +48,14 @@ type ListenContentValue = {
   artists: ArtistProfile[];
   getRecord: (slug: string) => SoundRecord | undefined;
   getArtist: (slug: string) => ArtistProfile | undefined;
+  listenCounts: Record<string, number>;
+  recordListen: (record: SoundRecord) => void;
 };
 
 const ListenContentContext = createContext<ListenContentValue | null>(null);
 const LISTEN_CACHE_KEY = "lowkal:listen-content:v1";
 const LISTEN_CACHE_MAX_AGE = 24 * 60 * 60 * 1_000;
+const LISTEN_COUNT_CACHE_KEY = "lowkal:mix-listens:v1";
 
 function readListenCache() {
   try {
@@ -91,6 +97,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     date: formatDate(mix.releaseDate),
     dateISO: mix.releaseDate,
     duration: mix.duration ?? 0,
+    listenCount: mix.listenCount,
     startOffset: getMixStartOffset(mix.audioStartOffset),
     playback,
     waveformPeaksUrl: mix.audioPeaksUrl,
@@ -112,6 +119,8 @@ function mapMix(mix: SanityMix): SoundRecord | null {
 
 export function ListenContentProvider({ children }: { children: React.ReactNode }) {
   const [content, setContent] = useState<SanityListenContent | null>(null);
+  const [listenCounts, setListenCounts] = useState<Record<string, number>>({});
+  const countedMixesRef = useRef(new Set<string>());
 
   useEffect(() => {
     if (!isSanityConfigured) return;
@@ -127,6 +136,24 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
       })
       .catch(() => { /* The local catalogue keeps Listen available if Sanity is unavailable. */ });
     return () => { active = false; controller.abort(); };
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(LISTEN_COUNT_CACHE_KEY) ?? "{}");
+      if (saved && typeof saved === "object" && !Array.isArray(saved)) setListenCounts(saved as Record<string, number>);
+    } catch { /* Counts use their baseline when storage is unavailable. */ }
+  }, []);
+
+  const recordListen = useCallback((record: SoundRecord) => {
+    if (countedMixesRef.current.has(record.slug)) return;
+    countedMixesRef.current.add(record.slug);
+    setListenCounts((current) => {
+      const next = { ...current, [record.slug]: (current[record.slug] ?? getMixListenCount(record.slug, record.listenCount)) + 1 };
+      try { window.localStorage.setItem(LISTEN_COUNT_CACHE_KEY, JSON.stringify(next)); } catch { /* Playback and tracking continue. */ }
+      return next;
+    });
+    track("mix_listen", { mix: record.slug, series: record.series });
   }, []);
 
   const value = useMemo<ListenContentValue>(() => {
@@ -158,9 +185,11 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
       programmes,
       artists,
       getRecord: (slug: string) => records.find((record) => record.slug === slug),
-      getArtist: (slug: string) => artists.find((artist) => artist.slug === slug)
+      getArtist: (slug: string) => artists.find((artist) => artist.slug === slug),
+      listenCounts,
+      recordListen
     };
-  }, [content]);
+  }, [content, listenCounts, recordListen]);
 
   return <ListenContentContext.Provider value={value}>{children}</ListenContentContext.Provider>;
 }

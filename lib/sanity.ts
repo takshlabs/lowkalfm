@@ -59,6 +59,7 @@ export const listenContentQuery = `{
     "artists": artists[]->{name, "slug": slug.current},
     releaseDate,
     duration,
+    listenCount,
     "audioDeliveryUrl": audio.deliveryUrl,
     "audioPeaksUrl": audio.peaksUrl,
     "audioStartOffset": audio.startOffset,

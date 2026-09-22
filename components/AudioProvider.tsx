@@ -125,7 +125,7 @@ function readSavedState(): SavedPlayerState | null {
 }
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  const { records, getRecord } = useListenContent();
+  const { records, getRecord, recordListen } = useListenContent();
   const playableRecords = useMemo(() => records.filter((record) => isPlayable(record)), [records]);
   const firstRecord = playableRecords[0] ?? records[0];
   const [activeSlug, setActiveSlug] = useState(firstRecord.slug);
@@ -528,7 +528,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             if (!ownsCurrentSession()) return;
             if (data === 1) {
               if (!autoplayRef.current) { youtubePlayerRef.current?.pauseVideo?.(); return; }
-              setIsPlaying(true); setIsLoading(false); setError(null);
+              recordListen(activeRecord); setIsPlaying(true); setIsLoading(false); setError(null);
               return;
             }
             if (data === 3) { setIsPlaying(false); setIsLoading(autoplayRef.current); return; }
@@ -795,7 +795,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
               bufferingTimerRef.current = null;
             }
             if (!autoplayRef.current) { audio.pause(); return; }
-            setIsPlaying(true); setIsLoading(false); setError(null);
+            recordListen(activeRecord); setIsPlaying(true); setIsLoading(false); setError(null);
           }}
           onWaiting={(event) => {
             if (!isCurrentNativeEvent(event.currentTarget, activeSourceKey) || !autoplayRef.current || !stateRef.current.isPlaying || bufferingTimerRef.current !== null) return;
