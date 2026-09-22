@@ -90,18 +90,8 @@ export function PersistentPlayer() {
 
   return (
     <aside className={`lowkal-player lowkal-player--compact${isPlaying ? " is-playing" : ""}`} aria-label="Lowkal audio player">
-      <button
-        className="lowkal-player-collapse"
-        type="button"
-        onClick={() => setExpanded(false)}
-        aria-label="Collapse player"
-        aria-expanded={true}
-      >
-        <ChevronDown className="lowkal-icon" aria-hidden="true" />
-      </button>
-
       <div className="lowkal-player-art">
-        <MediaFrame variant="record" src={activeRecord.artwork} alt="" fill sizes="56px" sourceWidth={168} />
+        <MediaFrame variant="record" src={activeRecord.artwork} alt="" fill sizes="(max-width: 680px) 64px, 96px" sourceWidth={400} />
       </div>
 
       <button
@@ -139,11 +129,10 @@ export function PersistentPlayer() {
         <span className="lowkal-player-record">{activeRecord.series} <i>/</i> {activeRecord.title}</span>
       </div>
 
-      <div className="lowkal-player-timeline">
+      <div className="lowkal-player-timeline" style={{ "--player-progress": `${total > 0 ? (position / total) * 100 : 0}%` } as CSSProperties}>
         <span className="sr-only">Playback position</span>
         <div className="lowkal-player-timecode" aria-hidden="true">
           <span>{formatTime(shownPosition)}</span>
-          <span>Position</span>
           <span>{formatTime(total)}</span>
         </div>
         <span className="lowkal-player-track">
@@ -175,6 +164,16 @@ export function PersistentPlayer() {
       <SiteLink className="lowkal-player-room" href={sitePath("/listen")} aria-label="Open Soundroom" title="Open Soundroom">
         <Plus className="lowkal-icon" aria-hidden="true" />
       </SiteLink>
+      <button
+        className="lowkal-player-collapse"
+        type="button"
+        onClick={() => setExpanded(false)}
+        aria-label="Collapse player"
+        aria-expanded={true}
+        title="Collapse player"
+      >
+        <ChevronDown className="lowkal-icon" aria-hidden="true" />
+      </button>
     </aside>
   );
 }
