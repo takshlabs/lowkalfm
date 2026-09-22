@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: MixPageProps): Promise<Metada
   if (!mix) return { title: "Mix not found", robots: { index: false, follow: false } };
 
   const canonical = `/listen/archive/${encodeURIComponent(slug)}`;
-  const socialImage = `/social/mixes/${encodeURIComponent(slug)}.png`;
+  const socialImage = mix.imageUrl;
   const pageTitle = `${mix.series} — ${mix.title}`;
 
   return {
