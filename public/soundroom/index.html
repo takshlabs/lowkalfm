@@ -266,6 +266,7 @@
         <span class="material-symbols-outlined text-lg">format_list_numbered</span>
         <span>tracklist</span>
       </button>
+      <button id="btn-share-mix" type="button" aria-label="Copy mix link"><span class="material-symbols-outlined" aria-hidden="true">ios_share</span><span id="share-mix-label">Copy link</span></button>
       <button id="btn-settings-open" type="button" aria-label="Open settings" aria-controls="modal-settings" aria-expanded="false" aria-haspopup="dialog"><span class="material-symbols-outlined" aria-hidden="true">settings</span></button>
     </div>
   </header>
@@ -1028,6 +1029,7 @@
         // Tracklist modal
         document.getElementById('btn-tracklist-open').addEventListener('click', () => this.showTracklist(true));
         document.getElementById('btn-tracklist-close').addEventListener('click', () => this.showTracklist(false));
+        document.getElementById('btn-share-mix').addEventListener('click', () => this.copyMixLink());
         document.getElementById('modal-tracklist').addEventListener('click', (e) => {
           if (e.target.id === 'modal-tracklist') this.showTracklist(false);
         });
@@ -1278,6 +1280,9 @@
         document.getElementById('main-host-date').textContent = [mix.dj ? `Hosted by ${mix.dj}` : '', mix.date].filter(Boolean).join(' • ');
         document.getElementById('main-cover-img').src = mix.artUrl || '../lowkal-logo.jpg';
         document.getElementById('main-cover-img').alt = mix.id ? `${mix.title} artwork` : 'Lowkal artwork';
+        const shareLabel = document.getElementById('share-mix-label');
+        shareLabel.textContent = 'Copy link';
+        document.getElementById('btn-share-mix').dataset.state = 'idle';
         for (const videoLink of [document.getElementById('main-youtube-video'), document.getElementById('mini-youtube-video')]) {
           videoLink.href = mix.youtubeVideoUrl || '#';
           videoLink.hidden = !mix.youtubeVideoUrl;
@@ -1296,6 +1301,39 @@
         if (resetTime) document.getElementById('main-time-current').textContent = '00:00';
         document.getElementById('main-time-total').textContent = formatTime(mix.duration);
         this.setupWaveform(mix);
+      }
+
+      async copyMixLink() {
+        if (!this.activeMix?.id) return;
+        const roomBase = window.location.pathname.replace(/\/soundroom\/?$/, '');
+        const url = new URL(`${roomBase}/listen/archive/${encodeURIComponent(this.activeMix.id)}`, window.location.origin).toString();
+        const button = document.getElementById('btn-share-mix');
+        const label = document.getElementById('share-mix-label');
+        try {
+          if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(url);
+          else {
+            const input = document.createElement('textarea');
+            input.value = url;
+            input.style.cssText = 'position:fixed;opacity:0';
+            document.body.append(input);
+            input.select();
+            const copied = document.execCommand('copy');
+            input.remove();
+            if (!copied) throw new Error('Copy failed');
+          }
+          label.textContent = 'Copied';
+          button.dataset.state = 'copied';
+          button.setAttribute('aria-label', `Link copied for ${this.activeMix.title}`);
+        } catch {
+          label.textContent = 'Try again';
+          button.dataset.state = 'error';
+        }
+        window.clearTimeout(this.shareResetTimer);
+        this.shareResetTimer = window.setTimeout(() => {
+          label.textContent = 'Copy link';
+          button.dataset.state = 'idle';
+          button.setAttribute('aria-label', 'Copy mix link');
+        }, 2200);
       }
       
       loadMixToPlayer(mix, startImmediately = false) {

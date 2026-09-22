@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatTime, SoundRecord } from "@/lib/content";
 import { sitePath } from "@/lib/site-path";
 import { ArchiveAtmosphere } from "./ArchiveAtmosphere";
+import { MixShareButton } from "./MixShareButton";
 import { useAudio } from "./AudioProvider";
 import { useListenContent } from "./ListenContentProvider";
 
@@ -211,10 +212,13 @@ export function SoundroomCatalog({ initialMixSlug, autoplay = false }: { initial
             <span>{selected.genres.join(" / ")}</span>
             <span>{formatTime(selected.duration)}</span>
           </div>
-          <button type="button" className="archive-play" onClick={handlePlay} disabled={!playable} aria-label={`${playLabel} — ${selected.title}`}>
-            {selectedIsActive && (isPlaying || isLoading) ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
-            <span>{playLabel}</span>
-          </button>
+          <div className="archive-actions">
+            <button type="button" className="archive-play" onClick={handlePlay} disabled={!playable} aria-label={`${playLabel} — ${selected.title}`}>
+              {selectedIsActive && (isPlaying || isLoading) ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}
+              <span>{playLabel}</span>
+            </button>
+            <MixShareButton slug={selected.slug} title={selected.title} variant="archive" />
+          </div>
         </div>
       </footer>
     </section>

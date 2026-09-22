@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ArrowUpRight, MapPin, Pause, Play } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
+import { MixShareButton } from "@/components/MixShareButton";
 import { AudioWaveform } from "@/components/AudioWaveform";
 import { SiteLink } from "@/components/SiteLink";
 import { UnderConstructionNote } from "@/components/UnderConstructionNote";
@@ -127,7 +128,10 @@ export function ArtistsDirectory() {
                   <span className="artist-mix-index">LKL—{String(index + 1).padStart(2, "0")}</span>
                   <span className="artist-mix-art"><Image src={record.artwork} alt="" fill sizes="140px" /></span>
                   <div><small>{record.series}</small><strong>{record.title}</strong><em>{record.date} / {record.genres.slice(0, 2).join(" · ")}</em><span className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} listens`}><i aria-hidden="true" />{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))} listens</span></div>
-                  <SiteLink href={sitePath(`/listen/archive?mix=${encodeURIComponent(record.slug)}`)} aria-label={`Open ${record.title} in the Archive`}><ArrowUpRight className="lowkal-icon" aria-hidden="true" /></SiteLink>
+                  <span className="artist-mix-actions">
+                    <SiteLink href={sitePath(`/listen/archive/${encodeURIComponent(record.slug)}`)} aria-label={`Open ${record.title} in the Archive`}><ArrowUpRight className="lowkal-icon" aria-hidden="true" /></SiteLink>
+                    <MixShareButton slug={record.slug} title={record.title} variant="artist" />
+                  </span>
                 </article>
               ))}
               {artist.externalMixes.map((mix, index) => (

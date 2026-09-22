@@ -5,6 +5,7 @@ import { ChevronDown, LoaderCircle, Pause, Play, Plus, RotateCcw, Video, Volume2
 import { AudioWaveform } from "@/components/AudioWaveform";
 import { usePathname } from "next/navigation";
 import { MediaFrame } from "@/components/MediaFrame";
+import { MixShareButton } from "@/components/MixShareButton";
 import { SiteLink } from "@/components/SiteLink";
 import { formatTime } from "@/lib/content";
 import { isUnlistedPath } from "@/lib/site-chrome";
@@ -170,6 +171,7 @@ export function PersistentPlayer() {
         />
         <output className="sr-only">Volume {volumeLabel}</output>
       </label>
+      <MixShareButton slug={activeRecord.slug} title={activeRecord.title} variant="player" />
       <SiteLink className="lowkal-player-room" href={sitePath("/listen")} aria-label="Open Soundroom" title="Open Soundroom">
         <Plus className="lowkal-icon" aria-hidden="true" />
       </SiteLink>
