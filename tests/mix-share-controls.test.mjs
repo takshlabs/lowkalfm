@@ -23,10 +23,17 @@ test("React mix surfaces copy the canonical mix route", async () => {
 });
 
 test("Soundroom copies its active mix route and provides visible feedback", async () => {
-  const room = await source("public/soundroom/index.html");
+  const [room, styles] = await Promise.all([
+    source("public/soundroom/index.html"),
+    source("public/soundroom/room.css")
+  ]);
 
   assert.match(room, /id="btn-share-mix"/);
+  assert.match(room, /id="btn-share-mix"[\s\S]*?<svg viewBox="0 0 24 24"/);
+  assert.doesNotMatch(room, /ios_share/);
   assert.match(room, /copyMixLink\(\)/);
   assert.match(room, /listen\/archive\/\$\{encodeURIComponent\(this\.activeMix\.id\)\}/);
   assert.match(room, /label\.textContent = 'Copied'/);
+  assert.match(styles, /#btn-share-mix \{[^}]*width: 38px;[^}]*border-radius: 50%;/);
+  assert.match(styles, /#share-mix-label \{[^}]*clip-path: inset\(50%\);/);
 });

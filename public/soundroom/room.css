@@ -1,9 +1,10 @@
 /* Settings only. The original room keeps its inline styles and utilities. */
 #btn-settings-open { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 38px; height: 38px; border: 1px solid #ffffff1a; border-radius: 50%; background: #ffffff08; color: inherit; }
 #btn-settings-open:hover { color: #55e93b; border-color: #55e93b55; }
-#btn-share-mix { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 0 13px; border: 1px solid #ffffff24; border-radius: 999px; background: #ffffff08; color: inherit; font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+#btn-share-mix { display: inline-grid; flex: 0 0 auto; width: 38px; height: 38px; padding: 0; place-items: center; border: 1px solid #ffffff1a; border-radius: 50%; background: #ffffff08; color: inherit; }
 #btn-share-mix:hover, #btn-share-mix:focus-visible, #btn-share-mix[data-state="copied"] { color: #0e0e0d; border-color: #55e93b; background: #55e93b; outline: none; }
-#btn-share-mix .material-symbols-outlined { font-size: 17px; }
+#btn-share-mix svg { width: 16px; height: 16px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#share-mix-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 #btn-settings-open:focus-visible, #modal-settings :focus-visible { outline: 2px solid #55e93b !important; outline-offset: 4px; }
 button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focus-visible { outline: 2px solid #55e93b !important; outline-offset: 4px; }
 
@@ -72,13 +73,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
   }
   #header-nav-btn { min-width: 44px; min-height: 44px; gap: 6px; font-size: 10px; line-height: 1.05; }
   #header-nav-text { max-width: 58px; }
-  body > header > div:last-child { gap: 8px !important; }
+  body > header > div:last-child { gap: 6px !important; }
   #header-logo { gap: 0 !important; }
   #header-logo .header-logo-name { display: none; }
   #header-logo img { width: 38px !important; height: 38px !important; }
-  #btn-tracklist-open, #btn-settings-open { width: 44px; height: 44px; min-width: 44px; }
-  #btn-share-mix { width: 44px; height: 44px; min-width: 44px; padding: 0; }
-  #share-mix-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  #btn-tracklist-open, #btn-settings-open { width: 42px; height: 42px; min-width: 42px; }
+  #btn-share-mix { width: 42px; height: 42px; min-width: 42px; }
 
   .soundroom-return-nav {
     right: max(10px, env(safe-area-inset-right));
