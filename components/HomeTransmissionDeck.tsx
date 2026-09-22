@@ -46,8 +46,10 @@ export function HomeTransmissionDeck() {
                   <p>{record.artist}</p>
                   <h3>{record.series}</h3>
                   <span>{record.title}</span>
-                  <small className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} listens`}><i aria-hidden="true" />{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))} listens</small>
                 </div>
+              </div>
+              <div className="transmission-meta">
+                <small className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} listens`}><i aria-hidden="true" /><strong aria-hidden="true">{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))}</strong><span aria-hidden="true">listens</span></small>
               </div>
               <div className="transmission-tags" role="list" aria-label="Genres">
                 {record.genres.map((genre) => <span role="listitem" key={genre}>{genre}</span>)}

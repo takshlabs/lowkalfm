@@ -1,4 +1,30 @@
 /* Phone Latest canvases: keep the play control large on a smaller frame. */
+.transmission-overlay > span { display: block; }
+.transmission-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 38px;
+  padding: 8px 2px;
+  border-bottom: 1px solid rgba(245, 241, 232, .22);
+}
+.transmission-meta .mix-listen-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  margin: 0;
+  color: var(--lowkal-paper);
+  font-family: Arial, sans-serif;
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  opacity: 1;
+}
+.transmission-meta .mix-listen-count i { width: 6px; height: 6px; border: 0; background: var(--lowkal-red); }
+.transmission-meta .mix-listen-count strong { color: var(--lowkal-paper); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.transmission-meta .mix-listen-count span { color: rgba(245, 241, 232, .64); }
+
 @media (max-width: 680px) {
   .transmission-media > button { width: 56px; height: 56px; }
   .transmission-media > button svg { width: 20px; height: 20px; }
