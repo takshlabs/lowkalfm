@@ -483,16 +483,9 @@
   <div id="modal-settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden inert>
     <div class="settings-card">
       <div class="settings-heading"><h2 id="settings-title">Room settings</h2><button id="btn-settings-close" type="button" aria-label="Close settings">×</button></div>
-      <section aria-labelledby="mixer-title"><h3 id="mixer-title">Mixer</h3>
-        <p id="mixer-status" role="status">EQ unavailable for this source. Master volume is available.</p>
-        <div class="mixer-strips">
-          <div class="mixer-strip"><label for="mixer-bass">Bass</label><output id="mixer-bass-value" for="mixer-bass">0 dB</output><div class="mixer-fader-well"><span class="mixer-scale" aria-hidden="true">+6<br>—<br>0<br>—<br>-12</span><input id="mixer-bass" class="mixer-fader" type="range" min="-12" max="6" step="1" value="0" aria-orientation="vertical" disabled/><span class="mixer-meter" aria-hidden="true"><span id="signal-bass"></span></span></div></div>
-          <div class="mixer-strip"><label for="mixer-mid">Mid</label><output id="mixer-mid-value" for="mixer-mid">0 dB</output><div class="mixer-fader-well"><span class="mixer-scale" aria-hidden="true">+6<br>—<br>0<br>—<br>-12</span><input id="mixer-mid" class="mixer-fader" type="range" min="-12" max="6" step="1" value="0" aria-orientation="vertical" disabled/><span class="mixer-meter" aria-hidden="true"><span id="signal-mid"></span></span></div></div>
-          <div class="mixer-strip"><label for="mixer-treble">Treble</label><output id="mixer-treble-value" for="mixer-treble">0 dB</output><div class="mixer-fader-well"><span class="mixer-scale" aria-hidden="true">+6<br>—<br>0<br>—<br>-12</span><input id="mixer-treble" class="mixer-fader" type="range" min="-12" max="6" step="1" value="0" aria-orientation="vertical" disabled/><span class="mixer-meter" aria-hidden="true"><span id="signal-treble"></span></span></div></div>
-          <div class="mixer-strip"><label for="mixer-master">Master</label><output id="mixer-master-value" for="mixer-master">60%</output><div class="mixer-fader-well"><span class="mixer-scale" aria-hidden="true">100<br>—<br>50<br>—<br>0</span><input id="mixer-master" class="mixer-fader" type="range" min="0" max="100" step="1" value="60" aria-orientation="vertical"/></div></div>
-        </div>
-        <div class="settings-actions"><button id="mixer-bypass" type="button" aria-pressed="false" disabled>Bypass EQ</button><button id="mixer-reset" type="button" disabled>Reset EQ</button></div>
-      </section>
+      <section class="settings-cues" aria-labelledby="cues-title"><div class="settings-section-head"><h3 id="cues-title">Cue points</h3><button id="cue-add" type="button" disabled>Save current time</button></div><p id="cue-status" role="status">Play a mix to save a cue point.</p><ol id="cue-list" aria-label="Saved cue points"></ol></section>
+      <section class="settings-waterfall" aria-labelledby="waterfall-title"><h3 id="waterfall-title">Spectrum waterfall</h3><div class="waterfall-frame"><canvas id="waterfall-canvas" role="img" aria-label="Live frequency history, low frequencies at the bottom and high frequencies at the top"></canvas><span class="waterfall-low" aria-hidden="true">30 Hz</span><span class="waterfall-high" aria-hidden="true">16 kHz</span></div><p id="waterfall-status" role="status">Play direct audio to see its spectrum.</p></section>
+      <section class="settings-volume" aria-labelledby="volume-title"><h3 id="volume-title">Playback level</h3><label for="mixer-master">Lowkal volume</label><input id="mixer-master" type="range" min="0" max="100" step="1" value="60"/><output id="mixer-master-value" for="mixer-master">60%</output></section>
       <section class="settings-visuals" aria-labelledby="visual-title"><h3 id="visual-title">Visuals</h3><label for="visual-intensity">Intensity</label><input id="visual-intensity" type="range" min="0" max="100" value="65"/><button id="visual-motion" type="button" aria-pressed="false">Pause visuals</button><p id="visual-status" aria-live="polite">Ambient motion</p></section>
     </div>
   </div>
@@ -500,6 +493,8 @@
   <!-- room-visuals.js owns u_paletteBase, u_paletteMid and u_paletteAccent. -->
   <script type="module" src="room-visuals.js"></script>
   <script type="module" src="room-settings.js"></script>
+  <script type="module" src="room-cues.js"></script>
+  <script type="module" src="room-waterfall.js"></script>
   <!-- WaveSurfer.js v7.12.1, BSD-3-Clause. Its local license is beside this asset. -->
   <script src="./wavesurfer.min.js"></script>
 

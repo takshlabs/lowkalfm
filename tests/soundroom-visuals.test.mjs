@@ -41,9 +41,9 @@ test('the room restores the original split player and moves controls into settin
   assert.match(html, /max-w-5xl mx-auto flex flex-col md:flex-row/);
   assert.match(html, /md:w-\[380px\] md:h-\[380px\] rounded-2xl/);
   assert.match(html, /md:w-\[460px\] h-\[55vh\] md:h-\[72vh\] glass-panel/);
-  assert.equal((html.match(/<canvas\b/g) || []).length, 1);
+  assert.equal((html.match(/<canvas\b/g) || []).length, 2);
   assert.doesNotMatch(html, /visual-dock|visual-scene|visual-focus|Soundroom\.<\/h1>|room-layout/);
-  for (const id of ['btn-settings-open', 'modal-settings', 'visual-motion', 'visual-intensity', 'signal-bass', 'signal-mid', 'signal-treble']) {
+  for (const id of ['btn-settings-open', 'modal-settings', 'visual-motion', 'visual-intensity', 'cue-add', 'cue-list', 'waterfall-canvas', 'waterfall-status']) {
     assert.ok(html.includes(`id="${id}"`), `Missing ${id}`);
   }
   assert.match(html, /aria-label="Playback waveform"/);

@@ -1,13 +1,10 @@
-// This surface sends commands only. Audio and visual rendering have separate owners.
+// This surface sends playback commands. The parent owns the audible player.
 (() => {
   const get = (id) => document.getElementById(id);
   const modal = get('modal-settings');
   const opener = get('btn-settings-open');
   const closer = get('btn-settings-close');
-  const bands = ['bass', 'mid', 'treble'];
-  const mixerChannel = 'lowkal.mixer.v1';
   const audioChannel = 'lowkal.audio.v1';
-  let state = { bass: 0, mid: 0, treble: 0, enabled: true, available: false };
   let returnFocus;
   let background = [];
   const clamp = (value, min, max, fallback = 0) => Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
@@ -15,29 +12,6 @@
   function send(channel, command) {
     if (window.parent === window) return;
     window.parent.postMessage({ channel, type: 'command', command }, window.location.origin);
-  }
-
-  function renderMixer() {
-    bands.forEach((band) => {
-      get(`mixer-${band}`).value = String(state[band]);
-      get(`mixer-${band}`).disabled = !state.available;
-      get(`mixer-${band}-value`).textContent = `${state[band] > 0 ? '+' : ''}${state[band]} dB`;
-      get(`mixer-${band}`).setAttribute('aria-valuetext', `${state[band]} decibels`);
-    });
-    get('mixer-bypass').disabled = !state.available;
-    get('mixer-reset').disabled = !state.available;
-    get('mixer-bypass').setAttribute('aria-pressed', String(!state.enabled));
-    get('mixer-status').textContent = !state.available
-      ? 'EQ unavailable for this source. Master volume is available.'
-      : state.enabled ? 'EQ active. Meters show the real audio signal.' : 'EQ bypassed. Master volume is available.';
-  }
-
-  function setMixer(settings) {
-    if (!state.available) return;
-    state = { ...state, ...settings };
-    const { bass, mid, treble, enabled } = state;
-    send(mixerChannel, { action: 'set', settings: { bass, mid, treble, enabled } });
-    renderMixer();
   }
 
   function renderVolume(volume) {
@@ -56,7 +30,6 @@
       modal.inert = false;
       background.forEach(({ element }) => { element.inert = true; });
       closer.focus();
-      send(mixerChannel, { action: 'request-state' });
       send(audioChannel, { action: 'request-state' });
     } else {
       modal.hidden = true;
@@ -92,11 +65,6 @@
     }
   });
 
-  bands.forEach((band) => get(`mixer-${band}`).addEventListener('input', (event) => {
-    setMixer({ [band]: clamp(Number(event.target.value), -12, 6) });
-  }));
-  get('mixer-bypass').addEventListener('click', () => setMixer({ enabled: !state.enabled }));
-  get('mixer-reset').addEventListener('click', () => setMixer({ bass: 0, mid: 0, treble: 0, enabled: true }));
   get('mixer-master').addEventListener('input', (event) => {
     const volume = clamp(Number(event.target.value), 0, 100, 60);
     renderVolume(volume);
@@ -107,20 +75,11 @@
     if (event.source !== window.parent || event.origin !== window.location.origin) return;
     const message = event.data;
     if (!message || message.type !== 'state' || !message.state || typeof message.state !== 'object') return;
-    if (message.channel === mixerChannel) {
-      const incoming = message.state;
-      state = {
-        bass: clamp(incoming.bass, -12, 6), mid: clamp(incoming.mid, -12, 6), treble: clamp(incoming.treble, -12, 6),
-        enabled: incoming.enabled === true, available: incoming.available === true,
-      };
-      renderMixer();
-    } else if (message.channel === audioChannel && Number.isFinite(message.state.volume)) {
+    if (message.channel === audioChannel && Number.isFinite(message.state.volume)) {
       renderVolume(clamp(message.state.volume, 0, 100));
     }
   });
 
-  renderMixer();
   renderVolume(60);
-  send(mixerChannel, { action: 'request-state' });
   send(audioChannel, { action: 'request-state' });
 })();

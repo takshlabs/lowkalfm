@@ -82,7 +82,7 @@ test("activation resumes synchronously, reuses each element source and keeps one
   await Promise.resolve();
   assert.equal(nodes.length, 1);
   assert.equal(audiblePath(nodes[0], context.destination), 1);
-  assert.deepEqual(engine.read(), { bass: 1, mid: 1, treble: 1, level: 1, available: true });
+  assert.deepEqual(engine.read(), { bass: 1, mid: 1, treble: 1, level: 1, available: true, bins: Array(48).fill(1) });
   engine.activate();
   await Promise.resolve();
   assert.equal(nodes.length, 1);

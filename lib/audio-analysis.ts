@@ -3,7 +3,7 @@ const TRUSTED_AUDIO_ORIGINS = new Set([
   "https://lowkal-audio-sync.lowkal-audio-737a.workers.dev",
 ]);
 
-export type AudioSpectrum = { bass: number; mid: number; treble: number; level: number; available: boolean };
+export type AudioSpectrum = { bass: number; mid: number; treble: number; level: number; available: boolean; bins?: number[] };
 const unavailable = (): AudioSpectrum => ({ bass: 0, mid: 0, treble: 0, level: 0, available: false });
 
 export function spectrumFromBins(frequency: Uint8Array, waveform: Uint8Array, sampleRate: number): AudioSpectrum {
@@ -19,6 +19,21 @@ export function spectrumFromBins(frequency: Uint8Array, waveform: Uint8Array, sa
   let energy = 0;
   for (const sample of waveform) energy += ((sample - 128) / 128) ** 2;
   return { bass: band(20, 250), mid: band(250, 2000), treble: band(2000, 16000), level: waveform.length ? Math.min(1, Math.sqrt(energy / waveform.length)) : 0, available: true };
+}
+
+export function waterfallFromBins(frequency: Uint8Array, sampleRate: number, count = 48): number[] {
+  if (!frequency.length || !Number.isFinite(sampleRate) || sampleRate <= 0) return [];
+  const binHz = sampleRate / (frequency.length * 2);
+  const high = Math.min(16000, sampleRate / 2);
+  return Array.from({ length: count }, (_, band) => {
+    const lowHz = 30 * (high / 30) ** (band / count);
+    const highHz = 30 * (high / 30) ** ((band + 1) / count);
+    const start = Math.min(frequency.length - 1, Math.max(1, Math.floor(lowHz / binHz)));
+    const end = Math.min(frequency.length, Math.max(start + 1, Math.ceil(highHz / binHz)));
+    let sum = 0;
+    for (let index = start; index < end; index += 1) sum += frequency[index];
+    return Math.min(1, Math.max(0, sum / ((end - start) * 255)));
+  });
 }
 
 export function isAnalysisSource(source: string | undefined, origin: string): boolean {
@@ -155,7 +170,7 @@ export function createAudioAnalysis(createContext: () => AudioContext, origin: s
     try {
       graph.analyser.getByteFrequencyData(graph.frequency);
       graph.analyser.getByteTimeDomainData(graph.waveform);
-      return spectrumFromBins(graph.frequency, graph.waveform, context.sampleRate);
+      return { ...spectrumFromBins(graph.frequency, graph.waveform, context.sampleRate), bins: waterfallFromBins(graph.frequency, context.sampleRate) };
     } catch { return unavailable(); }
   };
 

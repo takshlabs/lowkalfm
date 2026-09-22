@@ -252,28 +252,12 @@ async function settingsHarness() {
   return { get, send, messages, document, documentEvents };
 }
 
-test('settings uses the parent mixer protocol and keeps master available without EQ', async () => {
+test('settings keeps the player volume linked to the parent', async () => {
   const { get, send, messages } = await settingsHarness();
-  assert.ok(messages.some(({message, origin}) => message.channel === 'lowkal.mixer.v1' && message.command.action === 'request-state' && origin === 'https://example.com'));
-  assert.equal(get('mixer-bass').disabled, true);
+  assert.ok(messages.some(({message, origin}) => message.channel === 'lowkal.audio.v1' && message.command.action === 'request-state' && origin === 'https://example.com'));
   assert.equal(get('mixer-master').disabled, false);
-  send('lowkal.mixer.v1', { available: true, enabled: true, bass: 3, mid: -2, treble: 1 }, { origin: 'https://evil.test' });
-  assert.equal(get('mixer-bass').disabled, true);
-  send('lowkal.mixer.v1', { available: true, enabled: true, bass: 3, mid: -2, treble: 1 }, { source: {} });
-  assert.equal(get('mixer-bass').disabled, true);
-  send('lowkal.mixer.v1', { available: true, enabled: true, bass: 3, mid: -2, treble: 1 });
-  assert.equal(get('mixer-bass').disabled, false);
-  assert.equal(Number(get('mixer-bass').value), 3);
-  get('mixer-mid').value = '-5';
-  get('mixer-mid').events.input({ target: get('mixer-mid') });
-  assert.deepEqual(messages.at(-1).message, { channel: 'lowkal.mixer.v1', type: 'command', command: { action: 'set', settings: { bass: 3, mid: -5, treble: 1, enabled: true } } });
-  get('mixer-bypass').events.click();
-  assert.equal(messages.at(-1).message.command.settings.enabled, false);
-  get('mixer-reset').events.click();
-  assert.deepEqual(messages.at(-1).message.command.settings, { bass: 0, mid: 0, treble: 0, enabled: true });
-  send('lowkal.mixer.v1', { available: false, enabled: true, bass: 0, mid: 0, treble: 0 });
-  assert.equal(get('mixer-bass').disabled, true);
-  assert.match(get('mixer-status').textContent, /unavailable/i);
+  send('lowkal.audio.v1', { volume: 37 }, { origin: 'https://evil.test' });
+  assert.equal(Number(get('mixer-master').value), 60);
   send('lowkal.audio.v1', { volume: 37 });
   assert.equal(Number(get('mixer-master').value), 37);
   get('mixer-master').value = '42';

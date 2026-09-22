@@ -8,7 +8,6 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let still = reducedMotion.matches;
 let signal = readSpectrum(null);
 let receivedAt = -Infinity;
-let meterTimeout;
 let playing = false;
 let raf = 0;
 let lastFrame = 0;
@@ -183,28 +182,17 @@ function setStill(value) {
   start();
 }
 
-function paintMeters(data) {
-  // The mixer remains live when motion is paused or WebGL is unavailable.
-  ['bass', 'mid', 'treble'].forEach((band) => {
-    document.getElementById(`signal-${band}`).style.transform = `scaleY(${data[band]})`;
-  });
-}
-
 window.addEventListener('message', (event) => {
   if (event.origin !== window.location.origin || event.source !== window.parent || window.parent === window) return;
   const message = event.data;
   if (message?.channel === 'lowkal.analysis.v1' && message.type === 'spectrum') {
     signal = readSpectrum(message.data);
     receivedAt = performance.now();
-    paintMeters(signal);
-    clearTimeout(meterTimeout);
-    meterTimeout = setTimeout(() => paintMeters(readSpectrum(null)), 1000);
   }
   if (message?.channel === 'lowkal.audio.v1' && message.type === 'state') {
     playing = Boolean(message.state?.isPlaying);
     if (!playing) {
       signal = readSpectrum(null);
-      paintMeters(signal);
     }
   }
 });

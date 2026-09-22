@@ -7,7 +7,7 @@ import { runInNewContext } from 'node:vm';
 
 const measured = { available: true, bass: 0.7, mid: 0.3, treble: 0.2, level: 0.4 };
 
-test('mixer meters receive real levels even when graphics are unavailable or paused', async () => {
+test('liquid visuals accept real levels even when graphics are unavailable', async () => {
   const source = await readFile(new URL('../public/soundroom/room-visuals.js', import.meta.url), 'utf8');
   const elements = new Map();
   const element = (id) => {
@@ -18,9 +18,8 @@ test('mixer meters receive real levels even when graphics are unavailable or pau
   const window = { location: { origin: 'https://example.com' }, parent: {}, matchMedia: () => ({ matches: true, addEventListener() {} }), addEventListener: (type, fn) => { listeners[type] = fn; } };
   runInNewContext(source.replace(/^import .*;\n/, ''), { readSpectrum, visualFrame, window, document: { hidden: false, body: { dataset: {} }, documentElement: { style: { setProperty() {} } }, getElementById: element, addEventListener() {} }, performance: { now: () => 10 }, innerWidth: 900, innerHeight: 600, cancelAnimationFrame() {}, requestAnimationFrame() {}, setTimeout() {}, clearTimeout() {}, console });
   listeners.message({ origin: window.location.origin, source: window.parent, data: { channel: 'lowkal.analysis.v1', type: 'spectrum', data: measured } });
-  assert.equal(element('signal-bass').style.transform, 'scaleY(0.7)');
   listeners.message({ origin: window.location.origin, source: window.parent, data: { channel: 'lowkal.audio.v1', type: 'state', state: { isPlaying: false } } });
-  assert.equal(element('signal-bass').style.transform, 'scaleY(0)');
+  assert.equal(element('visual-status').textContent, 'Static light field');
 });
 
 test('measured audio takes exclusive control from the pointer', () => {
