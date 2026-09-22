@@ -119,6 +119,12 @@
       border: 1px solid rgba(255, 255, 255, 0.10);
     }
 
+    /* Show the complete mix artwork instead of cropping wide photographs. */
+    .main-cover-art {
+      object-fit: contain;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
     /* Scrollbar customization */
     .custom-scrollbar::-webkit-scrollbar {
       width: 4px;
@@ -279,7 +285,7 @@
     <main class="w-full max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-center gap-12 md:gap-16 lg:gap-20 h-full pt-20">
       <!-- Left: Cover Art Panel -->
       <div class="flex-shrink-0 w-[260px] h-[260px] md:w-[380px] md:h-[380px] rounded-2xl shadow-float overflow-hidden relative group border border-white/5">
-        <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" id="main-cover-img" src="" alt="Mix Artwork"/>
+        <img class="main-cover-art w-full h-full" id="main-cover-img" src="" alt="Mix Artwork"/>
       </div>
 
       <!-- Right: Detailed Player Card (matching reference design layout) -->

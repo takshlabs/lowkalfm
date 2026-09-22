@@ -65,6 +65,13 @@ test("the isolated Soundroom provides routes back to Lowkal, Read, and Go Out", 
   assert.match(soundroom, /href="\.\.\/go-out"[^>]*>\s*Go out/i);
 });
 
+test("the Soundroom shows the complete main mix artwork", async () => {
+  const soundroom = await source("public/soundroom/index.html");
+
+  assert.match(soundroom, /\.main-cover-art\s*\{[\s\S]*?object-fit:\s*contain;/);
+  assert.match(soundroom, /class="main-cover-art w-full h-full" id="main-cover-img"/);
+});
+
 test("semantic React images use Lowkal's shared media frame", async () => {
   const files = [
     "components/HomeTransmissionDeck.tsx",
