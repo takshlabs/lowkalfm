@@ -1,5 +1,6 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { MixDurationInput } from "@/sanity/components/MixDurationInput";
+import { CueTracklistInput } from "@/sanity/components/CueTracklistInput";
 import { getYouTubeVideoUrl } from "@/lib/audio-source";
 
 export const mixType = defineType({
@@ -180,6 +181,7 @@ export const mixType = defineType({
       type: "array",
       group: "tracklist",
       description: "Add tracks in play order. Soundroom shows each start time, title, and artist.",
+      components: { input: CueTracklistInput },
       of: [defineArrayMember({
         name: "track",
         title: "Track",
