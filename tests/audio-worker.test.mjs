@@ -48,7 +48,7 @@ test("audio sync derives a missing asset ID and returns a playable delivery URL"
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const url = String(input);
-    if (url === sourceUrl) return new Response(new Uint8Array([82, 73, 70, 70]), { status: 200, headers: { "content-type": "audio/wav" } });
+    if (url === sourceUrl) return new Response(wavHeader(), { status: 200, headers: { "content-type": "audio/wav" } });
     if (url.includes("api.sanity.io") && init?.method === "POST") {
       mutations.push(JSON.parse(String(init.body)));
       return new Response("{}", { status: 200 });
@@ -78,14 +78,49 @@ test("audio sync derives a missing asset ID and returns a playable delivery URL"
     assert.equal(response.status, 200);
     const result = await response.json();
     assert.equal(result.deliveryUrl, "https://worker.example/audio/mixes/mix-test/file-aabbcc-wav-Test.wav");
-    assert.equal(writes.length, 1);
+    assert.equal(writes.length, 2);
     assert.equal(writes[0].key, "mixes/mix-test/file-aabbcc-wav-Test.wav");
-    assert.deepEqual([...writes[0].bytes], [82, 73, 70, 70]);
+    assert.equal(writes[1].key, "mixes/mix-test/file-aabbcc-wav-Test.wav.peaks.json");
+    assert.deepEqual(JSON.parse(new TextDecoder().decode(writes[1].bytes)), { version: 1, peaks: Array(128).fill(0) });
     assert.equal(mutations.length, 1);
     assert.equal(mutations[0].mutations[0].patch.set["audio.sourceAssetId"], "file-aabbcc-wav");
     assert.equal(mutations[0].mutations[0].patch.set["audio.deliveryUrl"], result.deliveryUrl);
-    assert.equal(mutations[0].mutations[0].patch.set["audio.peaksUrl"], undefined);
-    assert.equal(mutations[0].mutations[0].patch.set.duration, undefined);
+    assert.equal(mutations[0].mutations[0].patch.set["audio.peaksUrl"], result.peaksUrl);
+    assert.equal(mutations[0].mutations[0].patch.set.duration, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("audio sync writes waveform peaks before it makes the delivery URL public", async () => {
+  const secret = "test-webhook-secret";
+  const sourceUrl = "https://cdn.sanity.io/files/project/production/aabbcc.wav";
+  const audio = wavAudio(1);
+  new DataView(audio.buffer).setInt16(44, 16384, true);
+  const payload = JSON.stringify({ _id: "mix-test", _type: "mix", audioMasterUrl: sourceUrl, audioMasterFilename: "Test.wav", audioMasterId: "file-aabbcc-wav", audioSourceAssetId: null });
+  const writes = [];
+  const mutations = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    if (url === sourceUrl) return new Response(audio, { status: 200, headers: { "content-type": "audio/wav" } });
+    if (url.includes("api.sanity.io") && init?.method === "POST") {
+      mutations.push(JSON.parse(String(init.body)));
+      return new Response("{}", { status: 200 });
+    }
+    throw new Error(`Unexpected fetch: ${url}`);
+  };
+  try {
+    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
+      AUDIO: { get: async () => null, put: async (key, value) => { writes.push({ key, value: typeof value === "string" ? value : new TextDecoder().decode(await new Response(value).arrayBuffer()) }); } },
+      SANITY_WEBHOOK_SECRET: secret, SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "token", AUDIO_PUBLIC_BASE_URL: "https://worker.example/",
+    });
+    assert.equal(response.status, 200);
+    assert.equal(writes.length, 2);
+    const peaks = JSON.parse(writes[1].value).peaks;
+    assert.equal(peaks.length, 128);
+    assert.equal(peaks[0], 0.5);
+    assert.equal(mutations[0].mutations[0].patch.set["audio.peaksUrl"], (await response.clone().json()).peaksUrl);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -112,6 +147,12 @@ function wavHeader(seconds = 2) {
   view.setUint16(34, 16, true);
   write(36, "data");
   view.setUint32(40, dataBytes, true);
+  return bytes;
+}
+
+function wavAudio(seconds = 1) {
+  const bytes = new Uint8Array(44 + 176400 * seconds);
+  bytes.set(wavHeader(seconds));
   return bytes;
 }
 

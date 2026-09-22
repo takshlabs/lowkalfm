@@ -32,6 +32,7 @@ type AudioSyncPayload = {
 };
 
 const encoder = new TextEncoder();
+const peakCount = 128;
 const AUDIO_ORIGINS = new Set([
   "https://lowkalfm.in",
   "https://www.lowkalfm.in",
@@ -95,6 +96,110 @@ function audioKeyFromRequest(pathname: string) {
   try { return parts.map(decodeURIComponent).join("/"); } catch { return null; }
 }
 
+type WavInfo = {
+  audioFormat: number;
+  channels: number;
+  blockAlign: number;
+  bits: number;
+  dataOffset: number;
+  dataSize: number;
+};
+
+function ascii(bytes: Uint8Array, offset: number, length: number) {
+  return String.fromCharCode(...bytes.subarray(offset, offset + length));
+}
+
+function wavInfo(bytes: Uint8Array): WavInfo | undefined {
+  if (bytes.length < 12 || ascii(bytes, 0, 4) !== "RIFF" || ascii(bytes, 8, 4) !== "WAVE") return undefined;
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let offset = 12;
+  while (offset + 8 <= bytes.length) {
+    const id = ascii(bytes, offset, 4);
+    const size = view.getUint32(offset + 4, true);
+    const dataStart = offset + 8;
+    if (id === "fmt " && size >= 16 && dataStart + 16 <= bytes.length) {
+      const format = view.getUint16(dataStart, true);
+      const audioFormat = format === 0xfffe && size >= 40 ? view.getUint16(dataStart + 24, true) : format;
+      const channels = view.getUint16(dataStart + 2, true);
+      const blockAlign = view.getUint16(dataStart + 12, true);
+      const bits = view.getUint16(dataStart + 14, true);
+      let next = dataStart + size + (size % 2);
+      while (next + 8 <= bytes.length) {
+        const nextId = ascii(bytes, next, 4);
+        const nextSize = view.getUint32(next + 4, true);
+        if (nextId === "data") return { audioFormat, channels, blockAlign, bits, dataOffset: next + 8, dataSize: nextSize };
+        next += 8 + nextSize + (nextSize % 2);
+      }
+      return undefined;
+    }
+    offset += 8 + size + (size % 2);
+  }
+  return undefined;
+}
+
+function sampleAmplitude(view: DataView, offset: number, info: WavInfo) {
+  if (info.audioFormat === 3 && info.bits === 32) return Math.abs(view.getFloat32(offset, true));
+  if (info.audioFormat !== 1) return 0;
+  if (info.bits === 16) return Math.abs(view.getInt16(offset, true) / 32768);
+  if (info.bits === 24) {
+    const raw = view.getUint8(offset) | (view.getUint8(offset + 1) << 8) | (view.getUint8(offset + 2) << 16);
+    return Math.abs((raw & 0x800000 ? raw - 0x1000000 : raw) / 8388608);
+  }
+  if (info.bits === 32) return Math.abs(view.getInt32(offset, true) / 2147483648);
+  return 0;
+}
+
+function waveformPeak(frame: Uint8Array, info: WavInfo) {
+  const bytesPerSample = info.bits / 8;
+  if (!Number.isInteger(bytesPerSample) || info.blockAlign !== info.channels * bytesPerSample) return undefined;
+  const view = new DataView(frame.buffer, frame.byteOffset, frame.byteLength);
+  let maximum = 0;
+  for (let channel = 0; channel < info.channels; channel += 1) maximum = Math.max(maximum, sampleAmplitude(view, channel * bytesPerSample, info));
+  return Number.isFinite(maximum) ? Math.min(1, maximum) : 0;
+}
+
+async function waveformPeaks(stream: ReadableStream<Uint8Array>, info: WavInfo) {
+  if (!info.channels || !info.blockAlign || !info.dataSize) throw new Error("Invalid WAV data");
+  const peaks = Array.from({ length: peakCount }, () => 0);
+  const reader = stream.getReader();
+  let offset = 0;
+  let remaining = new Uint8Array();
+  let complete = false;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        complete = true;
+        break;
+      }
+      const dataStart = Math.max(0, info.dataOffset - offset);
+      const dataEnd = Math.min(value.byteLength, info.dataOffset + info.dataSize - offset);
+      if (dataEnd > dataStart) {
+        const next = new Uint8Array(remaining.byteLength + dataEnd - dataStart);
+        next.set(remaining);
+        next.set(value.subarray(dataStart, dataEnd), remaining.byteLength);
+        let frameOffset = 0;
+        while (frameOffset + info.blockAlign <= next.byteLength) {
+          const framePosition = offset + dataStart - info.dataOffset + frameOffset - remaining.byteLength;
+          const peak = waveformPeak(next.subarray(frameOffset, frameOffset + info.blockAlign), info);
+          if (peak === undefined) throw new Error("Unsupported WAV format");
+          const index = Math.min(peakCount - 1, Math.floor(framePosition * peakCount / info.dataSize));
+          peaks[index] = Math.max(peaks[index], peak);
+          frameOffset += info.blockAlign;
+        }
+        remaining = next.slice(frameOffset);
+      }
+      offset += value.byteLength;
+    }
+  } finally {
+    if (!complete) {
+      try { await reader.cancel(); } catch { /* already closed */ }
+    }
+  }
+  if (remaining.byteLength) throw new Error("Incomplete WAV frame");
+  return peaks.map((peak) => Math.round(peak * 10000) / 10000);
+}
+
 async function serveAudio(request: Request, env: Env) {
   const objectKey = audioKeyFromRequest(new URL(request.url).pathname);
   if (!objectKey) return new Response("Not found", { status: 404 });
@@ -113,9 +218,10 @@ async function serveAudio(request: Request, env: Env) {
   return new Response(request.method === "HEAD" ? null : object.body, { status: object.range ? 206 : 200, headers });
 }
 
-async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl: string, env: Env, duration?: number) {
+async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl: string, peaksUrl: string, env: Env, duration?: number) {
   const set: Record<string, string | number> = {
     "audio.deliveryUrl": deliveryUrl,
+    "audio.peaksUrl": peaksUrl,
     "audio.sourceAssetId": payload.audioMasterId || "",
     "audio.syncedAt": new Date().toISOString()
   };
@@ -142,16 +248,23 @@ async function syncAudio(request: Request, env: Env, authorize: (rawBody: string
   if (!source.ok || !source.body) return new Response("Could not download audio master", { status: 502 });
   const filename = safeSegment(payload.audioMasterFilename || `${audioMasterId}.wav`);
   const objectKey = `mixes/${safeSegment(payload._id)}/${safeSegment(audioMasterId)}-${filename}`;
-  const [headerStream, bodyStream] = source.body.tee();
+  const [headerStream, audioStream] = source.body.tee();
   const headerBytes = await readStreamPrefix(headerStream, 131072);
+  const info = wavInfo(headerBytes);
+  if (!info) return new Response("Could not read WAV waveform data", { status: 422 });
   const fileSize = Number(source.headers.get("content-length")) || undefined;
   const duration = durationSecondsFromWav(headerBytes, fileSize);
-  await env.AUDIO.put(objectKey, bodyStream, { httpMetadata: { contentType: audioContentType(source, filename), cacheControl: "public, max-age=31536000, immutable" } });
+  const [audioObjectStream, peakStream] = audioStream.tee();
+  const audioWrite = env.AUDIO.put(objectKey, audioObjectStream, { httpMetadata: { contentType: audioContentType(source, filename), cacheControl: "public, max-age=31536000, immutable" } });
   const configuredBase = env.AUDIO_PUBLIC_BASE_URL.replace(/\/+$/, "");
   const audioBase = configuredBase.endsWith("/audio") ? configuredBase : `${configuredBase}/audio`;
   const deliveryUrl = `${audioBase}/${objectKey.split("/").map(encodeURIComponent).join("/")}`;
-  await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, env, duration);
-  return Response.json({ deliveryUrl });
+  const [peaks] = await Promise.all([waveformPeaks(peakStream, info), audioWrite]);
+  const peaksKey = `${objectKey}.peaks.json`;
+  await env.AUDIO.put(peaksKey, JSON.stringify({ version: 1, peaks }), { httpMetadata: { contentType: "application/json", cacheControl: "public, max-age=31536000, immutable" } });
+  const peaksUrl = `${audioBase}/${peaksKey.split("/").map(encodeURIComponent).join("/")}`;
+  await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, peaksUrl, env, duration);
+  return Response.json({ deliveryUrl, peaksUrl });
 }
 
 const worker = {

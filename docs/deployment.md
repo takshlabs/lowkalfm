@@ -94,19 +94,13 @@ The account has no Cloudflare DNS zone for `lowkalfm.in`. Keep the current Worke
 
 10. Publish a small test mix. Confirm that the mix document receives `audio.deliveryUrl`, then play the mix from `https://lowkalfm.in`.
 
-The Worker streams the Sanity master to R2, reads duration from the WAV header, and writes the Cloudflare CDN URL and duration back to the mix. The browser plays that URL directly. Vercel does not proxy the large audio file.
+The Worker streams the Sanity master to R2, reads duration from the WAV header, calculates 128 waveform peaks, and writes the Cloudflare CDN URL, waveform URL, and duration back to the mix in one update. The browser plays the CDN URL directly. Vercel does not proxy the large audio file.
 
-### Waveform publish step
+### Waveform generation
 
-After `audio.deliveryUrl` is present, generate the compact waveform sidecar before the mix is announced:
+The Worker creates the compact waveform sidecar during the audio upload webhook. It stores the `.peaks.json` object in R2 before it writes `audio.deliveryUrl` and `audio.peaksUrl` to Sanity. The browser reads only this JSON to draw the waveform. It does not download or decode the WAV.
 
-```sh
-npm run audio:peaks -- <mix-slug>
-```
-
-The command reads 128 evenly distributed samples from the private master, writes a small `.peaks.json` object to R2, and sets `audio.peaksUrl` in Sanity. The browser reads only this JSON to draw the waveform. It does not download or decode the WAV.
-
-Run this command from a CI job triggered after the Sanity publish webhook, or run it manually from an authenticated project checkout. Keep `SANITY_API_WRITE_TOKEN` local or in the CI secret store; it must not be put in browser code or Vercel.
+The `npm run audio:peaks -- <mix-slug>` command remains available only to repair old mixes. Keep `SANITY_API_WRITE_TOKEN` local; do not put it in browser code or Vercel.
 
 ## Troubleshooting
 

@@ -10,7 +10,9 @@ export async function readStreamPrefix(stream: ReadableStream<Uint8Array>, maxBy
       received += value.byteLength;
     }
   } finally {
-    try { await reader.cancel(); } catch { /* already closed */ }
+    // For a tee branch, cancellation completes only after the sibling starts
+    // reading. Do not block the upload stream while its header is inspected.
+    void reader.cancel().catch(() => { /* already closed */ });
   }
   const prefix = new Uint8Array(Math.min(received, maxBytes));
   let offset = 0;
