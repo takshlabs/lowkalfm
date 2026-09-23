@@ -188,7 +188,7 @@ export const mixType = defineType({
         type: "object",
         fields: [
           defineField({ name: "title", title: "Track title", type: "string", validation: (rule) => rule.required() }),
-          defineField({ name: "artist", title: "Track artist", type: "string", validation: (rule) => rule.required() })
+          defineField({ name: "artist", title: "Track artist", type: "string" })
         ],
         preview: { select: { title: "title", subtitle: "artist" } }
       })]

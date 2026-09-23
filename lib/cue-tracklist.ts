@@ -1,6 +1,6 @@
 export type ParsedCueTrack = {
   title: string;
-  artist: string;
+  artist?: string;
 };
 
 type CueTrackFields = {
@@ -33,7 +33,6 @@ export function parseRekordboxCueFile(contents: string): ParsedCueTrack[] {
   const lines = contents.replace(/^\uFEFF/, "").split(/\r?\n/);
   const tracks: CueTrackFields[] = [];
   let currentTrack: CueTrackFields | undefined;
-  let albumPerformer = "";
 
   for (const line of lines) {
     const match = /^\s*(TITLE|PERFORMER|TRACK)\b\s*(.*)$/i.exec(line);
@@ -59,7 +58,6 @@ export function parseRekordboxCueFile(contents: string): ParsedCueTrack[] {
     if (commandName === "PERFORMER") {
       const performer = cueValue(rest);
       if (currentTrack) currentTrack.performer = performer;
-      else albumPerformer = performer;
       continue;
     }
 
@@ -73,19 +71,15 @@ export function parseRekordboxCueFile(contents: string): ParsedCueTrack[] {
     const title = track.title?.trim() || "";
     const performer = track.performer?.trim() || "";
     const splitTitle = !performer ? splitArtistAndTitle(title) : undefined;
-    const artist = performer || splitTitle?.artist || albumPerformer.trim();
+    const artist = performer || splitTitle?.artist;
     const trackTitle = splitTitle?.title || title;
 
     if (!trackTitle) {
       throw new Error(`Track ${track.number}: no title was found.`);
     }
-    if (!artist) {
-      throw new Error(`Track ${track.number}: no artist was found. Add a PERFORMER line or use "Artist - Title" in TITLE.`);
-    }
-
     return {
       title: trackTitle,
-      artist
+      ...(artist ? { artist } : {})
     };
   });
 }

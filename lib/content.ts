@@ -6,7 +6,7 @@ export type ArchiveSection = "scene-programmes" | "volumes-residents" | "volumes
 
 export type Track = {
   title: string;
-  artist: string;
+  artist?: string;
 };
 
 export type SoundRecord = {

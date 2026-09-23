@@ -20,22 +20,22 @@ FILE "Lowkal Recording.wav" WAVE
   ]);
 });
 
-test("CUE import uses a disc performer and can split artist and title", () => {
-  const cue = `PERFORMER "Nila"
+test("CUE import ignores a disc performer and can split artist and title", () => {
+  const cue = `PERFORMER "Takezo"
 TRACK 01 AUDIO
 TITLE "First Track"
 TRACK 02 AUDIO
 TITLE "Maya K - Second Track"`;
 
   assert.deepEqual(parseRekordboxCueFile(cue), [
-    { title: "First Track", artist: "Nila" },
+    { title: "First Track" },
     { title: "Second Track", artist: "Maya K" }
   ]);
 });
 
-test("CUE import rejects tracks without an artist", () => {
-  assert.throws(
-    () => parseRekordboxCueFile('TRACK 01 AUDIO\nTITLE "First Track"'),
-    /no artist was found/
+test("CUE import keeps tracks without an artist", () => {
+  assert.deepEqual(
+    parseRekordboxCueFile('TRACK 01 AUDIO\nTITLE "First Track"'),
+    [{ title: "First Track" }]
   );
 });

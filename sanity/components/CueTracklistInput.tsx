@@ -9,7 +9,7 @@ type CueTrackValue = {
   _key: string;
   _type: "track";
   title: string;
-  artist: string;
+  artist?: string;
 };
 
 function cueTrackKey(index: number) {
@@ -41,7 +41,7 @@ export function CueTracklistInput(props: ArrayOfObjectsInputProps) {
         ...track
       }));
       props.onChange(PatchEvent.from(set(tracks)));
-      setStatus(`Imported ${tracks.length} tracks from ${file.name}. Check the times and details before you publish.`);
+      setStatus(`Imported ${tracks.length} tracks from ${file.name}. Review the details before you publish.`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "The CUE file could not be read.");
     }
@@ -51,7 +51,7 @@ export function CueTracklistInput(props: ArrayOfObjectsInputProps) {
     <Stack gap={3}>
       <Stack gap={2}>
         <Text size={1} weight="semibold">Import a Rekordbox CUE file</Text>
-        <Text size={1} muted>Choose a .cue file to fill the untimed tracklist. Each track needs a title and artist. You can edit the imported tracks below.</Text>
+        <Text size={1} muted>Choose a .cue file to fill the untimed tracklist. Track artists are optional. Review the imported details below.</Text>
         <div>
           <Button
             text="Choose CUE file"

@@ -1257,12 +1257,15 @@
           title.className = 'font-ui text-sm leading-tight';
           title.style.color = 'rgba(229,226,225,0.92)';
           title.textContent = plainText(track.title) || 'Untitled';
-          const artist = document.createElement('p');
-          artist.className = 'font-ui text-xs mt-1';
-          artist.style.color = 'rgba(229,226,225,0.58)';
-          artist.textContent = plainText(track.artist) || 'Unknown artist';
-
-          copy.append(title, artist);
+          copy.append(title);
+          const artistName = plainText(track.artist);
+          if (artistName) {
+            const artist = document.createElement('p');
+            artist.className = 'font-ui text-xs mt-1';
+            artist.style.color = 'rgba(229,226,225,0.58)';
+            artist.textContent = artistName;
+            copy.append(artist);
+          }
           row.append(copy);
           list.append(row);
         });
