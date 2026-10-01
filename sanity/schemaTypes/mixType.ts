@@ -51,40 +51,15 @@ export const mixType = defineType({
       title: "Audio",
       type: "object",
       group: "playback",
-      description: "Use this for a Cloudflare audio mix. Publish the mix to copy the master to Lowkal's audio CDN.",
+      description: "Use this for a Cloudflare audio mix. Publish the mix to copy the WAV master to Lowkal's audio CDN.",
       fields: [
         defineField({
           name: "master",
           title: "WAV master",
           type: "file",
           options: { accept: "audio/wav,audio/x-wav,.wav" },
-          description: "Use a PCM WAV master (16, 24, or 32 bit) or a 32-bit float WAV master. Duration is read from this file. The site streams only the Cloudflare delivery file after publication."
+          description: "Use a PCM WAV master (16, 24, or 32 bit) or a 32-bit float WAV master. Duration is read from this file. The site streams this WAV from Cloudflare after publication."
         }),
-        defineField({
-          name: "delivery",
-          title: "MP3 delivery file",
-          type: "file",
-          options: { accept: "audio/mpeg,.mp3" },
-          description: "Upload the same complete mix as a 192 kbps MP3. Keep the WAV master for the archive and waveform. Publish to copy the MP3 to the audio CDN.",
-          validation: (rule) => rule.custom((value, context) => {
-            const document = context.document as { published?: boolean; audio?: { master?: { asset?: { _ref?: string } } } } | undefined;
-            if (document?.published && document.audio?.master?.asset?._ref && !(value as { asset?: { _ref?: string } } | undefined)?.asset?._ref) return "Upload the MP3 delivery file before publication.";
-            return true;
-          })
-        }),
-        defineField({
-          name: "waveform",
-          title: "Waveform data",
-          type: "file",
-          options: { accept: "application/json,.json" },
-          description: "Use the waveform file made with the MP3 delivery file.",
-          validation: (rule) => rule.custom((value, context) => {
-            const document = context.document as { published?: boolean; audio?: { master?: { asset?: { _ref?: string } } } } | undefined;
-            if (document?.published && document.audio?.master?.asset?._ref && !(value as { asset?: { _ref?: string } } | undefined)?.asset?._ref) return "Add waveform data before publication.";
-            return true;
-          })
-        }),
-        defineField({ name: "sourceDeliveryAssetId", title: "Delivery asset ID", type: "string", readOnly: true, hidden: true }),
         defineField({
           name: "startOffset",
           title: "Start playback at (seconds)",
