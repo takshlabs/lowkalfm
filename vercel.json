@@ -2,11 +2,18 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
   "installCommand": "npm ci",
-  "buildCommand": "npm run build && node scripts/build-vercel-output.mjs",
+  "buildCommand": "npm run lint && npm run typecheck && npm run build && node --test tests/*.test.mjs && node scripts/build-vercel-output.mjs",
   "outputDirectory": "dist/client",
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/artists/:slug", "destination": "/artists" }
+    {
+      "source": "/artists/:slug",
+      "destination": "/artists"
+    },
+    {
+      "source": "/studio/:path*",
+      "destination": "/studio"
+    }
   ]
 }

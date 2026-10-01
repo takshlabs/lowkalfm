@@ -72,12 +72,12 @@ export function createStaticRoutes(files, compatibilityId) {
     continue: true,
   });
   routes.push({ src: '^/.*\\.html$', headers: { 'Cache-Control': 'no-store' }, continue: true });
+  if (files.includes('studio.html')) routes.push({ src: '^/studio(?:/.*)?$', dest: '/studio.html' });
   routes.push({ handle: 'filesystem' });
   // Static HTML remains directly addressable on refresh and shared links.
   for (const file of files.filter(file => file.endsWith('.rsc') && file !== 'index.rsc')) {
     routes.push({ src: `^/${escape(file.slice(0, -4))}/?$`, dest: `/${file.slice(0, -4)}.html` });
   }
   routes.push({ src: '^/artists/[^/]+/?$', dest: '/artists.html' });
-  if (files.includes('studio.html')) routes.push({ src: '^/studio(?:/.*)?$', dest: '/studio.html' });
   return routes;
 }

@@ -66,7 +66,7 @@ try {
     process.once('error', reject);
     process.once('exit', (code) => code === 0 ? resolve() : reject(new Error(`FFmpeg failed: ${code}`)));
   });
-  const values = [...(await readFile(peakLog, 'utf8')).matchAll(/lavfi\.astats\.Overall\.Peak_level=([^\r\n]+)/g)].map((match) => Math.round(Math.min(1, Math.pow(10, Number(match[1]) / 20)) * 10000) / 10000);
+  const values = [...(await readFile(peakLog, 'utf8')).matchAll(/lavfi\.astats\.Overall\.Peak_level=([^\r\n]+)/g)].map((match) => match[1].trim().toLowerCase() === "-inf" ? 0 : Math.round(Math.min(1, Math.pow(10, Number(match[1]) / 20)) * 10000) / 10000);
   if (!values.length || values.some((value) => !Number.isFinite(value))) throw new Error('Cannot read waveform data');
   const peaks = Array.from({ length: 128 }, (_, index) => values[index] ?? 0);
   const waveformPath = join(directory, `${slug}.peaks.json`);

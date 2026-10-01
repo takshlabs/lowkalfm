@@ -80,4 +80,5 @@ test('production configuration is Vercel-only', () => {
   assert.equal(rsc.dest, '/studio.rsc');
   assert.equal(rsc.headers['Cache-Control'], 'no-store');
   assert.ok(html);
+  assert.ok(routes.indexOf(html) < routes.findIndex(route => route.handle === "filesystem"));
  });

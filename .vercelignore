@@ -1,0 +1,14 @@
+.git
+.github
+.wrangler
+.vinext
+.next
+.vercel
+node_modules
+dist
+out
+build
+brag-output
+.env*
+npm-debug.log*
+tsconfig.tsbuildinfo
