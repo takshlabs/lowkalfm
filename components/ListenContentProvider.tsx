@@ -5,7 +5,6 @@ import { track } from "@vercel/analytics";
 import { getMixStartOffset, getYouTubeVideoUrl, resolveMixPlayback } from "@/lib/audio-source";
 import { artistProfiles, livePrograms, soundRecords, type ArchiveSection, type ArtistProfile, type LiveProgram, type SoundFormat, type SoundRecord } from "@/lib/content";
 import { sortMixesByLatest } from "@/lib/listen-order";
-import { getMixListenCount } from "@/lib/mix-listens";
 import { isSanityConfigured, listenContentQuery, sanityFetch, sanityImageUrl } from "@/lib/sanity";
 
 type SanityArtist = ArtistProfile;
@@ -29,6 +28,14 @@ type SanityMix = {
   description?: string;
   shaderMoodPrompt?: string;
   featured?: boolean;
+  playerOrder?: number;
+  soundroomOrder?: number;
+  archiveOrder?: number;
+  homeOrder?: number;
+  showInPlayer?: boolean;
+  showInSoundroom?: boolean;
+  showInArchive?: boolean;
+  showOnHome?: boolean;
   archiveSection?: ArchiveSection;
   tracks?: SoundRecord["tracks"];
   programmeSlug?: string;
@@ -43,36 +50,24 @@ type SanityProgramme = Omit<LiveProgram, "featuredSetSlug" | "setSlugs" | "date"
 type SanityListenContent = { mixes?: SanityMix[]; programmes?: SanityProgramme[]; artists?: SanityArtist[] };
 
 type ListenContentValue = {
+  isLoading: boolean;
+  error: string | null;
+  refresh: () => void;
   records: SoundRecord[];
   programmes: LiveProgram[];
   artists: ArtistProfile[];
   getRecord: (slug: string) => SoundRecord | undefined;
   getArtist: (slug: string) => ArtistProfile | undefined;
   listenCounts: Record<string, number>;
-  recordListen: (record: SoundRecord) => void;
+  beginListen: (record: SoundRecord) => Promise<string | null>;
+  recordListen: (record: SoundRecord, ticket: string) => void;
 };
 
+const useLocalCatalogue = !isSanityConfigured && process.env.NODE_ENV !== "production";
+
 const ListenContentContext = createContext<ListenContentValue | null>(null);
-const LISTEN_CACHE_KEY = "lowkal:listen-content:v1";
-const LISTEN_CACHE_MAX_AGE = 24 * 60 * 60 * 1_000;
-const LISTEN_COUNT_CACHE_KEY = "lowkal:mix-listens:v1";
-
-function readListenCache() {
-  try {
-    const cached = JSON.parse(window.sessionStorage.getItem(LISTEN_CACHE_KEY) ?? "null") as { savedAt?: number; content?: SanityListenContent } | null;
-    return cached?.content && Date.now() - Number(cached.savedAt) < LISTEN_CACHE_MAX_AGE ? cached.content : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeListenCache(content: SanityListenContent) {
-  try {
-    window.sessionStorage.setItem(LISTEN_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), content }));
-  } catch {
-    // Storage can be unavailable in private browsing modes.
-  }
-}
+const LISTEN_COUNTS_URL = "https://lowkal-audio-sync.lowkal-audio-737a.workers.dev/listen-counts";
+const VISITOR_KEY = "lowkal:listen-visitor:v1";
 
 function formatDate(dateISO: string) {
   const date = new Date(`${dateISO}T00:00:00Z`);
@@ -109,62 +104,93 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     featured: Boolean(mix.featured),
     programSlug: mix.programmeSlug,
     archiveSection: mix.archiveSection ?? "volumes-guests",
-    showInPlayer: true,
-    showInSoundroom: true,
-    showInArchive: true,
-    showOnHome: true,
+    playerOrder: mix.playerOrder,
+    soundroomOrder: mix.soundroomOrder,
+    archiveOrder: mix.archiveOrder,
+    homeOrder: mix.homeOrder,
+    showInPlayer: mix.showInPlayer !== false,
+    showInSoundroom: mix.showInSoundroom !== false,
+    showInArchive: mix.showInArchive !== false,
+    showOnHome: mix.showOnHome !== false,
     tracks: mix.tracks ?? []
   };
 }
 
 export function ListenContentProvider({ children }: { children: React.ReactNode }) {
   const [content, setContent] = useState<SanityListenContent | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refresh = useCallback(() => setRefreshKey((value) => value + 1), []);
   const [listenCounts, setListenCounts] = useState<Record<string, number>>({});
   const countedMixesRef = useRef(new Set<string>());
 
   useEffect(() => {
     if (!isSanityConfigured) return;
     let active = true;
-    const cached = readListenCache();
-    if (cached) queueMicrotask(() => { if (active) setContent(cached); });
+    // Remove snapshots from older releases. Never render a saved CMS catalogue.
+    try { window.sessionStorage.removeItem("lowkal:listen-content:v1"); } catch { /* Storage is optional. */ }
     const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15_000);
     sanityFetch<SanityListenContent>(listenContentQuery, { signal: controller.signal })
       .then((result) => {
         if (!active) return;
-        setContent(result);
-        writeListenCache(result);
+        setContent((previous) => JSON.stringify(previous) === JSON.stringify(result) ? previous : result);
+        window.clearTimeout(timeout);
+        setError(null);
       })
-      .catch(() => { /* The local catalogue keeps Listen available if Sanity is unavailable. */ });
-    return () => { active = false; controller.abort(); };
-  }, []);
+      .catch(() => { window.clearTimeout(timeout); if (active) setError("Cannot load the records. Try again."); });
+    return () => { active = false; window.clearTimeout(timeout); controller.abort(); };
+  }, [refreshKey]);
 
   useEffect(() => {
-    let active = true;
+    const handleVisibility = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", handleVisibility);
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible") refresh(); }, 60_000);
+    return () => { document.removeEventListener("visibilitychange", handleVisibility); window.clearInterval(timer); };
+  }, [refresh]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const mixes = content?.mixes?.map((mix) => mix.slug) ?? [];
+    for (const slug of mixes) {
+      if (!slug) continue;
+      fetch(`${LISTEN_COUNTS_URL}?mix=${encodeURIComponent(slug)}`, { signal: controller.signal })
+        .then((response) => response.ok ? response.json() as Promise<{ total: number }> : null)
+        .then((result) => { if (result && Number.isSafeInteger(result.total)) setListenCounts((current) => ({ ...current, [slug]: Math.max(current[slug] ?? 0, result.total) })); })
+        .catch(() => { /* Show the published baseline if counts are unavailable. */ });
+    }
+    return () => controller.abort();
+  }, [content]);
+
+  const beginListen = useCallback(async (record: SoundRecord) => {
+    if (record.playback?.provider !== "cloudflare" || countedMixesRef.current.has(record.slug)) return null;
+    let visitorToken: string | null = null;
+    try { visitorToken = window.localStorage.getItem(VISITOR_KEY); } catch { /* Storage is optional. */ }
     try {
-      const saved = JSON.parse(window.localStorage.getItem(LISTEN_COUNT_CACHE_KEY) ?? "{}");
-      if (saved && typeof saved === "object" && !Array.isArray(saved)) {
-        queueMicrotask(() => { if (active) setListenCounts(saved as Record<string, number>); });
-      }
-    } catch { /* Counts use their baseline when storage is unavailable. */ }
-    return () => { active = false; };
+      const response = await fetch(LISTEN_COUNTS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "start", mix: record.slug, visitorToken }) });
+      if (!response.ok) return null;
+      const result = await response.json() as { visitorToken: string; ticket: string };
+      try { window.localStorage.setItem(VISITOR_KEY, result.visitorToken); } catch { /* Storage is optional. */ }
+      return result.ticket;
+    } catch { return null; }
   }, []);
 
-  const recordListen = useCallback((record: SoundRecord) => {
+  const recordListen = useCallback((record: SoundRecord, ticket: string) => {
+    if (record.playback?.provider !== "cloudflare") return;
     if (countedMixesRef.current.has(record.slug)) return;
     countedMixesRef.current.add(record.slug);
-    setListenCounts((current) => {
-      const next = { ...current, [record.slug]: (current[record.slug] ?? getMixListenCount(record.slug, record.listenCount)) + 1 };
-      try { window.localStorage.setItem(LISTEN_COUNT_CACHE_KEY, JSON.stringify(next)); } catch { /* Playback and tracking continue. */ }
-      return next;
-    });
+    fetch(LISTEN_COUNTS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "listen", mix: record.slug, ticket }) })
+      .then((response) => { if (!response.ok) throw new Error("Listen was not saved"); return response.json() as Promise<{ total: number }>; })
+      .then((result) => { if (result && Number.isSafeInteger(result.total)) setListenCounts((current) => ({ ...current, [record.slug]: Math.max(current[record.slug] ?? 0, result.total) })); })
+      .catch(() => { countedMixesRef.current.delete(record.slug); });
     track("mix_listen", { mix: record.slug, series: record.series });
   }, []);
 
-  const value = useMemo<ListenContentValue>(() => {
+  const catalogue = useMemo(() => {
     const fetchedRecords = content?.mixes?.map(mapMix).filter((record): record is SoundRecord => Boolean(record)) ?? [];
-    const records = sortMixesByLatest(fetchedRecords.length > 0 ? fetchedRecords : soundRecords);
-    const programmes = content?.programmes?.length
-      ? content.programmes.map((programme) => ({
+    const records = sortMixesByLatest(content ? fetchedRecords : useLocalCatalogue ? soundRecords : []);
+    const programmes = content
+      ? (content.programmes ?? []).map((programme) => ({
           slug: programme.slug,
           number: programme.number,
           name: programme.name,
@@ -174,26 +200,26 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
           setSlugs: programme.setSlugs ?? [],
           description: programme.description
         }))
-      : livePrograms;
-    const artists = content?.artists?.length ? content.artists.map((artist) => ({
+      : useLocalCatalogue ? livePrograms : [];
+    const artists = content ? (content.artists ?? []).map((artist) => ({
       ...artist,
       bio: artist.bio ?? [],
       genres: artist.genres ?? [],
       links: artist.links ?? [],
       externalMixes: artist.externalMixes ?? [],
       productions: artist.productions ?? [],
-      fieldNotes: artist.fieldNotes ?? []
-    })) : artistProfiles;
+      fieldNotes: (artist.fieldNotes ?? []).map((note) => ({ ...note, tags: note.tags ?? [] }))
+    })) : useLocalCatalogue ? artistProfiles : [];
     return {
       records,
       programmes,
       artists,
       getRecord: (slug: string) => records.find((record) => record.slug === slug),
       getArtist: (slug: string) => artists.find((artist) => artist.slug === slug),
-      listenCounts,
-      recordListen
     };
-  }, [content, listenCounts, recordListen]);
+  }, [content]);
+
+  const value = useMemo<ListenContentValue>(() => ({ ...catalogue, listenCounts, beginListen, recordListen, isLoading: isSanityConfigured && !content && !error, error, refresh }), [catalogue, listenCounts, beginListen, recordListen, content, error, refresh]);
 
   return <ListenContentContext.Provider value={value}>{children}</ListenContentContext.Provider>;
 }

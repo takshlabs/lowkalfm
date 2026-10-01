@@ -3,7 +3,7 @@ const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
 const apiVersion = "2026-08-24";
 
 export const isSanityConfigured = projectId.length > 0;
-export const sanityCdnOrigin = isSanityConfigured ? `https://${projectId}.apicdn.sanity.io` : "";
+export const sanityCdnOrigin = isSanityConfigured ? `https://${projectId}.api.sanity.io` : "";
 
 export function sanityImageUrl(source: string, width = 1200) {
   try {
@@ -42,7 +42,7 @@ export async function sanityFetch<Result>(query: string, options: { signal?: Abo
   url.searchParams.set("perspective", "published");
   url.searchParams.set("returnQuery", "false");
   const response = await fetch(url, {
-    cache: "default",
+    cache: "no-store",
     credentials: "omit",
     signal: options.signal
   });
@@ -87,6 +87,10 @@ export const listenContentQuery = `{
     shaderMoodPrompt,
     featured,
     archiveSection,
+    playerOrder,
+    soundroomOrder,
+    archiveOrder,
+    homeOrder,
     showInPlayer,
     showInSoundroom,
     showInArchive,

@@ -40,6 +40,8 @@ export function ReadArticle() {
     if (!isSanityConfigured) return;
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
+      setPost(null);
+      setState("loading");
       void sanityFetch<Post[]>(storiesQuery, { signal: controller.signal })
         .then((posts) => {
           const found = posts.find((item) => item.slug === slug) ?? null;
@@ -51,10 +53,10 @@ export function ReadArticle() {
     return () => { controller.abort(); window.clearTimeout(timer); };
   }, [slug]);
 
-  if (!post) return <main className="reader-page"><p className="reader-status">{state === "loading" ? "Opening the piece…" : "This page is not here yet."}</p></main>;
+  if (!post || post.slug !== slug) return <main id="main-content" tabIndex={-1} className="reader-page"><p className="reader-status">{state === "loading" ? "Opening the piece…" : "This page is not here yet."}</p></main>;
 
   return (
-    <main className="reader-page">
+    <main id="main-content" tabIndex={-1} className="reader-page">
       <article className="reader-article">
         <SiteLink className="reader-back" href="/read">← Back to Read</SiteLink>
         <span className="section-kicker">{post.type}</span>

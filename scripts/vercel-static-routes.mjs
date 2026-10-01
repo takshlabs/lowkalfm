@@ -11,7 +11,9 @@ export function createStaticRoutes(files, compatibilityId) {
   const headers = {
     'Content-Type': 'text/x-component',
     'X-Vinext-RSC-Compatibility-Id': compatibilityId,
-    'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
+    'Cache-Control': 'no-store',
+    'CDN-Cache-Control': 'no-store',
+    'Vercel-CDN-Cache-Control': 'no-store',
     Vary: 'RSC, Accept',
   };
   const routes = [{ src: '^/.*$', headers: securityHeaders, continue: true }, ...files.filter(file => file.endsWith('.rsc')).map(file => ({
@@ -23,6 +25,8 @@ export function createStaticRoutes(files, compatibilityId) {
   if (files.includes('artists.rsc')) routes.push({
     src: '^/artists/[^/]+/?$', has: [{ type: 'header', key: 'rsc', value: '1' }], dest: '/artists.rsc', headers,
   });
+  if (files.includes('studio.rsc')) routes.push({ src: '^/studio(?:/.*)?$', has: [{ type: 'header', key: 'rsc', value: '1' }], dest: '/studio.rsc', headers });
+  routes.push({ src: '^/studio(?:/.*)?$', headers: { 'Cache-Control': 'no-store' }, continue: true });
   routes.push({ src: '^/.*\\.rsc$', headers, continue: true });
   routes.push({
     src: '^/_next/static/.*$',
@@ -45,8 +49,8 @@ export function createStaticRoutes(files, compatibilityId) {
     continue: true,
   });
   routes.push({
-    src: '^/soundroom/.*\\.(?:css|js|woff2)$',
-    headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' },
+    src: '^/soundroom(?:/.*)?$',
+    headers: { 'Cache-Control': 'no-store' },
     continue: true,
   });
   routes.push({
@@ -64,14 +68,16 @@ export function createStaticRoutes(files, compatibilityId) {
   });
   routes.push({
     src: '^/(?:|artists(?:/[^/]+)?|desk|go-out|listen(?:/archive(?:/[^/]+)?)?|read(?:/[^/]+)?|soundroom)/?$',
-    headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400' },
+    headers: { 'Cache-Control': 'no-store' },
     continue: true,
   });
+  routes.push({ src: '^/.*\\.html$', headers: { 'Cache-Control': 'no-store' }, continue: true });
   routes.push({ handle: 'filesystem' });
   // Static HTML remains directly addressable on refresh and shared links.
   for (const file of files.filter(file => file.endsWith('.rsc') && file !== 'index.rsc')) {
     routes.push({ src: `^/${escape(file.slice(0, -4))}/?$`, dest: `/${file.slice(0, -4)}.html` });
   }
   routes.push({ src: '^/artists/[^/]+/?$', dest: '/artists.html' });
+  if (files.includes('studio.html')) routes.push({ src: '^/studio(?:/.*)?$', dest: '/studio.html' });
   return routes;
 }

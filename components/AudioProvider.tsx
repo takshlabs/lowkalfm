@@ -4,8 +4,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { SoundRecord } from "@/lib/content";
 import { boundPlaybackTime, comparePlaybackClaims, createPlaybackRequests, createShuffleOrder, endedQueueIndex, nextQueueIndex, PLAYBACK_ACTIVITY_STORAGE_KEY, PLAYBACK_CLAIM_STORAGE_KEY, previousQueueIndex, shouldRestartPrevious, type PlaybackClaim, type RepeatMode } from "@/lib/audio-playback";
 import { createAudioAnalysis, isAnalysisSource, startAnalysisBridge, startMixerBridge } from "@/lib/audio-analysis";
+import { sortMixesForPlacement } from "@/lib/listen-order";
 import { sitePath } from "@/lib/site-path";
 import { useListenContent } from "./ListenContentProvider";
+
+const EMPTY_RECORD: SoundRecord = { slug: "", title: "", artist: "", artistSlugs: [], series: "", format: "weekly", date: "", dateISO: "", duration: 0, artwork: "", genres: [], description: "", featured: false, archiveSection: "volumes-guests", showInPlayer: false, showInSoundroom: false, showInArchive: false, showOnHome: false, tracks: [] };
 
 const STORAGE_KEY = "lowkal.player.v1";
 const AUDIO_SYNC_CHANNEL = "lowkal.audio.v1";
@@ -125,9 +128,9 @@ function readSavedState(): SavedPlayerState | null {
 }
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  const { records, getRecord, recordListen } = useListenContent();
-  const playableRecords = useMemo(() => records.filter((record) => isPlayable(record)), [records]);
-  const firstRecord = playableRecords[0] ?? records[0];
+  const { records, getRecord, beginListen, recordListen } = useListenContent();
+  const playableRecords = useMemo(() => sortMixesForPlacement(records.filter((record) => record.showInPlayer !== false && isPlayable(record)), "playerOrder"), [records]);
+  const firstRecord = playableRecords[0] ?? EMPTY_RECORD;
   const [activeSlug, setActiveSlug] = useState(firstRecord.slug);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(firstRecord.duration);
@@ -177,6 +180,16 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const stateRevisionRef = useRef(0);
   const didRestoreRef = useRef(false);
   const activeRecord = getRecord(activeSlug) ?? firstRecord;
+  useEffect(() => {
+    if (!isPlaying || activeRecord.playback?.provider !== "cloudflare") return;
+    let active = true;
+    let timer: number | undefined;
+    void beginListen(activeRecord).then((ticket) => {
+      if (active && ticket) timer = window.setTimeout(() => recordListen(activeRecord, ticket), 30_000);
+    });
+    return () => { active = false; if (timer) window.clearTimeout(timer); };
+  }, [activeRecord, isPlaying, beginListen, recordListen]);
+
   const playback = activeRecord.playback;
   const cloudflareUrl = playback?.provider === "cloudflare" ? playback.url : undefined;
   const youtubeId = playback?.provider === "youtube" ? playback.videoId : undefined;
@@ -241,7 +254,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { stateRef.current = { activeSlug: activeRecord.slug, currentTime, duration, isPlaying, isReady, isLoading, error, volume, isMuted, isShuffled, repeatMode, sleepTimer }; }, [activeRecord.slug, currentTime, duration, isPlaying, isReady, isLoading, error, volume, isMuted, isShuffled, repeatMode, sleepTimer]);
   useEffect(() => {
-    if (didRestoreRef.current) return;
+    if (didRestoreRef.current || !firstRecord.slug) return;
     const requestedSlug = new URLSearchParams(window.location.search).get("mix")?.trim();
     if (requestedSlug) {
       const requestedRecord = getRecord(requestedSlug);
@@ -256,7 +269,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     const saved = readSavedState();
-    if (!saved) { didRestoreRef.current = true; return; }
+    if (!saved) {
+      didRestoreRef.current = true;
+      resumeAtRef.current = firstRecord.startOffset ?? 0;
+      setActiveSlug(firstRecord.slug); setDuration(firstRecord.duration);
+      return;
+    }
     // The initial fallback catalog can arrive before Sanity. Keep the saved
     // intent pending until its record exists instead of permanently skipping it.
     if (!getRecord(saved.slug)) return;
@@ -268,7 +286,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       sleepDeadlineRef.current = saved.sleepDeadline;
       setSleepTimerState(saved.sleepTimer);
     }
-  }, [canonicalQueue, getRecord]);
+  }, [canonicalQueue, firstRecord, getRecord]);
   useEffect(() => { currentTimeRef.current = currentTime; }, [currentTime]);
   useEffect(() => { volumeRef.current = volume; }, [volume]);
 
@@ -540,7 +558,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
             if (!ownsCurrentSession()) return;
             if (data === 1) {
               if (!autoplayRef.current) { youtubePlayerRef.current?.pauseVideo?.(); return; }
-              recordListen(activeRecord); setIsPlaying(true); setIsLoading(false); setError(null);
+              setIsPlaying(true); setIsLoading(false); setError(null);
               return;
             }
             if (data === 3) { setIsPlaying(false); setIsLoading(autoplayRef.current); return; }
@@ -569,7 +587,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       youtubePlayerRef.current = null;
     };
   // The scalar record fields prevent a listen-count update from rebuilding the player.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRecord.duration, activeRecord.slug, activeRecord.startOffset, activeSourceKey, isYouTubeSource, playMedia, retryKey, youtubeId]);
 
   useEffect(() => {
@@ -809,7 +826,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
               bufferingTimerRef.current = null;
             }
             if (!autoplayRef.current) { audio.pause(); return; }
-            recordListen(activeRecord); setIsPlaying(true); setIsLoading(false); setError(null);
+            setIsPlaying(true); setIsLoading(false); setError(null);
           }}
           onWaiting={(event) => {
             if (!isCurrentNativeEvent(event.currentTarget, activeSourceKey) || !autoplayRef.current || !stateRef.current.isPlaying || bufferingTimerRef.current !== null) return;

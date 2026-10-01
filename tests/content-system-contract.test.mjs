@@ -12,7 +12,7 @@ test("Read uses Sanity as the public editorial source", async () => {
   const feed = await source("components/ReadFeed.tsx");
   const article = await source("components/ReadArticle.tsx");
 
-  assert.match(client, /apicdn\.sanity\.io/);
+  assert.match(client, /api\.sanity\.io/);
   assert.match(client, /auto.*format/);
   assert.match(client, /fit.*max/);
   assert.match(client, /NEXT_PUBLIC_SANITY_PROJECT_ID/);
@@ -63,7 +63,7 @@ test("parked mixes stay in the CMS but are not sent to public listen surfaces", 
   assert.match(query, /_type == "mix" && published == true && parked != true/);
 });
 
-test("published non-parked mixes appear on archive, soundroom, home, and the player", async () => {
+test("published non-parked mixes respect CMS placement settings", async () => {
   const schema = await source("sanity/schemaTypes/mixType.ts");
   const query = await source("lib/sanity.ts");
   const provider = await source("components/ListenContentProvider.tsx");
@@ -74,13 +74,13 @@ test("published non-parked mixes appear on archive, soundroom, home, and the pla
 
   assert.match(query, /_type == "mix" && published == true && parked != true/);
   assert.match(schema, /Hide this published mix from all public Lowkal listen surfaces/);
-  assert.match(provider, /showInPlayer:\s*true/);
-  assert.match(provider, /showInSoundroom:\s*true/);
-  assert.match(provider, /showInArchive:\s*true/);
-  assert.match(provider, /showOnHome:\s*true/);
-  assert.doesNotMatch(archive, /showInArchive/);
-  assert.doesNotMatch(soundroom, /showInSoundroom/);
-  assert.doesNotMatch(home, /showOnHome/);
+  assert.match(provider, /showInPlayer: mix\.showInPlayer !== false/);
+  assert.match(provider, /showInSoundroom: mix\.showInSoundroom !== false/);
+  assert.match(provider, /showInArchive: mix\.showInArchive !== false/);
+  assert.match(provider, /showOnHome: mix\.showOnHome !== false/);
+  assert.match(archive, /showInArchive/);
+  assert.match(soundroom, /showInSoundroom/);
+  assert.match(home, /showOnHome/);
   assert.doesNotMatch(player, /showInPlayer &&/);
 });
 

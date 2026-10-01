@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { ArrowLeft, ArrowRight, Pause, Play } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatTime, SoundRecord } from "@/lib/content";
+import { sortMixesForPlacement } from "@/lib/listen-order";
 import { sitePath } from "@/lib/site-path";
 import { ArchiveAtmosphere } from "./ArchiveAtmosphere";
 import { MixShareButton } from "./MixShareButton";
@@ -55,9 +56,9 @@ function mixPath(slug: string) {
   return sitePath(`/listen/archive/${encodeURIComponent(slug)}`);
 }
 
-export function SoundroomCatalog({ initialMixSlug, autoplay = false }: { initialMixSlug?: string; autoplay?: boolean } = {}) {
+function LoadedSoundroomCatalog({ initialMixSlug, autoplay = false }: { initialMixSlug?: string; autoplay?: boolean } = {}) {
   const { records } = useListenContent();
-  const archiveRecords = records;
+  const archiveRecords = sortMixesForPlacement(records.filter((record) => record.showInArchive), "archiveOrder");
   const searchParams = useSearchParams();
   const requestedSlug = initialMixSlug ?? searchParams.get("mix");
   const [selectedSlug, setSelectedSlug] = useState<string | null>(() => requestedSlug);
@@ -65,7 +66,7 @@ export function SoundroomCatalog({ initialMixSlug, autoplay = false }: { initial
   const { activeRecord, isPlaying, isLoading, error, retryPlayback, playRecord, togglePlayback } = useAudio();
   const selectedIndex = Math.max(0, archiveRecords.findIndex((record) => record.slug === (selectedSlug ?? activeRecord.slug)));
   const selected = archiveRecords[selectedIndex] ?? archiveRecords[0];
-  const group = useMemo(() => getGroup(selected), [selected]);
+  const group = getGroup(selected);
   const selectedIsActive = activeRecord.slug === selected.slug;
   const playable = Boolean(selected.playback);
   const playLabel = !playable ? "Unavailable" : selectedIsActive && error ? "Retry playback" : selectedIsActive && isLoading ? "Cancel loading" : selectedIsActive && isPlaying ? "Pause" : "Play record";
@@ -223,4 +224,14 @@ export function SoundroomCatalog({ initialMixSlug, autoplay = false }: { initial
       </footer>
     </section>
   );
+}
+
+export function SoundroomCatalog(props: { initialMixSlug?: string; autoplay?: boolean } = {}) {
+  const { records, isLoading, error, refresh } = useListenContent();
+  if (isLoading) return <p role="status">Loading records…</p>;
+  if (error) return <div role="alert"><p>{error}</p><button type="button" onClick={refresh}>Try again</button></div>;
+  const listed = records.filter((record) => record.showInArchive);
+  if (!listed.length) return <p>No records are available.</p>;
+  if (props.initialMixSlug && !listed.some((record) => record.slug === props.initialMixSlug)) return <p>This record is not available.</p>;
+  return <LoadedSoundroomCatalog {...props} />;
 }

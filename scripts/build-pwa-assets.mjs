@@ -36,13 +36,12 @@ const localShellAssets = files.filter((path) =>
   path === 'offline.html' ||
   path.startsWith('icons/') ||
   path.startsWith('fonts/') ||
-  path === 'lowkal-logo.jpg' ||
-  path.startsWith('soundroom/'));
+  path === 'lowkal-logo.jpg');
 const shellSources = await Promise.all(routeShells.map((path) => readFile(join(root, path), 'utf8')));
 const referencedBuildAssets = [...new Set(shellSources.flatMap((source) =>
   [...source.matchAll(/\/_next\/static\/[^"'\\\s?]+\.(?:css|js)/g)].map((match) => match[0].slice(1))))]
   .filter((path) => files.includes(path) && (path.endsWith('.css') || path.endsWith('.js')));
-const precache = [...routeShells, ...localShellAssets, ...referencedBuildAssets].map((path) => `/${path}`);
+const precache = [...localShellAssets, ...referencedBuildAssets].map((path) => `/${path}`);
 
 await writeFile(join(root, 'sw.js'), createServiceWorker({ version: compatibilityId, precache }));
 console.log(`Generated Lowkal service worker ${compatibilityId} with ${precache.length} shell assets.`);

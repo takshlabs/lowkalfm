@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /studio
+Disallow: /desk
+Sitemap: https://lowkalfm.in/sitemap.xml

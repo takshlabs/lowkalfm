@@ -13,9 +13,8 @@ export default function Home() {
 
       <section className="rinse-hero" aria-labelledby="rinse-hero-title">
         <div className="rinse-hero-copy">
-          <span>Electronic music curations from the lowkality</span>
           <h1 id="rinse-hero-title">The city has a frequency.</h1>
-          <p>Independent radio from Bengaluru.</p>
+          <p>Electronic music curations from the lowkality</p>
           <SiteLink href={sitePath("/listen")}>Enter soundroom <span aria-hidden="true">↗</span></SiteLink>
         </div>
         <div className="rinse-hero-art">

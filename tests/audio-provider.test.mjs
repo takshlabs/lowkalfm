@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
+import * as listenOrder from "../lib/listen-order.ts";
 import * as playback from "../lib/audio-playback.ts";
 
 // Exercise the real provider callbacks without a browser or network. React hooks
@@ -43,10 +44,11 @@ function harness(search = "") {
   runInNewContext(code, { exports: compiled.exports, require(name) {
     if (name === "react") return react;
     if (name === "react/jsx-runtime") return { jsx, jsxs: jsx };
+    if (name === "@/lib/listen-order") return listenOrder;
     if (name === "@/lib/audio-playback") return playback;
     if (name === "@/lib/audio-analysis") return { createAudioAnalysis: () => analysis, isAnalysisSource: () => false, startAnalysisBridge: () => () => {}, startMixerBridge: () => () => {} };
     if (name === "@/lib/site-path") return { sitePath: path => path };
-    if (name === "./ListenContentProvider") return { useListenContent: () => ({ records, getRecord }) };
+    if (name === "./ListenContentProvider") return { useListenContent: () => ({ records, getRecord, beginListen: async () => null, recordListen: () => {} }) };
     throw new Error(name);
   }, window, navigator: { maxTouchPoints: 1 }, document: { addEventListener: (name, fn) => { (documentListeners[name] ??= []).push(fn); }, removeEventListener() {} }, HTMLMediaElement: MediaElement, URLSearchParams, queueMicrotask, console, setTimeout, clearTimeout });
   function render() { cursor = 0; effects = []; tree = compiled.exports.AudioProvider({ children: null }); const media = tree.props.children.find?.(child => child?.type === "audio"); media?.props.ref(audio); effects.forEach(fn => fn()); return value; }
@@ -273,8 +275,8 @@ test("sleep timer expiry pauses without selecting another record", () => {
 test("provider retries a saved restore after the catalog hydrates", () => {
   const source = readFileSync(new URL("../components/AudioProvider.tsx", import.meta.url), "utf8");
   assert.match(source, /const didRestoreRef = useRef\(false\)/);
-  assert.match(source, /if \(didRestoreRef\.current\) return/);
-  assert.match(source, /if \(!saved\) \{ didRestoreRef\.current = true; return; \}/);
+  assert.match(source, /if \(didRestoreRef\.current \|\| !firstRecord\.slug\) return/);
+  assert.match(source, /if \(!saved\) \{[\s\S]*?setActiveSlug\(firstRecord\.slug\)/);
   assert.match(source, /if \(!getRecord\(saved\.slug\)\) return;/);
   assert.match(source, /didRestoreRef\.current = true/);
 });

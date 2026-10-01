@@ -23,14 +23,14 @@ test('manifest defines an installable standalone Lowkal app', async () => {
   for (const icon of manifest.icons) await access(new URL(`public${icon.src}`, root));
 });
 
-test('service worker separates documents from RSC and bypasses streamed media', () => {
+test('service worker bypasses streamed media and does not save page snapshots', () => {
   const source = createServiceWorker({
     version: 'test-build',
     precache: ['/index.html', '/index.rsc', '/offline.html', '/_next/static/app.js'],
   });
   assert.match(source, /const VERSION = "test-build"/);
-  assert.match(source, /lowkal-doc-\$\{VERSION\}/);
-  assert.match(source, /lowkal-rsc-\$\{VERSION\}/);
+  assert.doesNotMatch(source, /lowkal-doc-/);
+  assert.doesNotMatch(source, /lowkal-rsc-/);
   assert.match(source, /request\.headers\.get\(['"]RSC['"]\)/i);
   assert.match(source, /request\.headers\.has\(['"]Range['"]\)/i);
   assert.match(source, /\/studio/);
@@ -41,28 +41,16 @@ test('service worker separates documents from RSC and bypasses streamed media', 
   assert.doesNotMatch(source, /skipWaiting\(\).*install/s);
 });
 
-test('service worker uses live documents and RSC before offline cache fallbacks', async () => {
-  const source = createServiceWorker({
-    version: 'test-build',
-    precache: ['/index.html', '/offline.html', '/soundroom/index.html', '/fonts/lowkal.woff2', '/_next/static/app.js'],
-  });
-  assert.match(source, /const PRECACHE_SET = new Set\(PRECACHE\)/);
-  assert.ok(source.indexOf('PRECACHE_SET.has(url.pathname)') < source.indexOf("request.destination === 'image'"));
-  assert.match(source, /await cache\.put\(fallbackPath, response\.clone\(\)\)/);
-  assert.match(source, /async function networkFirstDocument/);
-  assert.match(source, /async function networkFirstRsc/);
-  assert.match(source, /return \(await cache\.match\(fallbackPath\)\) \|\| \(await cache\.match\('\/offline\.html'\)\)/);
-  assert.match(source, /return \(await cache\.match\(fallbackPath\)\) \|\| Response\.error\(\)/);
-  assert.doesNotMatch(source, /staleWhileRevalidateDocument/);
-  assert.doesNotMatch(source, /staleWhileRevalidateRsc/);
-  assert.match(source, /if \(clean.endsWith\('\.html'\)\) return clean;/);
-  assert.match(source, /PRECACHE_SET.has\(`\$\{clean\}\/index\.html`\)/);
-
+test('service worker uses fresh pages and has only a generic offline fallback', async () => {
+  const source = createServiceWorker({ version: 'test-build', precache: ['/index.html', '/index.rsc', '/offline.html', '/soundroom/index.html', '/soundroom/main.js', '/fonts/lowkal.woff2', '/_next/static/app.js'] });
+  const precache = JSON.parse(source.match(/const PRECACHE = ([\s\S]*?);/)[1]);
+  assert.deepEqual(precache, ['/_next/static/app.js', '/fonts/lowkal.woff2', '/offline.html']);
+  assert.match(source, /fetch\(request, \{ cache: 'no-store' \}\)/);
+  assert.match(source, /match\('\/offline\.html'\)/);
+  assert.doesNotMatch(source, /cache\.put\(fallbackPath/);
+  assert.match(source, /caches\.delete\(name\)/);
   const buildSource = await readFile(new URL('scripts/build-pwa-assets.mjs', root), 'utf8');
-  assert.match(buildSource, /path\.endsWith\('\.js'\)/);
   assert.match(buildSource, /referencedBuildAssets/);
-  assert.match(buildSource, /routeShells[\s\S]*?readFile/);
-  assert.doesNotMatch(buildSource, /files\.filter\(\(path\) =>\s*path\.startsWith\('_next\/static\/'\)/);
 });
 
 test('offline page is honest about streaming and offers recovery', async () => {

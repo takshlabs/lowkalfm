@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import * as listenOrder from "../lib/listen-order.ts";
 import ts from "typescript";
 
-const record = (slug, source = true) => ({ slug, artist: slug, series: "Volume", title: slug, duration: 120, artistSlugs: [], genres: [], artwork: "/art.jpg", archiveSection: "volumes-guests", ...(source ? { playback: { provider: "cloudflare", url: "/mix.mp3" }, waveformPeaksUrl: "/mix.peaks.json" } : {}) });
+const record = (slug, source = true) => ({ slug, artist: slug, series: "Volume", title: slug, duration: 120, artistSlugs: [], genres: [], artwork: "/art.jpg", archiveSection: "volumes-guests", showInArchive: true, ...(source ? { playback: { provider: "cloudflare", url: "/mix.mp3" }, waveformPeaksUrl: "/mix.peaks.json" } : {}) });
 const records = [record("first"), record("current"), record("unavailable", false)];
 function mount(name, overrides = {}) {
   const audio = { activeRecord: records[1], currentTime: 30, duration: 120, isPlaying: false, isReady: false, isLoading: false, error: null, volume: 82, isMuted: false, isShuffled: false, repeatMode: "off", sleepTimer: null, togglePlayback() {}, retryPlayback() {}, playNext() {}, playPrevious() {}, seek() {}, seekBy() {}, setVolume() {}, toggleMuted() {}, toggleShuffle() {}, cycleRepeatMode() {}, setSleepTimer() {}, playRecord() {}, ...overrides };
@@ -14,7 +15,7 @@ function mount(name, overrides = {}) {
     useMemo(fn) { return fn(); },
     useEffect(fn) { effects.push(fn); }
   };
-  const jsx = (type, props) => ({ type, props: props ?? {} });
+  const jsx = (type, props) => typeof type === "function" ? type(props ?? {}) : ({ type, props: props ?? {} });
   const source = readFileSync(new URL(`../components/${name}.tsx`, import.meta.url), "utf8");
   const code = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS } }).outputText;
   const compiled = { exports: {} };
@@ -26,6 +27,7 @@ function mount(name, overrides = {}) {
     if (id === "next/navigation") return { usePathname: () => "/listen/archive", useSearchParams: () => new URLSearchParams(overrides.search ?? "") };
     if (id.endsWith("site-chrome")) return { isUnlistedPath: () => false };
     if (id.endsWith("site-path")) return { sitePath: (path) => path };
+    if (id.endsWith("listen-order")) return listenOrder;
     if (id.endsWith("content")) return { formatTime: (seconds) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}` };
     return new Proxy({}, { get: (_, key) => key });
   }, compiled, compiled.exports);

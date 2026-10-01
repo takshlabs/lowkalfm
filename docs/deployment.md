@@ -52,6 +52,8 @@ Use `npx vercel env ls production` to check variable names. Do not put secret va
 
 ## Cloudflare R2 audio setup
 
+The audio Worker also serves `/listen-counts`. Set `YOUTUBE_API_KEY` as a Worker secret before releasing the shared play count. The key needs YouTube Data API v3 access to `videos.list`. Keep this key in Cloudflare and out of the site bundle. The existing `listenCount` field in Sanity is the lower bound for the legacy baseline; do not set it to YouTube views. The Worker uses only the published `listenCount` as the legacy baseline. It rejects browser count samples. Native audio starts with a signed ticket. The ticket is valid after 30 seconds and expires after 30 minutes. The Worker stores one `mixWebListen` document per signed browser identity, mix, and UTC day. POST requests have a rate limit. An embedded YouTube play does not create a web listen. These controls limit false counts; they do not prove that a person listened.
+
 This setup is separate from the Vercel deployment.
 
 ### Active services
@@ -94,11 +96,11 @@ The account has no Cloudflare DNS zone for `lowkalfm.in`. Keep the current Worke
 
 10. Publish a small test mix. Confirm that the mix document receives `audio.deliveryUrl`, then play the mix from `https://lowkalfm.in`.
 
-The Worker streams the Sanity master to R2, reads duration from the WAV header, calculates 128 waveform peaks, and writes the Cloudflare CDN URL, waveform URL, and duration back to the mix in one update. The browser plays the CDN URL directly. Vercel does not proxy the large audio file.
+Upload a WAV master and a 192 kbps MP3 delivery file. The Worker copies the MP3 to R2, reads duration from the WAV header and uses the prepared 128 waveform peaks, and writes the delivery URL, waveform URL, and duration in one update. The browser plays the CDN URL directly. Vercel does not proxy the large audio file.
 
 ### Waveform generation
 
-The Worker creates the compact waveform sidecar during the audio upload webhook. It stores the `.peaks.json` object in R2 before it writes `audio.deliveryUrl` and `audio.peaksUrl` to Sanity. The browser reads only this JSON to draw the waveform. It does not download or decode the WAV.
+The local conversion command decodes the WAV with FFmpeg and creates 128 waveform peaks. The Worker validates the master ID in this file and copies the sidecar to R2 before it writes the public delivery URLs. The browser reads only this JSON to draw the waveform. It does not download or decode the WAV.
 
 The `npm run audio:peaks -- <mix-slug>` command remains available only to repair old mixes. Keep `SANITY_API_WRITE_TOKEN` local; do not put it in browser code or Vercel.
 
@@ -108,3 +110,17 @@ The `npm run audio:peaks -- <mix-slug>` command remains available only to repair
 - If the CMS works but the site does not show the latest content, check the Sanity document is published, not a draft.
 - If a new audio file gives an old sound, upload a new master. The asset ID changes the R2 object key.
 - If the Vercel release fails, do not deploy elsewhere. Check the Vercel build log, repair the source, run `npm run check`, then deploy again.
+
+## Fresh content
+
+Pages and RSC responses use `Cache-Control: no-store`. The service worker does not save page or catalogue snapshots. It removes old Lowkal caches after activation. The site waits for the published CMS catalogue. Empty CMS results stay empty. CMS errors show a retry control in the archive. A service worker update waits until playback stops before it activates.
+
+The build exports published article and mix paths. Publish the CMS change and make a new Vercel release to add a new detail path. Studio tool paths use the Studio shell for direct navigation.
+
+Audio sync checks the current master and uses the Sanity revision before it updates a mix. A stale upload cannot replace the current master. Waveform generation runs in the local conversion command. The Free-plan Worker only copies prepared files and reads a small WAV header. Worker logs are enabled.
+
+### MP3 delivery files
+
+For a mix that has a WAV master, run `npm run audio:delivery -- <mix-slug>` on a computer with FFmpeg. The command makes a 192 kbps MP3, makes waveform data, uploads both files to Sanity, and applies it only if the master is still current. The existing webhook then copies it to R2. New mixes need a WAV master, an MP3 delivery file, and matching waveform data before publication. The master does not enter the public player. The Worker can serve older WAV delivery objects during migration.
+
+Vercel runs lint, type checks, the build, and all tests before it publishes a release. GitHub Actions runs `npm run check` and the dependency audit for pull requests and pushes to `main`.

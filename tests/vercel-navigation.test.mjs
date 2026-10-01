@@ -12,8 +12,7 @@ test('RSC requests receive exported payloads before HTML and retain compatibilit
     assert.equal(route.headers['Content-Type'], 'text/x-component');
     assert.equal(route.headers['X-Vinext-RSC-Compatibility-Id'], 'build-test');
     assert.ok(route.headers.Vary.includes('RSC'));
-    assert.match(route.headers['Cache-Control'], /max-age=300/);
-    assert.match(route.headers['Cache-Control'], /stale-while-revalidate/);
+    assert.equal(route.headers['Cache-Control'], 'no-store');
   }
   assert.ok(routes.findIndex(r => r.handle === 'filesystem') > routes.findIndex(r => r.has));
 });
@@ -54,7 +53,7 @@ test('static assets use long browser cache lifetimes', () => {
   const pages = routes.find(route => route.src.includes('listen(?:/archive'));
   assert.match(immutable.headers['Cache-Control'], /immutable/);
   assert.match(fonts.headers['Cache-Control'], /31536000/);
-  assert.match(pages.headers['Cache-Control'], /stale-while-revalidate/);
+  assert.equal(pages.headers['Cache-Control'], 'no-store');
   assert.ok(new RegExp(pages.src).test('/listen/archive'));
   assert.ok(new RegExp(pages.src).test('/listen/archive/lowkal-fm-vol-01'));
   assert.ok(new RegExp(pages.src).test('/soundroom'));
@@ -72,3 +71,13 @@ test('production configuration is Vercel-only', () => {
   assert.match(config, /process\.env\.VERCEL === "1"/);
   assert.doesNotMatch(config, /GITHUB_PAGES|github\.io/i);
 });
+
+ test('Studio tool paths receive the Studio shell for HTML and RSC', () => {
+  const routes = createStaticRoutes(['studio.html', 'studio.rsc'], 'build-test');
+  const path = '/studio/structure/mix;test';
+  const rsc = routes.find(route => route.has && new RegExp(route.src).test(path));
+  const html = routes.find(route => route.dest === '/studio.html' && new RegExp(route.src).test(path));
+  assert.equal(rsc.dest, '/studio.rsc');
+  assert.equal(rsc.headers['Cache-Control'], 'no-store');
+  assert.ok(html);
+ });

@@ -4,6 +4,7 @@ import { Pause, Play } from "lucide-react";
 import { HorizontalContentRail } from "@/components/HorizontalContentRail";
 import { MediaFrame } from "@/components/MediaFrame";
 import { SiteLink } from "@/components/SiteLink";
+import { sortMixesForPlacement } from "@/lib/listen-order";
 import { sitePath } from "@/lib/site-path";
 import { formatMixListenCount, getMixListenCount } from "@/lib/mix-listens";
 import { useAudio } from "./AudioProvider";
@@ -12,7 +13,7 @@ import { useListenContent } from "./ListenContentProvider";
 export function HomeTransmissionDeck() {
   const { activeRecord, isPlaying, playRecord, togglePlayback } = useAudio();
   const { records, listenCounts } = useListenContent();
-  const homeRecords = records;
+  const homeRecords = sortMixesForPlacement(records.filter((record) => record.showOnHome), "homeOrder");
 
   const toggleRecord = (slug: string) => {
     if (activeRecord.slug === slug) togglePlayback();
@@ -49,7 +50,7 @@ export function HomeTransmissionDeck() {
                 </div>
               </div>
               <div className="transmission-meta">
-                <small className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} listens`}><i aria-hidden="true" /><strong aria-hidden="true">{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))}</strong><span aria-hidden="true">listens</span></small>
+                <small className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} plays`}><i aria-hidden="true" /><strong aria-hidden="true">{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))}</strong><span aria-hidden="true">plays</span></small>
               </div>
               <div className="transmission-tags" role="list" aria-label="Genres">
                 {record.genres.map((genre) => <span role="listitem" key={genre}>{genre}</span>)}

@@ -72,11 +72,15 @@ export function PwaLifecycle() {
       registration = nextRegistration;
       if (registration.waiting) activateWorker(registration.waiting);
       registration.addEventListener("updatefound", handleUpdateFound);
-      void registration.update();
+      void registration.update().catch(() => { /* Try again when the tab becomes visible. */ });
     }).catch(() => {
       // The application remains usable when worker registration is unavailable.
     });
 
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void registration?.update().catch(() => {});
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
     const idleCheck = window.setInterval(() => {
       if (playbackIsActive()) return;
       if (deferredWorker && !updateActivationSent) activateWorker(deferredWorker);
@@ -88,6 +92,7 @@ export function PwaLifecycle() {
 
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", handleVisibility);
       window.clearInterval(idleCheck);
       trackedWorker?.removeEventListener("statechange", handleStateChange);
       registration?.removeEventListener("updatefound", handleUpdateFound);

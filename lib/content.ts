@@ -33,6 +33,10 @@ export type SoundRecord = {
   programSlug?: string;
   artistSlugs: string[];
   archiveSection: ArchiveSection;
+  playerOrder?: number;
+  soundroomOrder?: number;
+  archiveOrder?: number;
+  homeOrder?: number;
   showInPlayer: boolean;
   showInSoundroom: boolean;
   showInArchive: boolean;

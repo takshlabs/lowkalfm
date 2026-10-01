@@ -27,7 +27,7 @@ export function PersistentPlayer() {
   const volumeLabel = Math.round(volume).toString().padStart(2, "0");
   const waveformPeaksUrl = activeRecord.playback?.provider === "cloudflare" ? activeRecord.waveformPeaksUrl : undefined;
 
-  if (isUnlistedPath(pathname)) return null;
+  if (!activeRecord.slug || isUnlistedPath(pathname)) return null;
 
   const transportLabel = `${error ? "Retry" : isLoading ? "Cancel loading" : isPlaying ? "Pause" : "Play"} ${activeRecord.series} — ${activeRecord.title}`;
 
@@ -40,7 +40,7 @@ export function PersistentPlayer() {
     ) : isPlaying ? (
       <span className="lowkal-mini-bars" aria-hidden="true"><i /><i /><i /><i /></span>
     ) : (
-      <Play className="lowkal-icon" aria-hidden="true" />
+      <Play className="lowkal-icon" fill="currentColor" aria-hidden="true" />
     );
 
     return (
@@ -103,7 +103,7 @@ export function PersistentPlayer() {
         disabled={!isPlayable}
       >
         <span className={`lowkal-player-transport-icon${isLoading ? " is-loading" : ""}`}>
-          {error ? <RotateCcw className="lowkal-icon" aria-hidden="true" /> : isLoading ? <LoaderCircle className="lowkal-icon" aria-hidden="true" /> : isPlaying ? <Pause className="lowkal-icon" aria-hidden="true" /> : <Play className="lowkal-icon" aria-hidden="true" />}
+          {error ? <RotateCcw className="lowkal-icon" aria-hidden="true" /> : isLoading ? <LoaderCircle className="lowkal-icon" aria-hidden="true" /> : isPlaying ? <Pause className="lowkal-icon" aria-hidden="true" /> : <Play className="lowkal-icon" fill="currentColor" aria-hidden="true" />}
         </span>
       </button>
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { sortMixesForPlacement } from "@/lib/listen-order";
 import { sitePath } from "@/lib/site-path";
 import { useListenContent } from "./ListenContentProvider";
 
@@ -12,7 +13,7 @@ export function SoundroomFrame() {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const router = useRouter();
   const { records, getArtist } = useListenContent();
-  const mixes = useMemo(() => records.map((record, index) => {
+  const mixes = useMemo(() => sortMixesForPlacement(records.filter((record) => record.showInSoundroom), "soundroomOrder").map((record, index) => {
     const artist = record.artistSlugs[0] ? getArtist(record.artistSlugs[0]) : undefined;
     const positions = [{ top: 20, left: 15 }, { top: 50, left: 60 }, { top: 14, left: 76 }, { top: 68, left: 30 }];
     const basePos = positions[index % positions.length];

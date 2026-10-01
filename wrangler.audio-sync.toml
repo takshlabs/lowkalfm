@@ -7,3 +7,11 @@ workers_dev = true
 [[r2_buckets]]
 binding = "AUDIO"
 bucket_name = "lowkal-audio"
+
+[observability]
+enabled = true
+
+[[ratelimits]]
+name = "LISTEN_RATE_LIMITER"
+namespace_id = "737001"
+simple = { limit = 60, period = 60 }

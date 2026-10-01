@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { soundRecords } from "@/lib/content";
-import { getSharedMix, sanitySocialImageUrl } from "@/lib/sanity";
+import { getSharedMix, isSanityConfigured, sanitySocialImageUrl } from "@/lib/sanity";
 
 export type SharedMixView = {
   slug: string;
@@ -12,14 +12,8 @@ export type SharedMixView = {
 };
 
 export const resolveSharedMix = cache(async (slug: string): Promise<SharedMixView | null> => {
-  const fallback = soundRecords.find((mix) => mix.slug === slug);
-  let mix = null;
-
-  try {
-    mix = await getSharedMix(slug);
-  } catch {
-    // Keep local catalogue share pages available during a CMS outage.
-  }
+  const fallback = !isSanityConfigured && process.env.NODE_ENV !== "production" ? soundRecords.find((mix) => mix.slug === slug) : undefined;
+  const mix = await getSharedMix(slug);
 
   if (!mix && !fallback) return null;
 

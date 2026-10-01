@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { cp, mkdir, rm, readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createStaticRoutes } from './vercel-static-routes.mjs';
 
@@ -18,6 +18,7 @@ for (const file of ['sw.js', 'manifest.webmanifest', 'offline.html', 'icons/icon
   if (!files.includes(file)) throw new Error(`Required PWA output is missing: ${file}`);
 }
 await mkdir(output, { recursive: true });
+await rm(join(output, 'static'), { recursive: true, force: true });
 await cp(source, join(output, 'static'), { recursive: true });
 await writeFile(join(output, 'config.json'), JSON.stringify({ version: 3, routes: createStaticRoutes(files, compatibilityId) }, null, 2));
 console.log('Vercel static output includes RSC routing and build compatibility headers.');

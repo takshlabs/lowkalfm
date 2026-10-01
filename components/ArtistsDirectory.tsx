@@ -91,7 +91,7 @@ export function ArtistsDirectory() {
     const hasListening = artistMixes.length > 0 || artist.externalMixes.length > 0;
 
     return (
-      <main className="artist-profile">
+      <main id="main-content" tabIndex={-1} className="artist-profile">
         <header className="artist-profile-hero">
           <div className="artist-profile-identity">
             <div className="artist-profile-eyebrow"><span>Lowkal artist file</span><span>{artist.relationship} / {artist.location || "Location open"}</span></div>
@@ -127,7 +127,7 @@ export function ArtistsDirectory() {
                 <article className="artist-mix-card" key={record.slug}>
                   <span className="artist-mix-index">LKL—{String(index + 1).padStart(2, "0")}</span>
                   <span className="artist-mix-art"><Image src={record.artwork} alt="" fill sizes="140px" /></span>
-                  <div><small>{record.series}</small><strong>{record.title}</strong><em>{record.date} / {record.genres.slice(0, 2).join(" · ")}</em><span className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} listens`}><i aria-hidden="true" />{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))} listens</span></div>
+                  <div><small>{record.series}</small><strong>{record.title}</strong><em>{record.date} / {record.genres.slice(0, 2).join(" · ")}</em><span className="mix-listen-count" aria-label={`${listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount)} plays`}><i aria-hidden="true" />{formatMixListenCount(listenCounts[record.slug] ?? getMixListenCount(record.slug, record.listenCount))} plays</span></div>
                   <span className="artist-mix-actions">
                     <SiteLink href={sitePath(`/listen/archive/${encodeURIComponent(record.slug)}`)} aria-label={`Open ${record.title} in the Archive`}><ArrowUpRight className="lowkal-icon" aria-hidden="true" /></SiteLink>
                     <MixShareButton slug={record.slug} title={record.title} variant="artist" />
@@ -188,7 +188,7 @@ export function ArtistsDirectory() {
   }
 
   return (
-    <main className="artist-directory">
+    <main id="main-content" tabIndex={-1} className="artist-directory">
       <header><p className="section-kicker">Lowkal artists</p><h1>People in<br />the frequency.</h1><p>Residents, guests, and collaborators heard across Lowkal.</p></header>
       <UnderConstructionNote />
       <div className="artist-directory-grid">

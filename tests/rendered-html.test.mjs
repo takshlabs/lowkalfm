@@ -24,7 +24,7 @@ async function render(pathname) {
 }
 
 const routes = [
-  ["/", /Garden City Gallivanting/i],
+  ["/", /The city has a frequency/i],
   ["/listen", /Lowkal Soundroom/i],
   ["/read", /Stories from/i],
   ["/go-out", /Selected by Lowkal/i],
@@ -40,6 +40,7 @@ for (const [pathname, expectedText] of routes) {
     assert.match(html, expectedText);
     assert.match(html, /LOWKAL\.FM/i);
     assert.match(html, /Soundroom/i);
+    assert.doesNotMatch(html, /lowkal-fm-vol-01|lowkal-002-garden-city-gallivanting/);
   });
 }
 

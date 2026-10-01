@@ -2,26 +2,18 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SoundroomCatalog } from "@/components/SoundroomCatalog";
 import { soundRecords } from "@/lib/content";
-import { getSharedMixSlugs } from "@/lib/sanity";
+import { getSharedMixSlugs, isSanityConfigured } from "@/lib/sanity";
 import { resolveSharedMix } from "@/lib/shared-mix";
 
 type MixPageProps = { params: Promise<{ slug: string }> };
 
 function cleanSlug(slug: string) {
-  return decodeURIComponent(slug).trim();
+  return slug.trim();
 }
 
 export async function generateStaticParams() {
-  // The local catalogue keeps share pages available when the CMS is not
-  // configured during a local build. Production adds all published CMS mixes.
-  const fallbackSlugs = soundRecords.map((mix) => mix.slug);
-  let cmsSlugs: string[] = [];
-  try {
-    cmsSlugs = await getSharedMixSlugs();
-  } catch {
-    // A CMS outage must not stop a release of the available local catalogue.
-  }
-  return [...new Set([...fallbackSlugs, ...cmsSlugs])].map((slug) => ({ slug }));
+  const slugs = isSanityConfigured ? await getSharedMixSlugs() : process.env.NODE_ENV === "production" ? [] : soundRecords.map((mix) => mix.slug);
+  return [...new Set(slugs)].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: MixPageProps): Promise<Metadata> {

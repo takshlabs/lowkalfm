@@ -57,9 +57,34 @@ export const mixType = defineType({
           name: "master",
           title: "WAV master",
           type: "file",
-          options: { accept: "audio/wav,audio/x-wav,audio/flac,audio/mpeg,audio/mp4,audio/aac" },
-          description: "Use WAV for the archive master. Duration is read from this file. The site streams only the Cloudflare delivery file after publication."
+          options: { accept: "audio/wav,audio/x-wav,.wav" },
+          description: "Use a PCM WAV master (16, 24, or 32 bit) or a 32-bit float WAV master. Duration is read from this file. The site streams only the Cloudflare delivery file after publication."
         }),
+        defineField({
+          name: "delivery",
+          title: "MP3 delivery file",
+          type: "file",
+          options: { accept: "audio/mpeg,.mp3" },
+          description: "Upload the same complete mix as a 192 kbps MP3. Keep the WAV master for the archive and waveform. Publish to copy the MP3 to the audio CDN.",
+          validation: (rule) => rule.custom((value, context) => {
+            const document = context.document as { published?: boolean; audio?: { master?: { asset?: { _ref?: string } } } } | undefined;
+            if (document?.published && document.audio?.master?.asset?._ref && !(value as { asset?: { _ref?: string } } | undefined)?.asset?._ref) return "Upload the MP3 delivery file before publication.";
+            return true;
+          })
+        }),
+        defineField({
+          name: "waveform",
+          title: "Waveform data",
+          type: "file",
+          options: { accept: "application/json,.json" },
+          description: "Use the waveform file made with the MP3 delivery file.",
+          validation: (rule) => rule.custom((value, context) => {
+            const document = context.document as { published?: boolean; audio?: { master?: { asset?: { _ref?: string } } } } | undefined;
+            if (document?.published && document.audio?.master?.asset?._ref && !(value as { asset?: { _ref?: string } } | undefined)?.asset?._ref) return "Add waveform data before publication.";
+            return true;
+          })
+        }),
+        defineField({ name: "sourceDeliveryAssetId", title: "Delivery asset ID", type: "string", readOnly: true, hidden: true }),
         defineField({
           name: "startOffset",
           title: "Start playback at (seconds)",
@@ -148,18 +173,20 @@ export const mixType = defineType({
     defineField({ name: "featured", title: "Featured mix", type: "boolean", group: "placement", initialValue: false }),
     defineField({
       name: "listenCount",
-      title: "Analytics listen baseline",
+      title: "Legacy play baseline",
       type: "number",
       group: "placement",
       initialValue: 100,
       validation: (rule) => rule.integer().positive(),
-      description: "Set this to the verified Vercel Analytics total before publishing. New confirmed listens send mix_listen events."
+      description: "Keep the old displayed count here. The public total adds unique Lowkal audio listens and YouTube views to this number."
     }),
-    defineField({ name: "showInPlayer", title: "Available in player", type: "boolean", group: "placement", initialValue: true, hidden: true }),
+    defineField({ name: "showInPlayer", title: "Available in player", type: "boolean", group: "placement", initialValue: true }),
+    defineField({ name: "youtubeViewsMax", title: "YouTube views snapshot", type: "number", group: "placement", hidden: true }),
+    defineField({ name: "legacyBaselineMax", title: "Legacy browser count snapshot", type: "number", group: "placement", hidden: true }),
     defineField({ name: "playerOrder", title: "Player order", type: "number", group: "placement", initialValue: 100 }),
-    defineField({ name: "showInSoundroom", title: "Show in Soundroom", type: "boolean", group: "placement", initialValue: true, hidden: true }),
+    defineField({ name: "showInSoundroom", title: "Show in Soundroom", type: "boolean", group: "placement", initialValue: true }),
     defineField({ name: "soundroomOrder", title: "Soundroom order", type: "number", group: "placement", initialValue: 100 }),
-    defineField({ name: "showInArchive", title: "Show in Archive", type: "boolean", group: "placement", initialValue: true, hidden: true }),
+    defineField({ name: "showInArchive", title: "Show in Archive", type: "boolean", group: "placement", initialValue: true }),
     defineField({
       name: "archiveSection",
       title: "Archive section",
@@ -173,7 +200,7 @@ export const mixType = defineType({
       initialValue: "volumes-guests"
     }),
     defineField({ name: "archiveOrder", title: "Archive order", type: "number", group: "placement", initialValue: 100 }),
-    defineField({ name: "showOnHome", title: "Show on home", type: "boolean", group: "placement", initialValue: true, hidden: true }),
+    defineField({ name: "showOnHome", title: "Show on home", type: "boolean", group: "placement", initialValue: true }),
     defineField({ name: "homeOrder", title: "Home order", type: "number", group: "placement", initialValue: 100 }),
     defineField({
       name: "tracks",

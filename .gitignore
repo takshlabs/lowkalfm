@@ -11,3 +11,5 @@ dist/
 npm-debug.log*
 tsconfig.tsbuildinfo
 .vercel
+
+brag-output/
