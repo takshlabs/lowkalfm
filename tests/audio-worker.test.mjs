@@ -26,7 +26,7 @@ test("audio delivery allows the production site origin", async () => {
 });
 
 async function signature(body, secret) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const timestamp = Date.now();
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${body}`));
   return `t=${timestamp},v1=${base64Url(digest)}`;
@@ -254,4 +254,23 @@ test("WAV delivery preserves all master bytes without transcoding", async () => 
     assert.equal(stored.type, 'audio/wav');
     assert.match((await response.json()).deliveryUrl, /\.wav$/);
   } finally { globalThis.fetch = previous; }
+});
+
+test("audio sync accepts Sanity millisecond signatures and rejects stale or second-precision ones", async () => {
+  const secret = "test-webhook-secret";
+  const body = JSON.stringify({ _id: "drafts.ignored", _type: "page" });
+  const sign = async (timestamp) => {
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${body}`));
+    return `t=${timestamp},v1=${base64Url(digest)}`;
+  };
+  const send = async (header) => (await worker.fetch(new Request("https://worker.example/sanity/audio-sync", {
+    method: "POST",
+    headers: { "sanity-webhook-signature": header },
+    body,
+  }), { SANITY_WEBHOOK_SECRET: secret })).status;
+
+  assert.equal(await send(await sign(Date.now())), 204, "a fresh millisecond signature is accepted");
+  assert.equal(await send(await sign(Math.floor(Date.now() / 1000))), 401, "a seconds timestamp is rejected");
+  assert.equal(await send(await sign(Date.now() - 6 * 60 * 1000)), 401, "a stale signature is rejected");
 });

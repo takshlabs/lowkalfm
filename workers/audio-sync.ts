@@ -67,7 +67,8 @@ async function validSanitySignature(rawBody: string, signature: string | null, s
   const match = /^t=(\d+),v1=([A-Za-z0-9_-]+)$/.exec(signature);
   if (!match) return false;
   const signedAt = Number(match[1]);
-  if (!Number.isFinite(signedAt) || Math.abs(Date.now() - signedAt * 1000) > 5 * 60 * 1000) return false;
+  // Sanity signs with a Unix timestamp in milliseconds (see @sanity/webhook).
+  if (!Number.isFinite(signedAt) || signedAt < 1609459200000 || Math.abs(Date.now() - signedAt) > 5 * 60 * 1000) return false;
   const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const digest = await crypto.subtle.sign("HMAC", key, encoder.encode(`${match[1]}.${rawBody}`));
   return constantTimeEqual(base64Url(digest), match[2]);
