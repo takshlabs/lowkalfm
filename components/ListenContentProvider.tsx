@@ -145,7 +145,7 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     const handleVisibility = () => { if (document.visibilityState === "visible") refresh(); };
     document.addEventListener("visibilitychange", handleVisibility);
-    const timer = window.setInterval(() => { if (document.visibilityState === "visible") refresh(); }, 60_000);
+    const timer = window.setInterval(() => { if (document.visibilityState === "visible") refresh(); }, 300_000);
     return () => { document.removeEventListener("visibilitychange", handleVisibility); window.clearInterval(timer); };
   }, [refresh]);
 
