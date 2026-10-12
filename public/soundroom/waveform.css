@@ -1,7 +1,7 @@
 .spectrum-waveform {
-  --spectrum-bass: #ff867a;
-  --spectrum-mids: #87d7b2;
-  --spectrum-highs: #bba0ff;
+  --spectrum-bass: #eaa7b8;
+  --spectrum-mids: #a5dccb;
+  --spectrum-highs: #b8b2ec;
   --spectrum-cursor: #f1eadb;
   position: relative;
   isolation: isolate;
@@ -11,7 +11,7 @@
   overflow: visible;
   touch-action: pan-y;
   cursor: pointer;
-  background: #11110f;
+  background: transparent;
   border-radius: 4px;
 }
 .spectrum-waveform canvas { display: block; width: 100%; height: 100%; pointer-events: none; }

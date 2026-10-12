@@ -42,7 +42,7 @@ export function createSpectrumWaveform(container: HTMLElement, options: { compac
   container.replaceChildren(canvas, preview);
   let data: DisplayData = { peaks: [], bands: null }, position = 0, drag: { id: number; time: number } | null = null;
   let destroyed = false, lastWidth = 0, lastHeight = 0;
-  let geometry: { values: number[]; color: string; center: number; height: number }[] = [];
+  let geometry: number[] = [];
   const ctx = canvas.getContext("2d");
   const draw = () => {
     if (!ctx || destroyed) return;
@@ -54,24 +54,41 @@ export function createSpectrumWaveform(container: HTMLElement, options: { compac
     const style = getComputedStyle(container), cursor = style.getPropertyValue("--spectrum-cursor").trim() || "#f1eadb";
     if (lastWidth !== width || lastHeight !== height || !geometry.length) {
       lastWidth = width; lastHeight = height;
-      const colors = ["--spectrum-bass", "--spectrum-mids", "--spectrum-highs"].map((token, i) => style.getPropertyValue(token).trim() || ["#ff867a", "#87d7b2", "#bba0ff"][i]);
-      const source = data.bands ? [data.bands.bass, data.bands.mids, data.bands.highs] : [data.peaks];
-      const maximum = Math.max(.001, ...source.flat());
-      // All bands share one center line in every player size.
-      geometry = source.map((values, i) => ({ values: aggregateWaveform(values, width / 2).map(v => Math.pow(v / maximum, .72)), color: data.bands ? colors[i] : cursor, center: height / 2, height: height * (.84 - i * .19) }));
+      const source = data.bands ? data.peaks.map((_, i) => Math.sqrt((data.bands!.bass[i] ** 2 + data.bands!.mids[i] ** 2 + data.bands!.highs[i] ** 2) / 3)) : data.peaks;
+      const values = aggregateWaveform(source, Math.min(160, width / 5));
+      const maximum = Math.max(.001, ...values);
+      // Smooth measured interval energy into one ribbon. Retain real silence.
+      geometry = values.map((value, i) => {
+        if (value === 0) return 0;
+        const weights = [1, 2, 3, 2, 1];
+        const smoothed = weights.reduce((sum, weight, j) => sum + values[Math.max(0, Math.min(values.length - 1, i + j - 2))] * weight, 0) / 9;
+        return Math.pow(smoothed / maximum, .8);
+      });
     }
     const x = width * Math.max(0, Math.min(1, (drag?.time ?? position) / Math.max(1, options.duration)));
     if (!data.peaks.length) {
       ctx.fillStyle = cursor; ctx.globalAlpha = .25; ctx.fillRect(0, height / 2 - 1, width, 2); ctx.globalAlpha = .85; ctx.fillRect(0, height / 2 - 1, x, 2);
-    } else for (const lane of geometry) {
+    } else {
       const path = new Path2D();
-      lane.values.forEach((v, i) => { const px = i * width / Math.max(1, lane.values.length - 1), py = lane.center - v * lane.height / 2; if (!i) path.moveTo(px, py); else path.lineTo(px, py); });
-      for (let i = lane.values.length - 1; i >= 0; i--) path.lineTo(i * width / Math.max(1, lane.values.length - 1), lane.center + lane.values[i] * lane.height / 2);
-      path.closePath(); ctx.fillStyle = lane.color; ctx.globalAlpha = .55; ctx.fill(path);
-      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, x, height); ctx.clip(); ctx.globalAlpha = options.compact ? .8 : 1; ctx.fill(path); ctx.restore();
+      const step = width / Math.max(1, geometry.length - 1), amplitude = height * .32;
+      const points = geometry.map((v, i) => [i * step, height / 2 - v * amplitude]);
+      points.push(...geometry.map((v, i) => [i * step, height / 2 + v * amplitude]).reverse());
+      path.moveTo(points[0][0], points[0][1]);
+      for (let i = 0; i < points.length - 1; i++) {
+        const previous = points[Math.max(0, i - 1)], from = points[i], to = points[i + 1], next = points[Math.min(points.length - 1, i + 2)];
+        // Keep both end caps straight; smooth only the upper and lower edges.
+        if (i === geometry.length - 1) path.lineTo(to[0], to[1]);
+        else path.bezierCurveTo(from[0] + (to[0] - previous[0]) / 6, from[1] + (to[1] - previous[1]) / 6, to[0] - (next[0] - from[0]) / 6, to[1] - (next[1] - from[1]) / 6, to[0], to[1]);
+      }
+      path.closePath();
+      const gradient = ctx.createLinearGradient(0, 0, width, 0);
+      ["--spectrum-mids", "--spectrum-bass", "--spectrum-highs"].forEach((token, i) => gradient.addColorStop(i / 2, style.getPropertyValue(token).trim() || ["#a5dccb", "#eaa7b8", "#b8b2ec"][i]));
+      ctx.fillStyle = data.bands ? gradient : cursor; ctx.strokeStyle = data.bands ? gradient : cursor; ctx.lineWidth = 1;
+      ctx.globalAlpha = .25; ctx.fill(path); ctx.globalAlpha = .45; ctx.stroke(path);
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, x, height); ctx.clip(); ctx.globalAlpha = .9; ctx.fill(path); ctx.globalAlpha = .9; ctx.stroke(path); ctx.restore();
     }
-    ctx.globalAlpha = 1; ctx.fillStyle = cursor; ctx.fillRect(Math.min(width - 1.5, x), 2, 1.5, height - 4);
-    ctx.beginPath(); ctx.arc(Math.max(2.5, Math.min(width - 2.5, x)), 3, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = .9; ctx.fillStyle = cursor; ctx.fillRect(Math.min(width - 1.5, x), height * .12, 1.5, height * .76);
+    ctx.beginPath(); ctx.arc(Math.max(2.5, Math.min(width - 2.5, x)), height * .12, 2.5, 0, Math.PI * 2); ctx.fill();
   };
   const target = (clientX: number) => {
     const bounds = container.getBoundingClientRect();

@@ -35,7 +35,7 @@ Browser checks must include direct-audio playback and waterfall movement, YouTub
 
 ## Spectrum waveform
 
-Soundroom and the compact and expanded site players show one waveform. The measured bands overlap on one center line, with no legend. The cursor marks the current playback time. The shape remains fixed during playback and respects reduced motion without a separate animation loop.
+Soundroom and the compact and expanded site players show one smooth ribbon on a transparent surface, with no legend. The ribbon uses the combined measured band energy, with RMS aggregation and a five-interval smoothing filter. A mint, rose, and lavender gradient shows the shape; the played portion is brighter. The cursor marks the current playback time. The shape remains fixed during playback and respects reduced motion without a separate animation loop.
 
 Version 2 waveform data contains 2,048 measured intervals from the full WAV master. First-order crossovers separate bass and mids at 250 Hz and mids and highs at 2,000 Hz. A 20 Hz high-pass removes DC. The bands show RMS energy on one shared scale; each band is not normalized separately. These filters overlap near their crossover frequencies. The display is a recording overview, not a spectrum analyser.
 
