@@ -148,12 +148,12 @@ export const mixType = defineType({
     defineField({ name: "featured", title: "Featured mix", type: "boolean", group: "placement", initialValue: false }),
     defineField({
       name: "listenCount",
-      title: "Legacy play baseline",
+      title: "Historic unique website plays",
       type: "number",
       group: "placement",
-      initialValue: 100,
-      validation: (rule) => rule.integer().positive(),
-      description: "Keep the old displayed count here. The public total adds unique Lowkal audio listens and YouTube views to this number."
+      initialValue: 0,
+      validation: (rule) => rule.integer().min(0),
+      description: "Use a verified count from before website play records started. Exclude YouTube views and website records already saved by the count service."
     }),
     defineField({ name: "showInPlayer", title: "Available in player", type: "boolean", group: "placement", initialValue: true }),
     defineField({ name: "youtubeViewsMax", title: "YouTube views snapshot", type: "number", group: "placement", hidden: true }),

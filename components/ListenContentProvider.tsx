@@ -160,10 +160,10 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
         .catch(() => { /* Show the published baseline if counts are unavailable. */ });
     }
     return () => controller.abort();
-  }, [content]);
+  }, [content, refreshKey]);
 
   const beginListen = useCallback(async (record: SoundRecord) => {
-    if (record.playback?.provider !== "cloudflare" || countedMixesRef.current.has(record.slug)) return null;
+    if (record.playback?.provider !== "cloudflare" || countedMixesRef.current.has(`${record.slug}:${Math.floor(Date.now() / 86_400_000)}`)) return null;
     let visitorToken: string | null = null;
     try { visitorToken = window.localStorage.getItem(VISITOR_KEY); } catch { /* Storage is optional. */ }
     try {
@@ -177,12 +177,13 @@ export function ListenContentProvider({ children }: { children: React.ReactNode 
 
   const recordListen = useCallback((record: SoundRecord, ticket: string) => {
     if (record.playback?.provider !== "cloudflare") return;
-    if (countedMixesRef.current.has(record.slug)) return;
-    countedMixesRef.current.add(record.slug);
+    const listenKey = `${record.slug}:${Math.floor(Date.now() / 86_400_000)}`;
+    if (countedMixesRef.current.has(listenKey)) return;
+    countedMixesRef.current.add(listenKey);
     fetch(LISTEN_COUNTS_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "listen", mix: record.slug, ticket }) })
       .then((response) => { if (!response.ok) throw new Error("Listen was not saved"); return response.json() as Promise<{ total: number }>; })
       .then((result) => { if (result && Number.isSafeInteger(result.total)) setListenCounts((current) => ({ ...current, [record.slug]: Math.max(current[record.slug] ?? 0, result.total) })); })
-      .catch(() => { countedMixesRef.current.delete(record.slug); });
+      .catch(() => { countedMixesRef.current.delete(listenKey); });
     track("mix_listen", { mix: record.slug, series: record.series });
   }, []);
 

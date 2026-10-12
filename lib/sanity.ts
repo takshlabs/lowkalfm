@@ -75,7 +75,7 @@ export const listenContentQuery = `{
     "artists": artists[]->{name, "slug": slug.current},
     releaseDate,
     duration,
-    listenCount,
+    "listenCount": coalesce(*[_type == "mixPlayCount" && mixId == ^._id][0].total, listenCount, 0),
     "audioDeliveryUrl": audio.deliveryUrl,
     "audioPeaksUrl": audio.peaksUrl,
     "audioStartOffset": audio.startOffset,

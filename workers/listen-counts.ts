@@ -24,6 +24,7 @@ function validSlug(slug: unknown): slug is string {
 async function sanityQuery<T>(env: CountEnv, query: string, params: Record<string, string>): Promise<T> {
   const url = new URL(`https://${env.SANITY_API_PROJECT_ID}.api.sanity.io/v2026-08-24/data/query/${env.SANITY_API_DATASET}`);
   url.searchParams.set("query", query);
+  url.searchParams.set("perspective", "published");
   for (const [key, value] of Object.entries(params)) url.searchParams.set(`$${key}`, JSON.stringify(value));
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Sanity query failed: ${response.status}`);
@@ -35,24 +36,34 @@ async function mixInfo(env: CountEnv, slug: string) {
     '*[_type == "mix" && published == true && parked != true && slug.current == $slug][0]{_id,_rev,listenCount,legacyBaselineMax,youtubeViewsMax,youtubeVideoUrl,externalUrl}', { slug });
 }
 
-async function keepMax(env: CountEnv, slug: string, mix: NonNullable<Awaited<ReturnType<typeof mixInfo>>>, field: "youtubeViewsMax" | "legacyBaselineMax", observed: number | null) {
-  let stored = Math.max(0, Number(mix[field]) || 0);
-  if (observed === null || observed <= stored) return stored;
-  let current = mix;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+type CountSnapshot = { _id: string; _rev?: string; baseline?: number; web?: number; youtube?: number; total?: number };
+
+function countValue(value: unknown) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : 0;
+}
+
+async function saveCounts(env: CountEnv, slug: string, mix: NonNullable<Awaited<ReturnType<typeof mixInfo>>>, web: number, observedYoutube: number | null) {
+  const id = `mix-play-count-${await digest(mix._id)}`;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const stored = await sanityQuery<CountSnapshot | null>(env, '*[_id == $id][0]{_id,_rev,baseline,web,youtube,total}', { id });
+    const baseline = Math.max(countValue(stored?.baseline), countValue(mix.listenCount));
+    const nextWeb = Math.max(countValue(stored?.web), countValue(web));
+    const youtube = Math.max(countValue(stored?.youtube), countValue(mix.youtubeViewsMax), countValue(observedYoutube));
+    const total = Math.max(countValue(stored?.total), baseline + nextWeb + youtube);
+    const counts = { baseline, web: nextWeb, youtube, total };
+    if (stored && Object.entries(counts).every(([key, value]) => stored[key as keyof typeof counts] === value)) return counts;
+    // The count document is separate from the CMS mix. Publishing a draft cannot reset it.
+    const mutation = stored ? { patch: { id, ifRevisionID: stored._rev, set: counts } } :
+      { create: { _id: id, _type: "mixPlayCount", mixId: mix._id, mixSlug: slug, ...counts } };
     const response = await fetch(`https://${env.SANITY_API_PROJECT_ID}.api.sanity.io/v2026-08-24/data/mutate/${env.SANITY_API_DATASET}`, {
       method: "POST", headers: { Authorization: `Bearer ${env.SANITY_API_WRITE_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ mutations: [{ patch: { id: current._id, ifRevisionID: current._rev, set: { [field]: observed } } }] })
+      body: JSON.stringify({ mutations: [mutation] })
     });
-    if (response.ok) return observed;
-    if (response.status !== 409) throw new Error(`YouTube count write failed: ${response.status}`);
-    const latest = await mixInfo(env, slug);
-    if (!latest) return stored;
-    stored = Math.max(stored, Number(latest[field]) || 0);
-    if (stored >= observed) return stored;
-    current = latest;
+    if (response.ok) return counts;
+    if (response.status !== 409) throw new Error(`Count write failed: ${response.status}`);
   }
-  return stored;
+  // Do not return a value from a write that lost a concurrent update.
+  throw new Error("Count write conflict");
 }
 
 function videoId(url?: string): string | null {
@@ -66,21 +77,120 @@ function videoId(url?: string): string | null {
   } catch { return null; }
 }
 
+function youtubePageData(html: string, variable: "ytInitialPlayerResponse" | "ytInitialData"): unknown {
+  const marker = new RegExp(`${variable}\\s*=\\s*`).exec(html);
+  if (!marker) return null;
+  const start = marker.index + marker[0].length;
+  if (html[start] !== "{") return null;
+  let depth = 0;
+  let quoted = false;
+  let escaped = false;
+  for (let index = start; index < html.length; index += 1) {
+    const char = html[index];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') quoted = false;
+    } else if (char === '"') quoted = true;
+    else if (char === "{") depth += 1;
+    else if (char === "}" && --depth === 0) {
+      try {
+        return JSON.parse(html.slice(start, index + 1)) as unknown;
+      } catch { return null; }
+    }
+  }
+  return null;
+}
+
+export function publicYoutubeViews(html: string, id: string): number | null {
+  const player = youtubePageData(html, "ytInitialPlayerResponse") as { videoDetails?: { videoId?: string; viewCount?: string }; playabilityStatus?: { status?: string; reason?: string } } | null;
+  const count = Number(player?.videoDetails?.viewCount);
+  if (player?.videoDetails?.videoId === id && Number.isSafeInteger(count) && count >= 0) return count;
+  // A public page can show views when its player requires sign-in.
+  const data = youtubePageData(html, "ytInitialData") as {
+    currentVideoEndpoint?: { watchEndpoint?: { videoId?: string } };
+    contents?: { twoColumnWatchNextResults?: { results?: { results?: { contents?: Array<{
+      videoPrimaryInfoRenderer?: { viewCount?: { videoViewCountRenderer?: { viewCount?: { simpleText?: string } } } };
+    }> } } } };
+  } | null;
+  if (data?.currentVideoEndpoint?.watchEndpoint?.videoId !== id) {
+    console.warn("YouTube public metadata missing", id, player?.playabilityStatus?.status, player?.playabilityStatus?.reason, data?.currentVideoEndpoint?.watchEndpoint?.videoId);
+    return null;
+  }
+  const primary = data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.find((item) => item.videoPrimaryInfoRenderer)?.videoPrimaryInfoRenderer;
+  const text = primary?.viewCount?.videoViewCountRenderer?.viewCount?.simpleText;
+  if (!text || !/^[0-9][0-9,]* views?$/.test(text)) return null;
+  const views = Number(text.replace(/[^0-9]/g, ""));
+  return Number.isSafeInteger(views) && views >= 0 ? views : null;
+}
+
+async function readYoutubeViews(env: CountEnv, id: string): Promise<number | null> {
+  let count: number | null;
+  const signal = AbortSignal.timeout(12_000);
+  if (env.YOUTUBE_API_KEY) {
+    const url = new URL("https://www.googleapis.com/youtube/v3/videos");
+    url.searchParams.set("part", "statistics");
+    url.searchParams.set("id", id);
+    url.searchParams.set("key", env.YOUTUBE_API_KEY);
+    const response = await fetch(url, { signal });
+    if (!response.ok) throw new Error(`YouTube query failed: ${response.status}`);
+    count = Number(((await response.json()) as { items?: Array<{ statistics?: { viewCount?: string } }> }).items?.[0]?.statistics?.viewCount);
+  } else {
+    // Use the linked video's own metadata, never counts from recommended videos.
+    const response = await fetch(`https://www.youtube.com/watch?v=${id}&hl=en`, { signal });
+    if (!response.ok) throw new Error(`YouTube page failed: ${response.status}`);
+    const reader = response.body?.getReader();
+    if (!reader) return null;
+    const decoder = new TextDecoder();
+    let html = "";
+    let size = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > 4_000_000) { await reader.cancel(); return null; }
+        html += decoder.decode(value, { stream: true });
+      }
+      html += decoder.decode();
+    } finally { reader.releaseLock(); }
+    count = publicYoutubeViews(html, id);
+    if (count === null) throw new Error(`YouTube metadata unavailable (${size} bytes)`);
+  }
+  if (count === null) return null;
+  if (!Number.isSafeInteger(count) || count < 0) return null;
+  return count;
+}
+
 async function youtubeViews(env: CountEnv, id: string | null): Promise<number | null> {
-  if (!id || !env.YOUTUBE_API_KEY) return null;
+  if (!id) return null;
   const cached = youtubeCache.get(id);
   if (cached && cached.expiresAt > Date.now()) return cached.count;
-  const url = new URL("https://www.googleapis.com/youtube/v3/videos");
-  url.searchParams.set("part", "statistics");
-  url.searchParams.set("id", id);
-  url.searchParams.set("key", env.YOUTUBE_API_KEY);
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`YouTube query failed: ${response.status}`);
-  const count = Number(((await response.json()) as { items?: Array<{ statistics?: { viewCount?: string } }> }).items?.[0]?.statistics?.viewCount);
-  if (!Number.isSafeInteger(count) || count < 0) return null;
-  const stable = Math.max(count, cached?.count ?? 0);
-  youtubeCache.set(id, { count: stable, expiresAt: Date.now() + 60 * 60 * 1000 });
-  return stable;
+  const documentId = `youtube-view-${id}`;
+  type ViewSnapshot = { _rev: string; count?: number; checkedAt?: number };
+  const stored = await sanityQuery<ViewSnapshot | null>(env, '*[_id == $id][0]{_rev,count,checkedAt}', { id: documentId });
+  const previous = stored && typeof stored.count === "number" && Number.isSafeInteger(stored.count) && stored.count >= 0 ? stored.count : null;
+  const interval = 60 * 60 * 1000;
+  if (stored?.checkedAt && stored.checkedAt + interval > Date.now()) {
+    if (previous !== null) youtubeCache.set(id, { count: previous, expiresAt: stored.checkedAt + interval });
+    return previous;
+  }
+  // Claim the refresh across Worker instances before requesting YouTube.
+  const checkedAt = Date.now();
+  const claim = stored ? { patch: { id: documentId, ifRevisionID: stored._rev, set: { checkedAt } } } :
+    { create: { _id: documentId, _type: "youtubeViewSnapshot", videoId: id, checkedAt } };
+  const endpoint = `https://${env.SANITY_API_PROJECT_ID}.api.sanity.io/v2026-08-24/data/mutate/${env.SANITY_API_DATASET}`;
+  const headers = { Authorization: `Bearer ${env.SANITY_API_WRITE_TOKEN}`, "Content-Type": "application/json" };
+  const claimed = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify({ mutations: [claim] }) });
+  if (claimed.status === 409) return previous;
+  if (!claimed.ok) throw new Error(`YouTube refresh claim failed: ${claimed.status}`);
+  const observed = await readYoutubeViews(env, id);
+  if (observed === null) return previous;
+  const count = Math.max(observed, previous ?? 0);
+  const saved = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify({ mutations: [{ patch: { id: documentId, set: { count } } }] }) });
+  if (!saved.ok) throw new Error(`YouTube snapshot write failed: ${saved.status}`);
+  youtubeCache.set(id, { count, expiresAt: checkedAt + interval });
+  return count;
 }
 
 async function webListens(env: CountEnv, slug: string) {
@@ -168,9 +278,10 @@ export async function handleListenCounts(request: Request, env: CountEnv): Promi
     });
     if (!response.ok) throw new Error(`Sanity listen write failed: ${response.status}`);
   }
-  const [web, observedYoutube] = await Promise.all([webListens(env, slug), youtubeViews(env, videoId(mix.youtubeVideoUrl) ?? videoId(mix.externalUrl)).catch(() => null)]);
-  const youtube = await keepMax(env, slug, mix, "youtubeViewsMax", observedYoutube);
-  // Only the editor's published baseline is trusted. Browser samples are ignored.
-  const baseline = Math.max(0, Number(mix.listenCount) || 0);
-  return Response.json({ mix: slug, baseline, web, youtube, total: baseline + web + youtube }, { headers });
+  const [web, observedYoutube] = await Promise.all([webListens(env, slug), youtubeViews(env, videoId(mix.youtubeVideoUrl) ?? videoId(mix.externalUrl)).catch((error: unknown) => {
+    console.warn("YouTube count refresh unavailable", slug, error instanceof Error ? error.message : "Unknown error");
+    return null;
+  })]);
+  const counts = await saveCounts(env, slug, mix, web, observedYoutube);
+  return Response.json({ mix: slug, ...counts, youtubeStatus: observedYoutube === null ? "saved" : "current" }, { headers });
 }

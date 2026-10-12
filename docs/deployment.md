@@ -52,7 +52,13 @@ Use `npx vercel env ls production` to check variable names. Do not put secret va
 
 ## Cloudflare R2 audio setup
 
-The audio Worker also serves `/listen-counts`. Set `YOUTUBE_API_KEY` as a Worker secret before releasing the shared play count. The key needs YouTube Data API v3 access to `videos.list`. Keep this key in Cloudflare and out of the site bundle. The existing `listenCount` field in Sanity is the lower bound for the legacy baseline; do not set it to YouTube views. The Worker uses only the published `listenCount` as the legacy baseline. It rejects browser count samples. Native audio starts with a signed ticket. The ticket is valid after 30 seconds and expires after 30 minutes. The Worker stores one `mixWebListen` document per signed browser identity, mix, and UTC day. POST requests have a rate limit. An embedded YouTube play does not create a web listen. These controls limit false counts; they do not prove that a person listened.
+The audio Worker also serves `/listen-counts`. The total is verified historic website plays plus saved unique daily website plays plus YouTube views. Do not include YouTube views or saved website records in the `listenCount` history field. Its default is zero. Counts are stored in separate `mixPlayCount` documents. A CMS publish cannot reset these documents. Revision checks protect concurrent updates. Each component retains its largest saved value, so a service error or a lower source count cannot reduce the total.
+
+The Worker reads the exact view count from the linked YouTube video's public page metadata. It checks the video ID before it uses the count. It refreshes this count at most once per hour per video across Worker instances. A shared revision-checked claim prevents duplicate refreshes. If the page is unavailable or its format changes, the Worker retains the saved count. An optional `YOUTUBE_API_KEY` secret selects YouTube Data API v3 `videos.list` instead. Keep this key in Cloudflare and out of the site bundle. A mix without a YouTube link has no YouTube views to add.
+
+Native audio starts with a signed ticket. The ticket is valid after 30 seconds and expires after 30 minutes. The Worker stores one `mixWebListen` document per signed browser identity, mix, and UTC day. POST requests have a rate limit. An embedded YouTube play does not create a website play, because YouTube supplies its own views. Browser storage supplies the signed identity; clearing storage or using a different browser can create a new identity. The service cannot recover website plays that were never saved. It rejects browser count samples and does not use generated display counts.
+
+Use `npm run counts:refresh` to refresh all visible published mixes and save their totals before a site release. This command uses the local Sanity write token and optional YouTube API key. It does not change historic baselines.
 
 This setup is separate from the Vercel deployment.
 
