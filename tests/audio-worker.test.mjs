@@ -48,7 +48,7 @@ test("audio sync derives a missing asset ID and returns a playable delivery URL"
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const url = String(input);
-    if (url === sourceUrl) return new Response(wavHeader(), { status: 200, headers: { "content-type": "audio/wav" } });
+    if (url === sourceUrl) return new Response(wavAudio(2), { status: 200, headers: { "content-type": "audio/wav" } });
     if (url.includes("/data/query/")) return Response.json({ result: { _rev: "current-revision", master: "file-aabbcc-wav" } });
     if (url.includes("api.sanity.io") && init?.method === "POST") {
       mutations.push(JSON.parse(String(init.body)));
@@ -81,8 +81,11 @@ test("audio sync derives a missing asset ID and returns a playable delivery URL"
     assert.equal(result.deliveryUrl, "https://worker.example/audio/mixes/mix-test/file-aabbcc-wav-Test.wav");
     assert.equal(writes.length, 2);
     assert.equal(writes[0].key, "mixes/mix-test/file-aabbcc-wav-Test.wav");
-    assert.equal(writes[1].key, "mixes/mix-test/file-aabbcc-wav-Test.wav.peaks.json");
-    assert.deepEqual(JSON.parse(new TextDecoder().decode(writes[1].bytes)), { version: 1, peaks: Array(128).fill(0) });
+    assert.equal(writes[1].key, "mixes/mix-test/file-aabbcc-wav-Test.wav.spectrum-v2.json");
+    const waveform = JSON.parse(new TextDecoder().decode(writes[1].bytes));
+    assert.equal(waveform.version, 2);
+    assert.deepEqual(waveform.peaks, Array(2048).fill(0));
+    assert.deepEqual(waveform.bands.bass, Array(2048).fill(0));
     assert.equal(mutations.length, 1);
     assert.equal(mutations[0].mutations[0].patch.ifRevisionID, "current-revision");
     assert.equal(mutations[0].mutations[0].patch.set["audio.sourceAssetId"], "file-aabbcc-wav");
@@ -121,7 +124,7 @@ test("audio sync writes waveform peaks before it makes the delivery URL public",
     assert.equal(response.status, 200);
     assert.equal(writes.length, 2);
     const peaks = JSON.parse(writes[1].value).peaks;
-    assert.equal(peaks.length, 128);
+    assert.equal(peaks.length, 2048);
     assert.equal(peaks[0], 0.5);
     assert.equal(mutations[0].mutations[0].patch.set["audio.peaksUrl"], (await response.clone().json()).peaksUrl);
   } finally {
@@ -174,7 +177,7 @@ test("audio sync writes mix duration from the uploaded WAV master", async () => 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input, init) => {
     const url = String(input);
-    if (url === sourceUrl) return new Response(wavHeader(90), { status: 200, headers: { "content-type": "audio/wav" } });
+    if (url === sourceUrl) return new Response(wavAudio(90), { status: 200, headers: { "content-type": "audio/wav" } });
     if (url.includes("/data/query/")) return Response.json({ result: { _rev: "current-revision", master: "file-aabbcc-wav" } });
     if (url.includes("api.sanity.io") && init?.method === "POST") {
       mutations.push(JSON.parse(String(init.body)));

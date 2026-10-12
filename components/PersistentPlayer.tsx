@@ -83,6 +83,9 @@ export function PersistentPlayer() {
             <Plus className="lowkal-icon" aria-hidden="true" />
           </button>
         </span>
+        <div className="lowkal-mini-waveform">
+          <AudioWaveform peaksUrl={waveformPeaksUrl} currentTime={shownPosition} duration={total} canSeek={canSeek} onSeek={seek} />
+        </div>
         <span id="lowkal-playback-status" role="status" className="sr-only" title={error ?? undefined}>{status}{error ? `: ${error}` : ""}</span>
       </aside>
     );

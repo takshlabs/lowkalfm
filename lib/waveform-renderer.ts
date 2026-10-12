@@ -1,0 +1,113 @@
+type Bands = { bass: number[]; mids: number[]; highs: number[] };
+type DisplayData = { peaks: number[]; bands: Bands | null };
+export function timeFromProgress(percent: number, duration: number) {
+  if (!Number.isFinite(percent) || !Number.isFinite(duration) || duration <= 0) return 0;
+  return Math.min(duration, Math.max(0, Math.round(percent / 100 * duration * 1000) / 1000));
+}
+const validValues = (value: unknown): value is number[] => Array.isArray(value) && value.length > 0 && value.length <= 16384 && value.every(n => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 1);
+
+export function parseWaveformData(payload: unknown): DisplayData {
+  if (!payload || typeof payload !== "object") throw new Error("Invalid waveform data");
+  const data = payload as { version?: number; peaks?: unknown; bands?: Partial<Bands> };
+  if (!validValues(data.peaks)) throw new Error("Invalid waveform peaks");
+  if (data.version !== 2) return { peaks: data.peaks, bands: null };
+  const peakLength = data.peaks.length;
+  const bands = data.bands;
+  if (!bands || !validValues(bands.bass) || !validValues(bands.mids) || !validValues(bands.highs) || [bands.bass, bands.mids, bands.highs].some(v => v.length !== peakLength)) throw new Error("Invalid waveform bands");
+  return { peaks: data.peaks, bands: bands as Bands };
+}
+
+// RMS aggregation preserves interval energy at every display width.
+export function aggregateWaveform(values: number[], count: number) {
+  if (!values.length) return [];
+  const size = Math.max(1, Math.min(values.length, Math.floor(count)));
+  return Array.from({ length: size }, (_, index) => {
+    const start = Math.floor(index * values.length / size), end = Math.max(start + 1, Math.floor((index + 1) * values.length / size));
+    let sum = 0;
+    for (let i = start; i < end; i++) sum += values[i] * values[i];
+    return Math.sqrt(sum / (end - start));
+  });
+}
+
+function timeLabel(seconds: number) {
+  const value = Math.floor(Math.max(0, seconds));
+  return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`;
+}
+
+export function createSpectrumWaveform(container: HTMLElement, options: { compact?: boolean; duration: number; canSeek: () => boolean; onSeek: (seconds: number) => void }) {
+  const canvas = document.createElement("canvas"), legend = document.createElement("span"), preview = document.createElement("output");
+  canvas.setAttribute("aria-hidden", "true");
+  legend.className = "spectrum-waveform-legend";
+  legend.setAttribute("aria-hidden", "true");
+  legend.innerHTML = '<span>Bass</span><span>Mids</span><span>Highs</span>';
+  preview.className = "spectrum-waveform-preview"; preview.hidden = true; preview.setAttribute("aria-live", "off");
+  container.classList.add("spectrum-waveform");
+  container.dataset.compact = String(Boolean(options.compact));
+  container.replaceChildren(canvas, legend, preview);
+  let data: DisplayData = { peaks: [], bands: null }, position = 0, drag: { id: number; time: number } | null = null;
+  let destroyed = false, lastWidth = 0, lastHeight = 0;
+  let geometry: { values: number[]; color: string; center: number; height: number }[] = [];
+  const ctx = canvas.getContext("2d");
+  const draw = () => {
+    if (!ctx || destroyed) return;
+    const width = container.clientWidth, height = container.clientHeight;
+    if (!width || !height) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (canvas.width !== Math.round(width * dpr) || canvas.height !== Math.round(height * dpr)) { canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, width, height);
+    const style = getComputedStyle(container), cursor = style.getPropertyValue("--spectrum-cursor").trim() || "#f1eadb";
+    if (lastWidth !== width || lastHeight !== height || !geometry.length) {
+      lastWidth = width; lastHeight = height;
+      const colors = ["--spectrum-bass", "--spectrum-mids", "--spectrum-highs"].map((token, i) => style.getPropertyValue(token).trim() || ["#ff867a", "#87d7b2", "#bba0ff"][i]);
+      const source = data.bands ? [data.bands.bass, data.bands.mids, data.bands.highs] : [data.peaks];
+      const maximum = Math.max(.001, ...source.flat());
+      const compact = options.compact || !data.bands;
+      const plotHeight = height - (compact ? 0 : 18);
+      geometry = source.map((values, i) => ({ values: aggregateWaveform(values, width / 2).map(v => Math.pow(v / maximum, .72)), color: data.bands ? colors[i] : cursor, center: compact ? plotHeight / 2 : (i + .5) * plotHeight / 3, height: compact ? plotHeight * (.84 - i * .19) : plotHeight / 3 * .76 }));
+    }
+    const x = width * Math.max(0, Math.min(1, (drag?.time ?? position) / Math.max(1, options.duration)));
+    if (!data.peaks.length) {
+      ctx.fillStyle = cursor; ctx.globalAlpha = .25; ctx.fillRect(0, height / 2 - 1, width, 2); ctx.globalAlpha = .85; ctx.fillRect(0, height / 2 - 1, x, 2);
+    } else for (const lane of geometry) {
+      const path = new Path2D();
+      lane.values.forEach((v, i) => { const px = i * width / Math.max(1, lane.values.length - 1), py = lane.center - v * lane.height / 2; if (!i) path.moveTo(px, py); else path.lineTo(px, py); });
+      for (let i = lane.values.length - 1; i >= 0; i--) path.lineTo(i * width / Math.max(1, lane.values.length - 1), lane.center + lane.values[i] * lane.height / 2);
+      path.closePath(); ctx.fillStyle = lane.color; ctx.globalAlpha = .55; ctx.fill(path);
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, x, height); ctx.clip(); ctx.globalAlpha = options.compact ? .8 : 1; ctx.fill(path); ctx.restore();
+    }
+    ctx.globalAlpha = 1; ctx.fillStyle = cursor; ctx.fillRect(Math.min(width - 1.5, x), 2, 1.5, height - (options.compact || !data.bands ? 4 : 20));
+    ctx.beginPath(); ctx.arc(Math.max(2.5, Math.min(width - 2.5, x)), 3, 2.5, 0, Math.PI * 2); ctx.fill();
+  };
+  const target = (clientX: number) => {
+    const bounds = container.getBoundingClientRect();
+    return timeFromProgress((clientX - bounds.left) / Math.max(1, bounds.width) * 100, options.duration);
+  };
+  const showPreview = (clientX: number) => {
+    const seconds = target(clientX); preview.textContent = timeLabel(seconds); preview.hidden = false;
+    preview.style.left = `${Math.max(26, Math.min(container.clientWidth - 26, seconds / Math.max(1, options.duration) * container.clientWidth))}px`;
+    return seconds;
+  };
+  const down = (event: PointerEvent) => {
+    if (event.button !== 0 || !options.canSeek()) return;
+    drag = { id: event.pointerId, time: showPreview(event.clientX) }; container.setPointerCapture(event.pointerId); draw();
+  };
+  const move = (event: PointerEvent) => {
+    if (!options.canSeek()) return;
+    const time = showPreview(event.clientX); if (drag?.id === event.pointerId) { drag.time = time; draw(); }
+  };
+  const up = (event: PointerEvent) => {
+    if (drag?.id !== event.pointerId) return;
+    const seconds = target(event.clientX); drag = null; preview.hidden = true;
+    if (container.hasPointerCapture(event.pointerId)) container.releasePointerCapture(event.pointerId);
+    if (options.canSeek()) options.onSeek(seconds); draw();
+  };
+  const cancel = () => { drag = null; preview.hidden = true; draw(); };
+  const leave = () => { if (!drag) preview.hidden = true; };
+  container.addEventListener("pointerdown", down); container.addEventListener("pointermove", move); container.addEventListener("pointerup", up); container.addEventListener("pointercancel", cancel); container.addEventListener("lostpointercapture", cancel); container.addEventListener("pointerleave", leave);
+  const observer = new ResizeObserver(draw); observer.observe(container); draw();
+  return {
+    setData(payload: unknown) { data = parseWaveformData(payload); geometry = []; container.dataset.state = data.bands ? "spectrum" : "ready"; container.setAttribute("aria-description", data.bands ? "Recorded bass, mid, and high frequency levels." : "Recorded amplitude. Frequency data is not available."); draw(); },
+    setTime(seconds: number, duration = options.duration) { position = Number.isFinite(seconds) ? seconds : 0; options.duration = Number.isFinite(duration) && duration > 0 ? duration : 0; draw(); },
+    destroy() { destroyed = true; observer.disconnect(); container.removeEventListener("pointerdown", down); container.removeEventListener("pointermove", move); container.removeEventListener("pointerup", up); container.removeEventListener("pointercancel", cancel); container.removeEventListener("lostpointercapture", cancel); container.removeEventListener("pointerleave", leave); container.replaceChildren(); }
+  };
+}

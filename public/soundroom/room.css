@@ -220,3 +220,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
   .animate-rotate { animation: none !important; }
   .node-transition, .screen-fade { transition: none !important; }
 }
+
+/* Frequency lanes share the same recording timeline. */
+#main-waveform.spectrum-waveform { height: 110px; min-height: 110px; overflow: visible; touch-action: pan-y; }
+#main-waveform.spectrum-waveform[data-state="unavailable"] { opacity: 1; cursor: pointer !important; }
+@media (max-width: 680px) { #main-waveform.spectrum-waveform { height: 96px; min-height: 96px; } }
+
+#archive-mini-player > .glass-panel { flex-wrap: wrap; height: auto; gap: 8px 0; border-radius: 16px; }
+#mini-waveform.spectrum-waveform { flex: 0 0 100%; height: 44px; min-height: 44px; }

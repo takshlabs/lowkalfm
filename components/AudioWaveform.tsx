@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type KeyboardEvent, type MouseEvent } from "react";
-import WaveSurfer from "wavesurfer.js";
+import { useEffect, useRef, type KeyboardEvent } from "react";
+import { createSpectrumWaveform } from "@/lib/waveform-renderer";
 import { formatTime } from "@/lib/content";
 
 type AudioWaveformProps = {
@@ -11,92 +11,49 @@ type AudioWaveformProps = {
   canSeek: boolean;
   onSeek: (seconds: number) => void;
   className?: string;
+  compact?: boolean;
 };
-
-const waveformOptions = {
-  barWidth: 2,
-  barGap: 1,
-  barRadius: 3,
-  barMinHeight: 1,
-  cursorWidth: 1,
-  cursorColor: "rgba(241, 234, 219, 0.82)",
-  dragToSeek: false,
-  interact: false,
-  normalize: true,
-  progressColor: "#f04437",
-  sampleRate: 8_000,
-  waveColor: "rgba(241, 234, 219, 0.26)"
-} as const;
 
 function boundedTime(time: number, duration: number) {
   if (!Number.isFinite(time) || !(duration > 0)) return 0;
   return Math.min(duration, Math.max(0, time));
 }
 
-export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek, className }: AudioWaveformProps) {
+export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek, className, compact = true }: AudioWaveformProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const waveformRef = useRef<WaveSurfer | null>(null);
+  const waveformRef = useRef<ReturnType<typeof createSpectrumWaveform> | null>(null);
   const total = Number.isFinite(duration) && duration > 0 ? duration : 0;
   const position = boundedTime(currentTime, total);
   const positionRef = useRef(position);
 
+  const controlRef = useRef({ canSeek, onSeek });
+  useEffect(() => { controlRef.current = { canSeek, onSeek }; }, [canSeek, onSeek]);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    container.replaceChildren();
+    const waveform = createSpectrumWaveform(container, {
+      compact, duration: total,
+      canSeek: () => controlRef.current.canSeek,
+      onSeek: seconds => controlRef.current.onSeek(seconds)
+    });
+    waveformRef.current = waveform;
+    waveform.setTime(positionRef.current);
     container.dataset.state = peaksUrl && total ? "loading" : "unavailable";
-    if (!peaksUrl || !total) return;
-
     const controller = new AbortController();
-    let waveform: WaveSurfer | null = null;
-    const load = async () => {
-      try {
-        const response = await fetch(peaksUrl, { signal: controller.signal });
-        if (!response.ok) throw new Error(`Waveform data failed with ${response.status}`);
-        const payload = await response.json() as { peaks?: unknown };
-        if (!Array.isArray(payload.peaks) || !payload.peaks.length || !payload.peaks.every((peak) => typeof peak === "number" && Number.isFinite(peak))) throw new Error("Invalid waveform data");
-        if (controller.signal.aborted) return;
-        waveform = WaveSurfer.create({
-          container,
-          duration: total,
-          height: 28,
-          peaks: [payload.peaks],
-          ...waveformOptions
-        });
-        waveformRef.current = waveform;
-        waveform.on("ready", () => {
-          container.dataset.state = "ready";
-          waveform?.setTime(positionRef.current);
-        });
-        waveform.on("error", () => { container.dataset.state = "unavailable"; });
-      } catch {
-        if (!controller.signal.aborted) container.dataset.state = "unavailable";
-      }
-    };
-    void load();
-
-    return () => {
-      controller.abort();
-      waveform?.destroy();
-      if (waveformRef.current === waveform) waveformRef.current = null;
-    };
-  }, [peaksUrl, total]);
+    if (peaksUrl && total) {
+      void fetch(peaksUrl, { signal: controller.signal })
+        .then(response => { if (!response.ok) throw new Error("Waveform data unavailable"); return response.json(); })
+        .then(payload => { if (!controller.signal.aborted) waveform.setData(payload); })
+        .catch(() => { if (!controller.signal.aborted) container.dataset.state = "unavailable"; });
+    }
+    return () => { controller.abort(); waveform.destroy(); if (waveformRef.current === waveform) waveformRef.current = null; };
+  }, [peaksUrl, total, compact]);
 
   useEffect(() => {
     positionRef.current = position;
     waveformRef.current?.setTime(position);
   }, [position]);
-
-  const seekFromPointer = (clientX: number) => {
-    if (!canSeek || !total) return;
-    const bounds = containerRef.current?.getBoundingClientRect();
-    if (!bounds?.width) return;
-    onSeek(boundedTime(((clientX - bounds.left) / bounds.width) * total, total));
-  };
-
-  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
-    seekFromPointer(event.clientX);
-  };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!canSeek || !total) return;
@@ -124,7 +81,6 @@ export function AudioWaveform({ peaksUrl, currentTime, duration, canSeek, onSeek
       aria-valuemax={total}
       aria-valuenow={position}
       aria-valuetext={`${formatTime(position)} of ${formatTime(total)}`}
-      onClick={handleClick}
       onKeyDown={handleKeyDown}
     />
   );

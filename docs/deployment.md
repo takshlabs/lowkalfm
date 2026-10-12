@@ -96,13 +96,13 @@ The account has no Cloudflare DNS zone for `lowkalfm.in`. Keep the current Worke
 
 10. Publish a small test mix. Confirm that the mix document receives `audio.deliveryUrl`, then play the mix from `https://lowkalfm.in`.
 
-The Worker copies the WAV master to R2, reads duration from its header, calculates 128 waveform peaks, and writes the delivery URL, waveform URL, and duration in one update. The browser plays the CDN URL directly. Vercel does not proxy the large audio file.
+The Worker copies the WAV master to R2, reads duration from its header, calculates interval peaks and three frequency bands, and writes the delivery URL, waveform URL, and duration in one update. The browser plays the CDN URL directly. Vercel does not proxy the large audio file.
 
 ### Waveform generation
 
-The Worker calculates the waveform from the WAV stream during audio sync. It copies the compact sidecar to R2 before it writes the public delivery URLs. The browser reads only this JSON to draw the waveform. It does not download or decode the WAV for this display. Playback uses the original WAV.
+The Worker calculates 2,048 interval peaks and RMS energy for bass, mids, and highs from the WAV stream during audio sync. It uses first-order crossovers at 250 Hz and 2,000 Hz, with a 20 Hz high-pass. The three bands use one display scale. Each channel is measured separately to retain stereo energy. The version 2 sidecar uses a `.spectrum-v2.json` key, so cached version 1 data is not replaced. It copies the compact sidecar to R2 before it writes the public delivery URLs. The browser reads only this JSON to draw the waveform. It does not download or decode the WAV for this display. Playback uses the original WAV.
 
-The `npm run audio:peaks -- <mix-slug>` command remains available only to repair old mixes. Keep `SANITY_API_WRITE_TOKEN` local; do not put it in browser code or Vercel.
+Use `npm run audio:peaks -- <mix-slug>` to repair one published mix. Use `npm run audio:peaks -- --all` to add spectrum data to published direct-audio mixes that do not have version 2 data. The script scans the full matching master, changes only the derived waveform URL, and checks the current master and revision before the update. Keep `SANITY_API_WRITE_TOKEN` local; do not put it in browser code or Vercel.
 
 ## Troubleshooting
 

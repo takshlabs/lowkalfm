@@ -32,3 +32,11 @@ Source-independent, beat-matched playback for those mixes needs an analysis time
 Run `npm run check`. This runs lint, type checks, the production build, and Node tests.
 
 Browser checks must include direct-audio playback and waterfall movement, YouTube's unavailable state, cue save/rename/seek/remove after a reload and mix change, pause and seek, pointer suppression during measured audio, reduced motion, phone settings bounds, keyboard dialog controls, and WebGL context loss. Verify the production origin: the Sanity project can reject localhost requests even when production CORS works.
+
+## Spectrum waveform
+
+Soundroom shows three aligned frequency lanes. Coral shows bass, mint shows mids, and violet shows highs. The compact and expanded site players combine the same lanes in a small waveform. The cursor marks the current playback time. The shape remains fixed during playback and respects reduced motion without a separate animation loop.
+
+Version 2 waveform data contains 2,048 measured intervals from the full WAV master. First-order crossovers separate bass and mids at 250 Hz and mids and highs at 2,000 Hz. A 20 Hz high-pass removes DC. The bands show RMS energy on one shared scale; each band is not normalized separately. These filters overlap near their crossover frequencies. The display is a recording overview, not a spectrum analyser.
+
+Drag to preview a time and release to seek once. Keyboard controls retain five-second steps, Shift for 30-second steps, Home, and End. The seek area is at least 44 px high. Source changes cancel the old data request. Legacy peak data stays neutral. Missing, malformed, or unavailable data retains a progress control. YouTube does not show invented frequency data. AudioProvider remains the playback authority.

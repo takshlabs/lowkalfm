@@ -32,6 +32,7 @@
   <!-- CSS & Fonts -->
   <link rel="stylesheet" href="./tailwind.css"/>
   <link rel="stylesheet" href="./material-symbols.css"/>
+  <link rel="stylesheet" href="./waveform.css"/>
 
   <style>
     @font-face {
@@ -400,11 +401,6 @@
     <!-- Floating Mini-Player Pill -->
     <div class="absolute bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-xl z-40 transition-all duration-500 transform translate-y-2 opacity-0 pointer-events-none" id="archive-mini-player">
       <div class="glass-panel w-full h-18 px-5 py-3 rounded-full flex items-center justify-between shadow-float relative overflow-hidden">
-        <!-- Progress Fill along bottom edge -->
-        <div class="absolute bottom-0 left-6 right-6 h-[2.5px] bg-white/10 rounded-full overflow-hidden">
-          <div class="h-full bg-primary transition-all duration-300" id="mini-progress-fill" style="width: 0%;"></div>
-        </div>
-
         <!-- Left metadata (click redirects to home player) -->
         <button type="button" class="flex items-center min-w-0 flex-1 hover:opacity-90 active:scale-98 transition-all cursor-none text-left" id="mini-player-info-click" aria-label="Return to the main player">
           <!-- Thumbnail cover -->
@@ -432,6 +428,7 @@
             <span class="material-symbols-outlined text-2xl">open_in_full</span>
           </button>
         </div>
+        <div id="mini-waveform" role="slider" tabindex="-1" aria-label="Mini player playback position" aria-disabled="true" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
       </div>
     </div>
   </div>
@@ -495,8 +492,8 @@
   <script type="module" src="room-settings.js"></script>
   <script type="module" src="room-cues.js"></script>
   <script type="module" src="room-waterfall.js"></script>
-  <!-- WaveSurfer.js v7.12.1, BSD-3-Clause. Its local license is beside this asset. -->
-  <script src="./wavesurfer.min.js"></script>
+  <!-- Shared spectrum renderer. AudioProvider controls playback. -->
+  <script src="./waveform-renderer.js"></script>
 
   <!-- Playback and same-origin parent bridges. -->
   <script>
@@ -825,69 +822,49 @@
       setupWaveform(mix = this.activeMix) {
         const container = document.getElementById('main-waveform');
         const peaksUrl = peaksUrlFor(mix);
-        const sourceKey = peaksUrl ? `${mix.id}:${peaksUrl}` : '';
+        const sourceKey = `${mix?.id || ''}:${peaksUrl || ''}`;
         if (sourceKey === this.waveformSource) return;
         const request = ++this.waveformRequest;
-        this.waveform?.destroy?.();
-        this.waveform = null;
+        this.waveformAbort?.abort();
+        this.waveform?.destroy();
+        this.miniWaveform?.destroy();
         this.waveformSource = sourceKey;
-        container.replaceChildren();
-        container.dataset.state = peaksUrl ? 'loading' : 'unavailable';
-        const WaveSurfer = window.WaveSurfer;
-        if (!peaksUrl || !WaveSurfer?.create || !(Number(mix.duration) > 0)) return;
-        fetch(peaksUrl)
-          .then((response) => {
-            if (!response.ok) throw new Error(`Waveform data failed with ${response.status}`);
-            return response.json();
-          })
-          .then((payload) => {
-            if (request !== this.waveformRequest || !Array.isArray(payload?.peaks) || !payload.peaks.length || !payload.peaks.every((peak) => typeof peak === 'number' && Number.isFinite(peak))) return;
-            this.waveform = WaveSurfer.create({
-              container,
-              duration: Number(mix.duration),
-              peaks: [payload.peaks],
-              height: 42,
-              waveColor: 'rgba(229, 226, 225, 0.24)',
-              progressColor: '#55e93b',
-              cursorColor: 'rgba(229, 226, 225, 0.82)',
-              cursorWidth: 1,
-              barWidth: 2,
-              barGap: 1,
-              barRadius: 3,
-              barMinHeight: 1,
-              normalize: true,
-              interact: false,
-              dragToSeek: false
-            });
-            this.waveform.on('ready', () => {
-              container.dataset.state = 'ready';
-              this.updateWaveform();
-            });
-            this.waveform.on('error', () => { container.dataset.state = 'unavailable'; });
-          })
-          .catch(() => {
-            if (request === this.waveformRequest) container.dataset.state = 'unavailable';
-          });
+        this.waveform = LowkalWaveform.createSpectrumWaveform(container, {
+          duration: Number(mix?.duration) || 0,
+          canSeek: () => container.getAttribute('aria-disabled') === 'false',
+          onSeek: seconds => this.scrubPlayback(seconds / this.getEffectiveDuration() * 100)
+        });
+        const mini = document.getElementById('mini-waveform');
+        this.miniWaveform = LowkalWaveform.createSpectrumWaveform(mini, {
+          compact: true, duration: Number(mix?.duration) || 0,
+          canSeek: () => mini.getAttribute('aria-disabled') === 'false',
+          onSeek: seconds => this.scrubPlayback(seconds / this.getEffectiveDuration() * 100)
+        });
+        container.dataset.state = mini.dataset.state = peaksUrl ? 'loading' : 'unavailable';
+        this.updateWaveform();
+        if (!peaksUrl) return;
+        const controller = new AbortController();
+        this.waveformAbort = controller;
+        fetch(peaksUrl, { signal: controller.signal })
+          .then(response => { if (!response.ok) throw new Error('Waveform data unavailable'); return response.json(); })
+          .then(payload => { if (request === this.waveformRequest) { this.waveform.setData(payload); this.miniWaveform.setData(payload); } })
+          .catch(() => { if (request === this.waveformRequest) container.dataset.state = mini.dataset.state = 'unavailable'; });
       }
 
       updateWaveform() {
-        const container = document.getElementById('main-waveform');
         const duration = this.getEffectiveDuration();
         const canSeek = Boolean(this.activeMix?.id && hasPlayback(this.activeMix) && this.isReady && !this.error && duration > 0);
-        container.tabIndex = canSeek ? 0 : -1;
-        container.setAttribute('aria-disabled', String(!canSeek));
-        container.setAttribute('aria-valuemax', String(duration));
-        container.setAttribute('aria-valuenow', String(this.playbackTime));
-        container.setAttribute('aria-valuetext', `${formatTime(this.playbackTime)} of ${formatTime(duration)}`);
-        if (this.waveform && duration > 0) this.waveform.setTime(Math.min(duration, Math.max(0, this.playbackTime)));
-      }
-
-      seekFromWaveform(clientX) {
-        const duration = this.getEffectiveDuration();
-        if (!this.isReady || this.error || !(duration > 0)) return;
-        const bounds = document.getElementById('main-waveform').getBoundingClientRect();
-        if (!bounds.width) return;
-        this.scrubPlayback(Math.min(duration, Math.max(0, ((clientX - bounds.left) / bounds.width) * duration)) / duration * 100);
+        for (const id of ['main-waveform', 'mini-waveform']) {
+          const container = document.getElementById(id);
+          container.tabIndex = canSeek ? 0 : -1;
+          container.setAttribute('aria-disabled', String(!canSeek));
+          container.setAttribute('aria-valuemax', String(duration));
+          container.setAttribute('aria-valuenow', String(this.playbackTime));
+          container.setAttribute('aria-valuetext', `${formatTime(this.playbackTime)} of ${formatTime(duration)}`);
+        }
+        const time = Math.min(duration, Math.max(0, this.playbackTime));
+        this.waveform?.setTime(time, duration);
+        this.miniWaveform?.setTime(time, duration);
       }
 
       // Setup DOM elements for Archive nodes
@@ -1086,20 +1063,20 @@
         document.getElementById('btn-mini-maximize').addEventListener('click', () => this.navigate('home'));
         document.getElementById('mini-player-info-click').addEventListener('click', () => this.navigate('home'));
 
-        const waveform = document.getElementById('main-waveform');
-        waveform.addEventListener('click', (event) => this.seekFromWaveform(event.clientX));
-        waveform.addEventListener('keydown', (event) => {
-          const duration = this.getEffectiveDuration();
-          const step = event.shiftKey ? 30 : 5;
-          const target = event.key === 'Home' ? 0
-            : event.key === 'End' ? duration
-              : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? this.playbackTime - step
-                : event.key === 'ArrowRight' || event.key === 'ArrowUp' ? this.playbackTime + step
-                  : null;
-          if (target === null || !(duration > 0)) return;
-          event.preventDefault();
-          this.scrubPlayback(Math.min(duration, Math.max(0, target)) / duration * 100);
-        });
+        for (const id of ['main-waveform', 'mini-waveform']) {
+          document.getElementById(id).addEventListener('keydown', (event) => {
+            const duration = this.getEffectiveDuration();
+            const step = event.shiftKey ? 30 : 5;
+            const target = event.key === 'Home' ? 0
+              : event.key === 'End' ? duration
+                : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? this.playbackTime - step
+                  : event.key === 'ArrowRight' || event.key === 'ArrowUp' ? this.playbackTime + step
+                    : null;
+            if (target === null || !(duration > 0) || !this.isReady || this.error) return;
+            event.preventDefault();
+            this.scrubPlayback(Math.min(duration, Math.max(0, target)) / duration * 100);
+          });
+        }
         
         window.addEventListener('resize', () => {
           if (this.currentScreen === 'archive' && !this.isTransitioningNode) {
@@ -1479,7 +1456,7 @@
 
       scrubPlayback(percent) {
         const dur = this.getEffectiveDuration();
-        const seconds = Math.floor((percent / 100) * dur);
+        const seconds = LowkalWaveform.timeFromProgress(Number(percent), dur);
         if (IS_EMBEDDED) {
           this.playbackTime = seconds;
           this.sendAudioCommand('seek', { seconds });
@@ -1772,9 +1749,6 @@
         }
         miniPlayIcon.textContent = this.error ? 'refresh' : this.isLoading || this.isPlaying ? 'pause' : 'play_arrow';
         
-        const miniDur = this.getEffectiveDuration();
-        const percent = miniDur > 0 ? Math.floor((this.playbackTime / miniDur) * 100) : 0;
-        document.getElementById('mini-progress-fill').style.width = percent + '%';
       }
     }
 

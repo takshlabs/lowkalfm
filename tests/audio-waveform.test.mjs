@@ -8,18 +8,18 @@ async function source(path) {
   return readFile(new URL(path, root), "utf8");
 }
 
-test("Lowkal player timelines use the shared interactive WaveSurfer surface", async () => {
+test("Lowkal player timelines use the shared measured spectrum surface", async () => {
   const waveform = await source("components/AudioWaveform.tsx");
   const player = await source("components/PersistentPlayer.tsx");
   const artists = await source("components/ArtistsDirectory.tsx");
 
-  assert.match(waveform, /from "wavesurfer\.js"/);
-  assert.match(waveform, /WaveSurfer\.create/);
+  assert.match(waveform, /from "@\/lib\/waveform-renderer"/);
+  assert.match(waveform, /createSpectrumWaveform/);
   assert.match(waveform, /fetch\(peaksUrl/);
-  assert.match(waveform, /peaks:\s*\[payload\.peaks\]/);
+  assert.match(waveform, /waveform.setData\(payload\)/);
   assert.match(waveform, /role="slider"/);
-  assert.match(waveform, /onClick=\{handleClick\}/);
-  assert.match(waveform, /onSeek\(/);
+  assert.match(waveform, /canSeek: \(\) => controlRef.current.canSeek/);
+  assert.match(waveform, /current.onSeek\(seconds\)/);
   assert.match(waveform, /onKeyDown/);
   assert.match(player, /<AudioWaveform/);
   assert.match(artists, /<AudioWaveform/);
@@ -27,14 +27,14 @@ test("Lowkal player timelines use the shared interactive WaveSurfer surface", as
   assert.doesNotMatch(waveform, /url:\s*sourceUrl/);
 });
 
-test("Soundroom uses WaveSurfer for the source waveform and parent seeking", async () => {
+test("Soundroom uses the shared renderer for the measured waveform and parent seeking", async () => {
   const room = await source("public/soundroom/index.html");
 
-  assert.match(room, /wavesurfer\.min\.js/);
+  assert.match(room, /waveform-renderer\.js/);
   assert.match(room, /id="main-waveform"/);
-  assert.match(room, /WaveSurfer\.create/);
-  assert.match(room, /fetch\(peaksUrl\)/);
-  assert.match(room, /peaks:\s*\[payload\.peaks\]/);
+  assert.match(room, /LowkalWaveform.createSpectrumWaveform/);
+  assert.match(room, /fetch\(peaksUrl,/);
+  assert.match(room, /waveform.setData\(payload\)/);
   assert.match(room, /sendAudioCommand\('seek'/);
   assert.doesNotMatch(room, /id="main-scrubber"/);
 });

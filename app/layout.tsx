@@ -15,6 +15,8 @@ import "./home-transmissions.css";
 import "./design-polish.css";
 import "./pwa-audio.css";
 import "./player-refresh.css";
+import "../public/soundroom/waveform.css";
+import "./spectrum-player.css";
 
 export const dynamic = "force-static";
 
