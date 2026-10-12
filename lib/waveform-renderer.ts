@@ -78,7 +78,7 @@ export function createSpectrumWaveform(container: HTMLElement, options: { compac
         ctx.globalAlpha = major ? .18 : .28;
         if (major) ctx.fillRect(tickX, 2, .5, plotHeight - 2);
         ctx.fillRect(tickX, rulerY, 1, major ? 4 : 2);
-        if (major && (time === 0 || width - tickX > 56)) {
+        if (time === 0) {
           ctx.globalAlpha = .7; ctx.textAlign = time === 0 ? "left" : "center";
           ctx.fillText(timeLabel(time), tickX, height);
         }
