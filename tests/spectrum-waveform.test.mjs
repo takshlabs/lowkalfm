@@ -1,8 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { generateWaveformData, wavInfo } from "../lib/waveform-data.ts";
-import { parseWaveformData, aggregateWaveform, timeFromProgress } from "../lib/waveform-renderer.ts";
+import { parseWaveformData, aggregateWaveform, timeFromProgress, waveformTimeStep } from "../lib/waveform-renderer.ts";
 import { readMasterInRanges } from "../lib/waveform-source.ts";
+
+test("time divisions stay readable for short recordings, long sets, and phone widths", () => {
+  for (const duration of [60, 3600, 4210, 10800, 172800]) {
+    for (const width of [262, 324, 560, 1280]) {
+      const step = waveformTimeStep(duration, width);
+      assert.ok(step > 0);
+      assert.ok(step / duration * width >= Math.min(width, 88));
+      assert.ok(duration / step <= Math.max(1, width / 88));
+    }
+  }
+});
 
 function wav(frequency = 100, { channels = 1, bits = 16, floating = false, opposite = false } = {}) {
   const rate = 48000, frames = 9600, align = channels * bits / 8;

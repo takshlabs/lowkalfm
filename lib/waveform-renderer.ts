@@ -34,6 +34,11 @@ function timeLabel(seconds: number) {
   return `${Math.floor(value / 60)}:${String(value % 60).padStart(2, "0")}`;
 }
 
+export function waveformTimeStep(duration: number, width: number) {
+  const spacing = duration / Math.max(1, width / 88);
+  return [15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400].find(step => step >= spacing) ?? Math.ceil(spacing / 86400) * 86400;
+}
+
 export function createSpectrumWaveform(container: HTMLElement, options: { compact?: boolean; duration: number; canSeek: () => boolean; onSeek: (seconds: number) => void }) {
   const canvas = document.createElement("canvas"), preview = document.createElement("output");
   canvas.setAttribute("aria-hidden", "true");
@@ -55,40 +60,50 @@ export function createSpectrumWaveform(container: HTMLElement, options: { compac
     if (lastWidth !== width || lastHeight !== height || !geometry.length) {
       lastWidth = width; lastHeight = height;
       const source = data.bands ? data.peaks.map((_, i) => Math.sqrt((data.bands!.bass[i] ** 2 + data.bands!.mids[i] ** 2 + data.bands!.highs[i] ** 2) / 3)) : data.peaks;
-      const values = aggregateWaveform(source, Math.min(160, width / 5));
+      const values = aggregateWaveform(source, width / 3);
       const maximum = Math.max(.001, ...values);
-      // Smooth measured interval energy into one ribbon. Retain real silence.
-      geometry = values.map((value, i) => {
-        if (value === 0) return 0;
-        const weights = [1, 2, 3, 2, 1];
-        const smoothed = weights.reduce((sum, weight, j) => sum + values[Math.max(0, Math.min(values.length - 1, i + j - 2))] * weight, 0) / 9;
-        return Math.pow(smoothed / maximum, .8);
-      });
+      // Retain interval detail. The display curve brings out changes in dense mixes.
+      geometry = values.map(value => Math.pow(value / maximum, 2.6));
+    }
+    const plotHeight = height - 20, center = plotHeight / 2, rulerY = height - 15;
+    const duration = options.duration;
+    ctx.fillStyle = cursor; ctx.strokeStyle = cursor;
+    ctx.globalAlpha = .15; ctx.fillRect(0, center, width, .5);
+    if (Number.isFinite(duration) && duration > 0) {
+      const step = waveformTimeStep(duration, width), minor = step / 5;
+      ctx.font = `${options.compact ? 9 : 10}px ui-monospace, SFMono-Regular, monospace`;
+      ctx.textBaseline = "bottom";
+      for (let time = 0; time < duration; time += minor) {
+        const tickX = width * time / duration, major = Math.abs(time / step - Math.round(time / step)) < .001;
+        ctx.globalAlpha = major ? .18 : .28;
+        if (major) ctx.fillRect(tickX, 2, .5, plotHeight - 2);
+        ctx.fillRect(tickX, rulerY, 1, major ? 4 : 2);
+        if (major && (time === 0 || width - tickX > 56)) {
+          ctx.globalAlpha = .7; ctx.textAlign = time === 0 ? "left" : "center";
+          ctx.fillText(timeLabel(time), tickX, height);
+        }
+      }
+      ctx.globalAlpha = .7; ctx.textAlign = "right"; ctx.fillText(timeLabel(duration), width, height);
     }
     const x = width * Math.max(0, Math.min(1, (drag?.time ?? position) / Math.max(1, options.duration)));
     if (!data.peaks.length) {
-      ctx.fillStyle = cursor; ctx.globalAlpha = .25; ctx.fillRect(0, height / 2 - 1, width, 2); ctx.globalAlpha = .85; ctx.fillRect(0, height / 2 - 1, x, 2);
+      ctx.fillStyle = cursor; ctx.globalAlpha = .25; ctx.fillRect(0, center - 1, width, 2); ctx.globalAlpha = .85; ctx.fillRect(0, center - 1, x, 2);
     } else {
       const path = new Path2D();
-      const step = width / Math.max(1, geometry.length - 1), amplitude = height * .32;
-      const points = geometry.map((v, i) => [i * step, height / 2 - v * amplitude]);
-      points.push(...geometry.map((v, i) => [i * step, height / 2 + v * amplitude]).reverse());
-      path.moveTo(points[0][0], points[0][1]);
-      for (let i = 0; i < points.length - 1; i++) {
-        const previous = points[Math.max(0, i - 1)], from = points[i], to = points[i + 1], next = points[Math.min(points.length - 1, i + 2)];
-        // Keep both end caps straight; smooth only the upper and lower edges.
-        if (i === geometry.length - 1) path.lineTo(to[0], to[1]);
-        else path.bezierCurveTo(from[0] + (to[0] - previous[0]) / 6, from[1] + (to[1] - previous[1]) / 6, to[0] - (next[0] - from[0]) / 6, to[1] - (next[1] - from[1]) / 6, to[0], to[1]);
-      }
-      path.closePath();
+      const step = width / geometry.length, barWidth = Math.max(1, step - 1), amplitude = plotHeight * .44;
+      geometry.forEach((value, i) => {
+        if (value === 0) return;
+        const barHeight = Math.max(1, value * amplitude * 2);
+        path.roundRect(i * step + .5, center - barHeight / 2, barWidth, barHeight, Math.min(barWidth / 2, barHeight / 2));
+      });
       const gradient = ctx.createLinearGradient(0, 0, width, 0);
       ["--spectrum-mids", "--spectrum-bass", "--spectrum-highs"].forEach((token, i) => gradient.addColorStop(i / 2, style.getPropertyValue(token).trim() || ["#a5dccb", "#eaa7b8", "#b8b2ec"][i]));
       ctx.fillStyle = data.bands ? gradient : cursor; ctx.strokeStyle = data.bands ? gradient : cursor; ctx.lineWidth = 1;
-      ctx.globalAlpha = .25; ctx.fill(path); ctx.globalAlpha = .45; ctx.stroke(path);
-      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, x, height); ctx.clip(); ctx.globalAlpha = .9; ctx.fill(path); ctx.globalAlpha = .9; ctx.stroke(path); ctx.restore();
+      ctx.globalAlpha = .4; ctx.fill(path);
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, x, height); ctx.clip(); ctx.globalAlpha = .95; ctx.fill(path); ctx.restore();
     }
-    ctx.globalAlpha = .9; ctx.fillStyle = cursor; ctx.fillRect(Math.min(width - 1.5, x), height * .12, 1.5, height * .76);
-    ctx.beginPath(); ctx.arc(Math.max(2.5, Math.min(width - 2.5, x)), height * .12, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = .95; ctx.fillStyle = cursor; ctx.fillRect(Math.min(width - 1.5, x), 3, 1.5, plotHeight - 2);
+    ctx.beginPath(); ctx.arc(Math.max(2.5, Math.min(width - 2.5, x)), 3, 2.5, 0, Math.PI * 2); ctx.fill();
   };
   const target = (clientX: number) => {
     const bounds = container.getBoundingClientRect();
