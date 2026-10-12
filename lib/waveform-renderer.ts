@@ -35,15 +35,11 @@ function timeLabel(seconds: number) {
 }
 
 export function createSpectrumWaveform(container: HTMLElement, options: { compact?: boolean; duration: number; canSeek: () => boolean; onSeek: (seconds: number) => void }) {
-  const canvas = document.createElement("canvas"), legend = document.createElement("span"), preview = document.createElement("output");
+  const canvas = document.createElement("canvas"), preview = document.createElement("output");
   canvas.setAttribute("aria-hidden", "true");
-  legend.className = "spectrum-waveform-legend";
-  legend.setAttribute("aria-hidden", "true");
-  legend.innerHTML = '<span>Bass</span><span>Mids</span><span>Highs</span>';
   preview.className = "spectrum-waveform-preview"; preview.hidden = true; preview.setAttribute("aria-live", "off");
   container.classList.add("spectrum-waveform");
-  container.dataset.compact = String(Boolean(options.compact));
-  container.replaceChildren(canvas, legend, preview);
+  container.replaceChildren(canvas, preview);
   let data: DisplayData = { peaks: [], bands: null }, position = 0, drag: { id: number; time: number } | null = null;
   let destroyed = false, lastWidth = 0, lastHeight = 0;
   let geometry: { values: number[]; color: string; center: number; height: number }[] = [];
@@ -61,9 +57,8 @@ export function createSpectrumWaveform(container: HTMLElement, options: { compac
       const colors = ["--spectrum-bass", "--spectrum-mids", "--spectrum-highs"].map((token, i) => style.getPropertyValue(token).trim() || ["#ff867a", "#87d7b2", "#bba0ff"][i]);
       const source = data.bands ? [data.bands.bass, data.bands.mids, data.bands.highs] : [data.peaks];
       const maximum = Math.max(.001, ...source.flat());
-      const compact = options.compact || !data.bands;
-      const plotHeight = height - (compact ? 0 : 18);
-      geometry = source.map((values, i) => ({ values: aggregateWaveform(values, width / 2).map(v => Math.pow(v / maximum, .72)), color: data.bands ? colors[i] : cursor, center: compact ? plotHeight / 2 : (i + .5) * plotHeight / 3, height: compact ? plotHeight * (.84 - i * .19) : plotHeight / 3 * .76 }));
+      // All bands share one center line in every player size.
+      geometry = source.map((values, i) => ({ values: aggregateWaveform(values, width / 2).map(v => Math.pow(v / maximum, .72)), color: data.bands ? colors[i] : cursor, center: height / 2, height: height * (.84 - i * .19) }));
     }
     const x = width * Math.max(0, Math.min(1, (drag?.time ?? position) / Math.max(1, options.duration)));
     if (!data.peaks.length) {
@@ -75,7 +70,7 @@ export function createSpectrumWaveform(container: HTMLElement, options: { compac
       path.closePath(); ctx.fillStyle = lane.color; ctx.globalAlpha = .55; ctx.fill(path);
       ctx.save(); ctx.beginPath(); ctx.rect(0, 0, x, height); ctx.clip(); ctx.globalAlpha = options.compact ? .8 : 1; ctx.fill(path); ctx.restore();
     }
-    ctx.globalAlpha = 1; ctx.fillStyle = cursor; ctx.fillRect(Math.min(width - 1.5, x), 2, 1.5, height - (options.compact || !data.bands ? 4 : 20));
+    ctx.globalAlpha = 1; ctx.fillStyle = cursor; ctx.fillRect(Math.min(width - 1.5, x), 2, 1.5, height - 4);
     ctx.beginPath(); ctx.arc(Math.max(2.5, Math.min(width - 2.5, x)), 3, 2.5, 0, Math.PI * 2); ctx.fill();
   };
   const target = (clientX: number) => {

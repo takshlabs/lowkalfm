@@ -35,7 +35,7 @@ Browser checks must include direct-audio playback and waterfall movement, YouTub
 
 ## Spectrum waveform
 
-Soundroom shows three aligned frequency lanes. Coral shows bass, mint shows mids, and violet shows highs. The compact and expanded site players combine the same lanes in a small waveform. The cursor marks the current playback time. The shape remains fixed during playback and respects reduced motion without a separate animation loop.
+Soundroom and the compact and expanded site players show one waveform. The measured bands overlap on one center line, with no legend. The cursor marks the current playback time. The shape remains fixed during playback and respects reduced motion without a separate animation loop.
 
 Version 2 waveform data contains 2,048 measured intervals from the full WAV master. First-order crossovers separate bass and mids at 250 Hz and mids and highs at 2,000 Hz. A 20 Hz high-pass removes DC. The bands show RMS energy on one shared scale; each band is not normalized separately. These filters overlap near their crossover frequencies. The display is a recording overview, not a spectrum analyser.
 
