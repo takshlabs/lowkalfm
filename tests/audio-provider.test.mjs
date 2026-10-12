@@ -8,7 +8,7 @@ import * as playback from "../lib/audio-playback.ts";
 
 // Exercise the real provider callbacks without a browser or network. React hooks
 // retain state between explicit renders; media promises and events are controlled.
-function harness(search = "") {
+function harness(search = "", savedState = null) {
   const slots = []; let cursor = 0; let effects = []; let value; let tree;
   const records = [
     { slug: "one", title: "One", artist: "Test", artwork: "/one.png", series: "Test", duration: 100, startOffset: 10, playback: { provider: "cloudflare", url: "/one.mp3" } },
@@ -24,6 +24,7 @@ function harness(search = "") {
     useEffect(fn, deps) { const slot = hook(() => ({})); if (!slot.deps || deps.some((item, i) => item !== slot.deps[i])) { effects.push(() => { slot.cleanup?.(); slot.cleanup = fn(); }); slot.deps = deps; } },
   };
   const requests = []; const messages = []; const listeners = {}; const documentListeners = {}; const timers = new Map(); const storage = new Map(); let timerId = 0;
+  if (savedState) storage.set("lowkal.player.v1", JSON.stringify(savedState));
   class MediaElement {
     constructor() { this.paused = false; this.listeners = {}; }
     addEventListener(name, fn) { this.listeners[name] = fn; }
@@ -209,6 +210,58 @@ test("provider exposes authoritative queue navigation and playback modes", () =>
   assert.equal(h.value.isShuffled, true);
   assert.equal(h.value.repeatMode, "all");
 });
+
+test("next mix after a page refresh keeps restored playback paused", () => {
+  const h = harness("", { slug: "one", currentTime: 65, volume: 82 });
+  assert.equal(h.value.currentTime, 65);
+  assert.equal(h.value.isPlaying, false);
+
+  h.value.playNext(); h.render();
+  assert.equal(h.value.activeRecord.slug, "two");
+  h.audio.getAttribute = () => "/two.mp3";
+  h.audio.duration = 120;
+  h.event("onLoadedMetadata"); h.render();
+  assert.equal(h.value.currentTime, 0);
+  assert.equal(h.value.isLoading, false);
+  assert.equal(h.value.isPlaying, false);
+  assert.equal(h.audio.paused, true);
+  assert.equal(h.requests.length, 0);
+});
+
+test("next and previous mix keep playback paused after the user pauses", () => {
+  const h = harness();
+  h.value.togglePlayback();
+  h.value.togglePlayback(); h.render();
+  h.value.playNext(); h.render();
+  assert.equal(h.value.activeRecord.slug, "two");
+  assert.equal(h.value.isLoading, false);
+  h.value.playPrevious(); h.render();
+  assert.equal(h.value.activeRecord.slug, "one");
+  h.audio.duration = 100;
+  h.event("onLoadedMetadata"); h.render();
+  assert.equal(h.value.isPlaying, false);
+  assert.equal(h.value.isLoading, false);
+  assert.equal(h.audio.paused, true);
+  assert.equal(h.requests.length, 1);
+});
+
+for (const playing of [false, true]) {
+  test(`next and previous mix keep a ${playing ? "playing" : "loading"} play request active`, () => {
+    const h = harness();
+    h.value.togglePlayback();
+    if (playing) h.event("onPlaying");
+    h.render();
+    h.value.playNext(); h.render();
+    assert.equal(h.value.activeRecord.slug, "two");
+    assert.equal(h.value.isLoading, true);
+    h.value.playPrevious(); h.render();
+    assert.equal(h.value.activeRecord.slug, "one");
+    assert.equal(h.value.isLoading, true);
+    h.audio.duration = 100;
+    h.event("onLoadedMetadata");
+    assert.equal(h.requests.length, 2);
+  });
+}
 
 test("mute is authoritative and preserves the selected volume", () => {
   const h = harness();

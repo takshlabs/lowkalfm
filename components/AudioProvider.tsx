@@ -466,7 +466,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     const currentIndex = activeQueue.indexOf(activeRecord.slug);
     const nextIndex = nextQueueIndex(currentIndex, activeQueue.length, repeatMode === "one" ? "off" : repeatMode);
     if (nextIndex === null) { pauseMedia(); return; }
-    playRecord(activeQueue[nextIndex], true);
+    playRecord(activeQueue[nextIndex], autoplayRef.current);
   }, [activeQueue, activeRecord.slug, pauseMedia, playRecord, repeatMode]);
 
   const playPrevious = useCallback(() => {
@@ -489,7 +489,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       persist(start);
       return;
     }
-    playRecord(activeQueue[previousIndex], true);
+    playRecord(activeQueue[previousIndex], autoplayRef.current);
   }, [activeQueue, activeRecord.slug, activeRecord.startOffset, persist, playRecord, repeatMode]);
 
   const onEnded = useCallback(() => {
