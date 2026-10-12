@@ -111,12 +111,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, [role="button"]:focu
   #screen-home::-webkit-scrollbar { display: none; }
   #screen-home > main { display: grid !important; width: 100% !important; height: auto !important; padding-top: 0 !important; gap: 14px !important; }
   #screen-home > main > div:first-child {
-    width: 100% !important;
+    width: fit-content !important;
+    max-width: 100%;
     height: auto !important;
-    aspect-ratio: 16 / 10;
+    justify-self: center;
     border-radius: 14px !important;
     box-shadow: 0 18px 54px rgba(0, 0, 0, .36);
   }
+  .main-cover-art { max-height: min(52dvh, 420px); }
 
   #screen-home > main > div:nth-child(2) {
     width: 100% !important;

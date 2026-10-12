@@ -39,7 +39,7 @@ test('room assets resolve after clean-URL redirects and under a site prefix', as
 test('the room restores the original split player and moves controls into settings', async () => {
   const html = await readFile(new URL('../public/soundroom/index.html', import.meta.url), 'utf8');
   assert.match(html, /max-w-5xl mx-auto flex flex-col md:flex-row/);
-  assert.match(html, /md:w-\[380px\] md:h-\[380px\] rounded-2xl/);
+  assert.match(html, /main-cover-frame flex-shrink-0 rounded-2xl/);
   assert.match(html, /md:w-\[460px\] h-\[55vh\] md:h-\[72vh\] glass-panel/);
   assert.equal((html.match(/<canvas\b/g) || []).length, 2);
   assert.doesNotMatch(html, /visual-dock|visual-scene|visual-focus|Soundroom\.<\/h1>|room-layout/);
