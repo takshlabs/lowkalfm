@@ -38,9 +38,10 @@ export function flacInfo(bytes: Uint8Array) {
   const minBlock = view.getUint16(8), maxBlock = view.getUint16(10);
   const sampleRate = bytes[18] * 4096 + bytes[19] * 16 + (bytes[20] >> 4);
   const bits = ((bytes[20] & 1) << 4 | bytes[21] >> 4) + 1;
+  const channels = ((bytes[20] >> 1) & 7) + 1;
   const totalSamples = (bytes[21] & 0x0f) * 4294967296 + view.getUint32(22);
   if (minBlock < 16 || maxBlock < minBlock || !sampleRate || sampleRate > 655350 || bits < 4) return undefined;
-  return { sampleRate, totalSamples };
+  return { sampleRate, totalSamples, channels, bits };
 }
 
 export function durationSecondsFromFlac(bytes: Uint8Array) {

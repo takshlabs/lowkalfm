@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { generateWaveformData, wavInfo } from "../lib/waveform-data.ts";
 import { flacInfo } from "../lib/audio-duration.ts";
 import { readMasterInRanges } from "../lib/waveform-source.ts";
+import { generateFlacWaveformData } from "./flac-waveform.mjs";
 
 const workerBase = "https://lowkal-audio-sync.lowkal-audio-737a.workers.dev";
 const client = createClient({ projectId: process.env.SANITY_API_PROJECT_ID, dataset: process.env.SANITY_API_DATASET, apiVersion: "2026-08-24", token: process.env.SANITY_API_WRITE_TOKEN, useCdn: false });
@@ -30,16 +31,16 @@ for (const mix of mixes) {
   const response = await fetch(mix.masterUrl, { headers: { Range: "bytes=0-131071" } });
   if (response.status !== 206) throw new Error(`${mix.slug}: master header read failed`);
   const header = new Uint8Array(await response.arrayBuffer());
-  if (flacInfo(header)) { console.log(`${mix.slug}: FLAC has no stored waveform; skipped`); continue; }
+  const flac = flacInfo(header);
   const info = wavInfo(header);
-  if (!info) throw new Error(`${mix.slug}: unsupported WAV header`);
+  if (!info && !flac) throw new Error(`${mix.slug}: unsupported audio header`);
   let progress = 0;
   const stream = readMasterInRanges(mix.masterUrl, mix.masterSize, bytes => {
     const percent = Math.floor(bytes / mix.masterSize * 10) * 10;
     if (percent > progress) { progress = percent; console.log(`${mix.slug}: ${percent}%`); }
   });
-  const data = await generateWaveformData(stream, info);
-  const filename = safeSegment(mix.masterFilename || `${mix.masterId}.wav`);
+  const data = flac ? await generateFlacWaveformData(stream, flac) : await generateWaveformData(stream, info);
+  const filename = safeSegment(mix.masterFilename || `${mix.masterId}.${flac ? "flac" : "wav"}`);
   const key = `mixes/${safeSegment(mix._id)}/${safeSegment(mix.masterId)}-${filename}.spectrum-v2.json`;
   await putObject(key, data);
   const peaksUrl = `${workerBase}/audio/${key.split("/").map(encodeURIComponent).join("/")}`;

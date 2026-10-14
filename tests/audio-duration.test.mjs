@@ -5,7 +5,7 @@ import { durationSecondsFromAudio, durationSecondsFromFlac, durationSecondsFromW
 
 test("FLAC duration reads STREAMINFO without decoding audio", () => {
   const bytes = new Uint8Array(readFileSync(new URL("./fixtures/mix.flac", import.meta.url)));
-  assert.deepEqual(flacInfo(bytes), { sampleRate: 44100, totalSamples: 11025 });
+  assert.deepEqual(flacInfo(bytes), { sampleRate: 44100, totalSamples: 11025, channels: 1, bits: 16 });
   assert.equal(durationSecondsFromAudio(bytes), 1);
   assert.equal(durationSecondsFromAudio(wavHeader()), 2);
   assert.equal(durationSecondsFromFlac(bytes.subarray(0, 41)), undefined);

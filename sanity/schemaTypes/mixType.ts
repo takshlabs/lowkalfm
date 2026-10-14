@@ -80,7 +80,7 @@ export const mixType = defineType({
           title: "Waveform peak data URL",
           type: "url",
           readOnly: true,
-          description: "Set automatically for WAV masters. FLAC masters use the playback position display without a stored waveform."
+          description: "Set automatically for WAV masters. For FLAC masters, run the audio:peaks command after the CDN copy is complete. Both formats use the same waveform display."
         }),
         defineField({
           name: "sourceAssetId",
