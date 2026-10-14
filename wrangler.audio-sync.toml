@@ -1,8 +1,13 @@
 name = "lowkal-audio-sync"
-main = "workers/audio-sync.ts"
+main = "workers/audio-workflow.js"
 compatibility_date = "2026-09-04"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
+
+[[workflows]]
+name = "lowkal-audio-copy"
+binding = "AUDIO_SYNC"
+class_name = "AudioSyncWorkflow"
 
 [[r2_buckets]]
 binding = "AUDIO"

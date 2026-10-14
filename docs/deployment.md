@@ -66,6 +66,7 @@ This setup is separate from the Vercel deployment.
 
 - R2 bucket: `lowkal-audio` (APAC location hint, Standard storage)
 - Worker: `lowkal-audio-sync`
+- Audio copy workflow: `lowkal-audio-copy`, bound as `AUDIO_SYNC`
 - Current audio endpoint: `https://lowkal-audio-sync.lowkal-audio-737a.workers.dev`
 - Sanity webhook: `Copy published mixes to Cloudflare R2` (production dataset, create and update events)
 
@@ -102,7 +103,9 @@ The account has no Cloudflare DNS zone for `lowkalfm.in`. Keep the current Worke
 
 10. Publish a small test mix. Confirm that the mix document receives `audio.deliveryUrl`, then play the mix from `https://lowkalfm.in`.
 
-The Worker copies WAV and FLAC masters to R2 and reads duration from the header. For WAV masters, it also calculates interval peaks and three frequency bands. It writes the delivery URL, duration, and WAV waveform URL in one update. For FLAC masters, it removes any old waveform URL. The browser plays the CDN URL directly. Vercel does not proxy the large audio file.
+The Worker checks the webhook signature, saves an audio copy job, and returns HTTP 202. The `lowkal-audio-copy` workflow copies the master after the publish request ends. This prevents the 30-second webhook timeout from stopping large file transfers. Each copy can run for 30 minutes and has three retries. Repeat publishes use the same job for the same mix and master. A new publish restarts an errored or terminated job.
+
+The workflow copies WAV and FLAC masters to R2 and reads duration from the header. For WAV masters, it also calculates interval peaks and three frequency bands. It writes the delivery URL, duration, and WAV waveform URL in one update. For FLAC masters, it removes any old waveform URL. The browser plays the CDN URL directly. Vercel does not proxy the large audio file.
 
 ### Waveform generation
 
@@ -113,6 +116,7 @@ Use `npm run audio:peaks -- <mix-slug>` to repair one published mix. Use `npm ru
 ## Troubleshooting
 
 - If the CDN URL does not appear, check the Cloudflare Worker logs and the Sanity webhook delivery log.
+- HTTP 202 confirms that the audio job is saved. Use `npx wrangler workflows instances describe lowkal-audio-copy <job-id> --config wrangler.audio-sync.toml` to check the copy result. Publish the mix again to restart a failed job.
 - If the CMS works but the site does not show the latest content, check the Sanity document is published, not a draft.
 - If a new audio file gives an old sound, upload a new master. The asset ID changes the R2 object key.
 - If the Vercel release fails, do not deploy elsewhere. Check the Vercel build log, repair the source, run `npm run check`, then deploy again.

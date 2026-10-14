@@ -9,6 +9,7 @@ The Lowkal site and CMS run at `https://lowkalfm.in`. Cloudflare R2 stores and d
 3. Upload the lossless master to **WAV or FLAC master**.
 4. Set **Start playback at (seconds)** only when the file has leading silence. Use `0` for no skip.
 5. Publish the mix.
+   The publish request saves a background audio job. The copy continues after the request ends. Failed copies retry automatically. Publish the same mix again to restart a failed job; a new upload is not required.
 6. For a WAV master, wait for both **CDN delivery URL** and **Waveform peak data URL** to appear. The Worker copies the WAV master, calculates interval peaks and measured bass, mid, and high energy, and saves both URLs in one publish operation.
 
 For a FLAC master, wait for **CDN delivery URL** to appear. The Worker copies the original FLAC file and reads its duration from the header. FLAC mixes use the playback position display. They do not have stored waveform data. When a FLAC replaces a WAV, the Worker removes the old waveform URL.

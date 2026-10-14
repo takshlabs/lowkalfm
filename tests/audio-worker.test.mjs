@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import worker from "../workers/audio-sync.ts";
+import worker, { copyAudioMaster, syncAudioRequest } from "../workers/audio-sync.ts";
+
+const syncAudioNow = (request, env) => syncAudioRequest(request, env, copyAudioMaster);
 
 function base64Url(bytes) {
   return Buffer.from(bytes).toString("base64url");
@@ -59,7 +61,7 @@ test("audio sync derives a missing asset ID and returns a playable delivery URL"
   };
 
   try {
-    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", {
+    const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", {
       method: "POST",
       headers: { "sanity-webhook-signature": await signature(payload, secret) },
       body: payload,
@@ -118,7 +120,7 @@ test("audio sync writes waveform peaks before it makes the delivery URL public",
     throw new Error(`Unexpected fetch: ${url}`);
   };
   try {
-    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
+    const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
       AUDIO: { get: async () => null, put: async (key, value) => { writes.push({ key, value: typeof value === "string" ? value : new TextDecoder().decode(await new Response(value).arrayBuffer()) }); } },
       SANITY_WEBHOOK_SECRET: secret, SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "token", AUDIO_PUBLIC_BASE_URL: "https://worker.example/",
     });
@@ -188,7 +190,7 @@ test("audio sync writes mix duration from the uploaded WAV master", async () => 
   };
 
   try {
-    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", {
+    const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", {
       method: "POST",
       headers: { "sanity-webhook-signature": await signature(payload, secret) },
       body: payload,
@@ -223,7 +225,7 @@ test("an older WAV upload cannot replace a newer master", async () => {
     throw new Error(`Unexpected fetch: ${url}`);
   };
   try {
-    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
+    const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
       SANITY_WEBHOOK_SECRET: secret, SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "test", AUDIO_PUBLIC_BASE_URL: "https://worker.example",
       AUDIO: { put: async (_, value) => { await new Response(value).arrayBuffer(); master = "file-new-master-wav"; } }
     });
@@ -249,7 +251,7 @@ test("WAV delivery preserves all master bytes without transcoding", async () => 
     throw new Error(`Unexpected fetch: ${url}`);
   };
   try {
-    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
+    const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
       SANITY_WEBHOOK_SECRET: secret, SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "test", AUDIO_PUBLIC_BASE_URL: "https://worker.example",
       AUDIO: { put: async (key, value, options) => { const bytes = new Uint8Array(await new Response(value).arrayBuffer()); if (!key.endsWith('.json')) stored = { bytes, type: options.httpMetadata.contentType }; } }
     });
@@ -268,7 +270,7 @@ test("audio sync accepts Sanity millisecond signatures and rejects stale or seco
     const digest = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${timestamp}.${body}`));
     return `t=${timestamp},v1=${base64Url(digest)}`;
   };
-  const send = async (header) => (await worker.fetch(new Request("https://worker.example/sanity/audio-sync", {
+  const send = async (header) => (await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", {
     method: "POST",
     headers: { "sanity-webhook-signature": header },
     body,
@@ -305,7 +307,7 @@ test("FLAC sync preserves audio, clears an old WAV waveform, and serves byte ran
     throw new Error(`Unexpected fetch: ${url}`);
   };
   try {
-    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), env);
+    const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), env);
     assert.equal(response.status, 200);
     const result = await response.json();
     assert.equal(result.published, true);
@@ -324,8 +326,72 @@ test("FLAC sync preserves audio, clears an old WAV waveform, and serves byte ran
     assert.deepEqual(new Uint8Array(await delivery.arrayBuffer()), audio.slice(0, 42));
     const invalid = await signature(payload, secret);
     globalThis.fetch = async () => new Response("not FLAC");
-    const rejected = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": invalid }, body: payload }), env);
+    const rejected = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": invalid }, body: payload }), env);
     assert.equal(rejected.status, 422);
     assert.equal(writes.length, 1);
   } finally { globalThis.fetch = previous; }
+});
+
+async function publishRequest(payload, secret = "test-secret") {
+  const body = JSON.stringify(payload);
+  return new Request("https://worker.example/sanity/audio-sync", {
+    method: "POST", headers: { "sanity-webhook-signature": await signature(body, secret) }, body
+  });
+}
+
+const queuedMaster = { _id: "mix-test", _type: "mix", audioMasterUrl: "https://cdn.sanity.io/files/project/production/aabbcc.flac" };
+
+test("publish saves a background job and returns before the master is downloaded", async () => {
+  const previous = globalThis.fetch;
+  const jobs = [];
+  globalThis.fetch = async () => { throw new Error("Publish must not download the master"); };
+  try {
+    const response = await worker.fetch(await publishRequest(queuedMaster), {
+      SANITY_WEBHOOK_SECRET: "test-secret",
+      AUDIO_SYNC: { create: async job => { jobs.push(job); return { id: job.id }; } }
+    });
+    assert.equal(response.status, 202);
+    assert.equal((await response.json()).jobId, jobs[0].id);
+    assert.equal(jobs[0].params.audioMasterId, "file-aabbcc-flac");
+  } finally { globalThis.fetch = previous; }
+});
+
+test("repeated publish uses the saved job and can restart a failed copy", async () => {
+  for (const status of ["running", "complete", "errored", "terminated"]) {
+    const ids = [], restarts = [];
+    const env = {
+      SANITY_WEBHOOK_SECRET: "test-secret",
+      AUDIO_SYNC: {
+        create: async job => { ids.push(job.id); throw new Error("Instance already exists"); },
+        get: async id => ({ status: async () => ({ status }), restart: async () => { restarts.push(id); } })
+      }
+    };
+    assert.equal((await worker.fetch(await publishRequest(queuedMaster), env)).status, 202);
+    assert.equal((await worker.fetch(await publishRequest(queuedMaster), env)).status, 202);
+    assert.equal(ids[0], ids[1]);
+    assert.equal(restarts.length, ["errored", "terminated"].includes(status) ? 2 : 0);
+    const changed = await publishRequest({ ...queuedMaster, audioMasterUrl: queuedMaster.audioMasterUrl.replace("aabbcc", "ddeeff") });
+    assert.equal((await worker.fetch(changed, env)).status, 202);
+    assert.notEqual(ids[0], ids[2], "a replacement master gets a new job");
+  }
+});
+
+test("invalid signatures and already copied masters do not create jobs", async () => {
+  let created = 0;
+  const env = { SANITY_WEBHOOK_SECRET: "test-secret", AUDIO_SYNC: { create: async () => { created++; } } };
+  assert.equal((await worker.fetch(await publishRequest(queuedMaster, "wrong-secret"), env)).status, 401);
+  assert.equal((await worker.fetch(await publishRequest({ ...queuedMaster, audioSourceAssetId: "file-aabbcc-flac" }), env)).status, 204);
+  assert.equal(created, 0);
+});
+
+test("a failed job submission is not acknowledged as a successful publish", async () => {
+  const previous = console.error;
+  console.error = () => {};
+  try {
+    const response = await worker.fetch(await publishRequest(queuedMaster), {
+      SANITY_WEBHOOK_SECRET: "test-secret",
+      AUDIO_SYNC: { create: async () => { throw new Error("Service unavailable"); }, get: async () => { throw new Error("No saved job"); } }
+    });
+    assert.equal(response.status, 500);
+  } finally { console.error = previous; }
 });

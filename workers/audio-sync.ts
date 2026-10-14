@@ -15,7 +15,7 @@ interface AudioObjectBucket {
   put(key: string, value: ReadableStream<Uint8Array> | string, options: { httpMetadata: { contentType: string; cacheControl: string } }): Promise<unknown>;
 }
 
-interface Env {
+export interface Env {
   AUDIO: AudioObjectBucket;
   SANITY_WEBHOOK_SECRET: string;
   SANITY_API_PROJECT_ID: string;
@@ -24,9 +24,13 @@ interface Env {
   AUDIO_PUBLIC_BASE_URL: string;
   YOUTUBE_API_KEY?: string;
   LISTEN_RATE_LIMITER: { limit: (options: { key: string }) => Promise<{ success: boolean }> };
+  AUDIO_SYNC: {
+    create(options: { id: string; params: AudioSyncPayload }): Promise<{ id: string }>;
+    get(id: string): Promise<{ status(): Promise<{ status: string }>; restart(): Promise<void> }>;
+  };
 }
 
-type AudioSyncPayload = {
+export type AudioSyncPayload = {
   _id?: string;
   _type?: string;
   audioMasterUrl?: string;
@@ -139,16 +143,39 @@ async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">>
   throw new Error("Sanity source changed during audio update");
 }
 
-async function syncAudio(request: Request, env: Env, authorize: (rawBody: string) => Promise<boolean> | boolean) {
+async function queueAudioMaster(payload: AudioSyncPayload, env: Env) {
+  // One job per mix and master. Publish retries must not start duplicate copies.
+  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(JSON.stringify([payload._id, payload.audioMasterId])));
+  const id = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+  try {
+    await env.AUDIO_SYNC.create({ id, params: payload });
+  } catch (error) {
+    // A duplicate create fails. Confirm that the saved job exists before we
+    // acknowledge the publish, and restart a failed job on a new publish.
+    const instance = await env.AUDIO_SYNC.get(id);
+    const { status } = await instance.status();
+    if (status === "errored" || status === "terminated") await instance.restart();
+    else if (!["queued", "running", "waiting", "complete"].includes(status)) throw error;
+  }
+  return Response.json({ jobId: id }, { status: 202 });
+}
+
+export async function syncAudioRequest(request: Request, env: Env, processMaster = queueAudioMaster) {
   const rawBody = await request.text();
-  if (!await authorize(rawBody)) return new Response("Unauthorized", { status: 401 });
+  if (!await validSanitySignature(rawBody, request.headers.get("sanity-webhook-signature"), env.SANITY_WEBHOOK_SECRET)) return new Response("Unauthorized", { status: 401 });
   let payload: AudioSyncPayload;
   try { payload = JSON.parse(rawBody) as AudioSyncPayload; } catch { return new Response("Invalid JSON", { status: 400 }); }
   if (payload._type !== "mix" || !payload._id || !payload.audioMasterUrl) return new Response(null, { status: 204 });
   const audioMasterId = payload.audioMasterId || sourceAssetId(payload.audioMasterUrl);
   if (!audioMasterId || payload.audioSourceAssetId === audioMasterId) return new Response(null, { status: 204 });
   const syncPayload = { ...payload, audioMasterId };
+  return processMaster(syncPayload, env);
+}
 
+export async function copyAudioMaster(payload: AudioSyncPayload, env: Env) {
+  if (!payload._id || !payload.audioMasterUrl) throw new Error("Audio master is missing");
+  const audioMasterId = payload.audioMasterId || sourceAssetId(payload.audioMasterUrl);
+  const syncPayload = { ...payload, audioMasterId };
   const source = await fetch(payload.audioMasterUrl);
   if (!source.ok || !source.body) return new Response("Could not download audio master", { status: 502 });
   const [headerStream, audioStream] = source.body.tee();
@@ -187,7 +214,7 @@ const worker = {
     }
     if (url.pathname.startsWith("/audio/") && (request.method === "GET" || request.method === "HEAD")) return serveAudio(request, env);
     if (url.pathname !== "/sanity/audio-sync" || request.method !== "POST") return new Response("Not found", { status: 404 });
-    try { return await syncAudio(request, env, (rawBody) => validSanitySignature(rawBody, request.headers.get("sanity-webhook-signature"), env.SANITY_WEBHOOK_SECRET)); } catch (error) { console.error(error); return new Response("Audio sync failed", { status: 500 }); }
+    try { return await syncAudioRequest(request, env); } catch (error) { console.error(error); return new Response("Audio sync failed", { status: 500 }); }
   }
 };
 
