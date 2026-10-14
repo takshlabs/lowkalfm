@@ -41,7 +41,7 @@ export const mixType = defineType({
     }),
     defineField({ name: "artists", title: "Artists", type: "array", group: "identity", of: [defineArrayMember({ type: "reference", to: [{ type: "artist" }] })] }),
     defineField({ name: "artistDisplayName", title: "Artist line override", type: "string", group: "identity", description: "Use this for a B2B or multi-artist credit. Leave it empty to use the linked artist names." }),
-    defineField({ name: "releaseDate", title: "Release date", type: "date", group: "identity", validation: (rule) => rule.required() }),
+    defineField({ name: "releaseDate", title: "Release date", type: "date", group: "identity", description: "All set lists show the newest release first. This date controls the order.", validation: (rule) => rule.required() }),
     defineField({ name: "description", title: "Description", type: "text", rows: 5, group: "identity" }),
     defineField({ name: "genres", title: "Genres", type: "array", group: "identity", of: [defineArrayMember({ type: "string" })], options: { layout: "tags" } }),
     defineField({ name: "artwork", title: "Artwork", type: "image", group: "identity", options: { hotspot: true }, fields: [defineField({ name: "alt", title: "Description", type: "string" })], validation: (rule) => rule.required() }),
@@ -51,14 +51,14 @@ export const mixType = defineType({
       title: "Audio",
       type: "object",
       group: "playback",
-      description: "Use this for a Cloudflare audio mix. Publish the mix to copy the WAV master to Lowkal's audio CDN.",
+      description: "Use this for a Cloudflare audio mix. Publish the mix to copy the audio master to Lowkal's audio CDN.",
       fields: [
         defineField({
           name: "master",
-          title: "WAV master",
+          title: "WAV or FLAC master",
           type: "file",
-          options: { accept: "audio/wav,audio/x-wav,.wav" },
-          description: "Use a PCM WAV master (16, 24, or 32 bit) or a 32-bit float WAV master. Duration is read from this file. The site streams this WAV from Cloudflare after publication."
+          options: { accept: "audio/wav,audio/x-wav,.wav,audio/flac,audio/x-flac,.flac" },
+          description: "Use a FLAC master, a PCM WAV master (16, 24, or 32 bit), or a 32-bit float WAV master. Duration is read from this file. The site streams the original file from Cloudflare after publication."
         }),
         defineField({
           name: "startOffset",
@@ -73,14 +73,14 @@ export const mixType = defineType({
           title: "CDN delivery URL",
           type: "url",
           readOnly: true,
-          description: "Set automatically after the WAV is copied to the audio CDN."
+          description: "Set automatically after the audio master is copied to the audio CDN."
         }),
         defineField({
           name: "peaksUrl",
           title: "Waveform peak data URL",
           type: "url",
           readOnly: true,
-          description: "Set automatically with the CDN delivery URL. The player uses this compact data to draw the master waveform."
+          description: "Set automatically for WAV masters. FLAC masters use the playback position display without a stored waveform."
         }),
         defineField({
           name: "sourceAssetId",
@@ -158,9 +158,7 @@ export const mixType = defineType({
     defineField({ name: "showInPlayer", title: "Available in player", type: "boolean", group: "placement", initialValue: true }),
     defineField({ name: "youtubeViewsMax", title: "YouTube views snapshot", type: "number", group: "placement", hidden: true }),
     defineField({ name: "legacyBaselineMax", title: "Legacy browser count snapshot", type: "number", group: "placement", hidden: true }),
-    defineField({ name: "playerOrder", title: "Player order", type: "number", group: "placement", initialValue: 100 }),
     defineField({ name: "showInSoundroom", title: "Show in Soundroom", type: "boolean", group: "placement", initialValue: true }),
-    defineField({ name: "soundroomOrder", title: "Soundroom order", type: "number", group: "placement", initialValue: 100 }),
     defineField({ name: "showInArchive", title: "Show in Archive", type: "boolean", group: "placement", initialValue: true }),
     defineField({
       name: "archiveSection",
@@ -174,9 +172,7 @@ export const mixType = defineType({
       ] },
       initialValue: "volumes-guests"
     }),
-    defineField({ name: "archiveOrder", title: "Archive order", type: "number", group: "placement", initialValue: 100 }),
     defineField({ name: "showOnHome", title: "Show on home", type: "boolean", group: "placement", initialValue: true }),
-    defineField({ name: "homeOrder", title: "Home order", type: "number", group: "placement", initialValue: 100 }),
     defineField({
       name: "tracks",
       title: "Tracklist",
@@ -198,7 +194,6 @@ export const mixType = defineType({
   ],
   orderings: [
     { title: "Release date, new first", name: "releaseDateDesc", by: [{ field: "releaseDate", direction: "desc" }] },
-    { title: "Soundroom order", name: "soundroomOrder", by: [{ field: "soundroomOrder", direction: "asc" }] }
   ],
   preview: {
     select: { title: "title", series: "series", artist: "artistDisplayName", media: "artwork", published: "published", parked: "parked" },

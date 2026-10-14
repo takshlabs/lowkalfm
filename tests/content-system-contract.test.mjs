@@ -129,6 +129,7 @@ test("mix masters upload in Sanity and are delivered from the audio CDN", async 
   assert.match(schema, /name:\s*"audio"/);
   assert.match(schema, /name:\s*"master"/);
   assert.match(schema, /audio\/wav/);
+  assert.match(schema, /audio\/flac/);
   assert.match(schema, /name:\s*"startOffset"/);
   assert.match(schema, /Start playback at/);
   assert.match(schema, /MixDurationInput/);
@@ -143,7 +144,7 @@ test("mix masters upload in Sanity and are delivered from the audio CDN", async 
   assert.match(worker, /AUDIO_PUBLIC_BASE_URL/);
   assert.match(worker, /sourceAssetId/);
   assert.match(worker, /payload\.audioMasterId \|\| sourceAssetId\(payload\.audioMasterUrl\)/);
-  assert.match(worker, /durationSecondsFromWav/);
+  assert.match(worker, /durationSecondsFromAudio/);
   assert.match(worker, /set\.duration/);
 
   const publishingGuide = await source("docs/deployment.md");

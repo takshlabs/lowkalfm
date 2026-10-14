@@ -1,6 +1,7 @@
 import { createClient } from "@sanity/client";
 import { spawn } from "node:child_process";
 import { generateWaveformData, wavInfo } from "../lib/waveform-data.ts";
+import { flacInfo } from "../lib/audio-duration.ts";
 import { readMasterInRanges } from "../lib/waveform-source.ts";
 
 const workerBase = "https://lowkal-audio-sync.lowkal-audio-737a.workers.dev";
@@ -23,12 +24,14 @@ const projection = '{_id,_rev,"slug":slug.current,"masterUrl":audio.master.asset
 const mixes = await client.fetch(`*[_type == "mix" && !(_id in path("drafts.**")) && defined(audio.deliveryUrl) && ($all || slug.current == $slug)]${projection}`, { all: slug === "--all", slug });
 if (!mixes.length) throw new Error("No published direct-audio mixes found");
 for (const mix of mixes) {
-  if (!mix.masterUrl || !mix.masterId) throw new Error(`${mix.slug}: WAV master is missing`);
+  if (!mix.masterUrl || !mix.masterId) throw new Error(`${mix.slug}: Audio master is missing`);
   if (slug === "--all" && mix.peaksUrl?.includes(".spectrum-v2.json")) { console.log(`${mix.slug}: spectrum data already available`); continue; }
   console.log(`${mix.slug}: scan master`);
   const response = await fetch(mix.masterUrl, { headers: { Range: "bytes=0-131071" } });
   if (response.status !== 206) throw new Error(`${mix.slug}: master header read failed`);
-  const info = wavInfo(new Uint8Array(await response.arrayBuffer()));
+  const header = new Uint8Array(await response.arrayBuffer());
+  if (flacInfo(header)) { console.log(`${mix.slug}: FLAC has no stored waveform; skipped`); continue; }
+  const info = wavInfo(header);
   if (!info) throw new Error(`${mix.slug}: unsupported WAV header`);
   let progress = 0;
   const stream = readMasterInRanges(mix.masterUrl, mix.masterSize, bytes => {

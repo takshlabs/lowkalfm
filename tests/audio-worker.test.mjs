@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
 import worker from "../workers/audio-sync.ts";
 
 function base64Url(bytes) {
@@ -276,4 +277,55 @@ test("audio sync accepts Sanity millisecond signatures and rejects stale or seco
   assert.equal(await send(await sign(Date.now())), 204, "a fresh millisecond signature is accepted");
   assert.equal(await send(await sign(Math.floor(Date.now() / 1000))), 401, "a seconds timestamp is rejected");
   assert.equal(await send(await sign(Date.now() - 6 * 60 * 1000)), 401, "a stale signature is rejected");
+});
+
+test("FLAC sync preserves audio, clears an old WAV waveform, and serves byte ranges", async () => {
+  const audio = new Uint8Array(readFileSync(new URL("./fixtures/mix.flac", import.meta.url)));
+  const sourceUrl = "https://cdn.sanity.io/files/project/production/aabbcc.flac";
+  const payload = JSON.stringify({ _id: "mix-test", _type: "mix", audioMasterUrl: sourceUrl });
+  const secret = "test-secret";
+  const previous = globalThis.fetch;
+  const writes = [], patches = [];
+  const env = {
+    SANITY_WEBHOOK_SECRET: secret, SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "test", AUDIO_PUBLIC_BASE_URL: "https://worker.example",
+    AUDIO: {
+      put: async (key, value, options) => { writes.push({ key, bytes: new Uint8Array(await new Response(value).arrayBuffer()), type: options.httpMetadata.contentType }); },
+      get: async (key, options) => {
+        assert.equal(key, writes[0].key);
+        assert.equal(options.range.get("range"), "bytes=0-41");
+        return { body: new Blob([writes[0].bytes.slice(0, 42)]).stream(), size: audio.length, range: { offset: 0, length: 42 }, etag: "flac", httpMetadata: { contentType: writes[0].type } };
+      }
+    }
+  };
+  globalThis.fetch = async (input, init) => {
+    const url = String(input);
+    if (url === sourceUrl) return new Response(audio, { headers: { "content-type": "application/octet-stream" } });
+    if (url.includes("/data/query/")) return Response.json({ result: { _rev: "current", master: "file-aabbcc-flac" } });
+    if (init?.method === "POST") { patches.push(JSON.parse(init.body).mutations[0].patch); return Response.json({}); }
+    throw new Error(`Unexpected fetch: ${url}`);
+  };
+  try {
+    const response = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), env);
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.published, true);
+    assert.match(result.deliveryUrl, /\.flac$/);
+    assert.equal(writes.length, 1);
+    assert.deepEqual(writes[0].bytes, audio);
+    assert.equal(writes[0].type, "audio/flac");
+    assert.equal(patches[0].set.duration, 1);
+    assert.equal(patches[0].set["audio.sourceAssetId"], "file-aabbcc-flac");
+    assert.equal(patches[0].ifRevisionID, "current");
+    assert.deepEqual(patches[0].unset, ["audio.peaksUrl"]);
+    const delivery = await worker.fetch(new Request(result.deliveryUrl, { headers: { Range: "bytes=0-41" } }), env);
+    assert.equal(delivery.status, 206);
+    assert.equal(delivery.headers.get("content-type"), "audio/flac");
+    assert.equal(delivery.headers.get("content-range"), `bytes 0-41/${audio.length}`);
+    assert.deepEqual(new Uint8Array(await delivery.arrayBuffer()), audio.slice(0, 42));
+    const invalid = await signature(payload, secret);
+    globalThis.fetch = async () => new Response("not FLAC");
+    const rejected = await worker.fetch(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": invalid }, body: payload }), env);
+    assert.equal(rejected.status, 422);
+    assert.equal(writes.length, 1);
+  } finally { globalThis.fetch = previous; }
 });

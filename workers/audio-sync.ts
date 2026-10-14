@@ -1,4 +1,4 @@
-import { durationSecondsFromWav, readStreamPrefix } from "../lib/audio-duration.ts";
+import { durationSecondsFromAudio, flacInfo, readStreamPrefix } from "../lib/audio-duration.ts";
 import { generateWaveformData, wavInfo } from "../lib/waveform-data.ts";
 import { handleListenCounts } from "./listen-counts.ts";
 
@@ -110,13 +110,13 @@ async function serveAudio(request: Request, env: Env) {
   return new Response(request.method === "HEAD" ? null : object.body, { status: object.range ? 206 : 200, headers });
 }
 
-async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl: string, peaksUrl: string, env: Env, duration?: number) {
+async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl: string, peaksUrl: string | undefined, env: Env, duration?: number) {
   const set: Record<string, string | number> = {
     "audio.deliveryUrl": deliveryUrl,
-    "audio.peaksUrl": peaksUrl,
     "audio.sourceAssetId": payload.audioMasterId || "",
     "audio.syncedAt": new Date().toISOString()
   };
+  if (peaksUrl) set["audio.peaksUrl"] = peaksUrl;
   if (duration) set.duration = duration;
   // Read the current master and revision after the upload. An older job must
   // not replace a newer master, even when the two jobs finish out of order.
@@ -131,7 +131,7 @@ async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">>
     const response = await fetch(`https://${env.SANITY_API_PROJECT_ID}.api.sanity.io/v2026-08-24/data/mutate/${env.SANITY_API_DATASET}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${env.SANITY_API_WRITE_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ mutations: [{ patch: { id: payload._id, ifRevisionID: current._rev, set } }] })
+      body: JSON.stringify({ mutations: [{ patch: { id: payload._id, ifRevisionID: current._rev, set, ...(!peaksUrl ? { unset: ["audio.peaksUrl"] } : {}) } }] })
     });
     if (response.ok) return true;
     if (response.status !== 409) throw new Error(`Sanity patch failed with ${response.status}`);
@@ -151,20 +151,27 @@ async function syncAudio(request: Request, env: Env, authorize: (rawBody: string
 
   const source = await fetch(payload.audioMasterUrl);
   if (!source.ok || !source.body) return new Response("Could not download audio master", { status: 502 });
-  const filename = safeSegment(payload.audioMasterFilename || `${audioMasterId}.wav`);
-  const objectKey = `mixes/${safeSegment(payload._id)}/${safeSegment(audioMasterId)}-${filename}`;
   const [headerStream, audioStream] = source.body.tee();
   const headerBytes = await readStreamPrefix(headerStream, 131072);
   const info = wavInfo(headerBytes);
-  if (!info) { void audioStream.cancel().catch(() => {}); return new Response("Use a PCM WAV or 32-bit float WAV master", { status: 422 }); }
+  const flac = flacInfo(headerBytes);
+  if (!info && !flac) { void audioStream.cancel().catch(() => {}); return new Response("Use a FLAC, PCM WAV, or 32-bit float WAV master", { status: 422 }); }
+  const extension = flac ? "flac" : "wav";
+  const filename = safeSegment(payload.audioMasterFilename || `${audioMasterId}.${extension}`);
+  const objectKey = `mixes/${safeSegment(payload._id)}/${safeSegment(audioMasterId)}-${filename}`;
   const fileSize = Number(source.headers.get("content-length")) || undefined;
-  const duration = durationSecondsFromWav(headerBytes, fileSize);
-  const [audioObjectStream, peakStream] = audioStream.tee();
-  const audioWrite = env.AUDIO.put(objectKey, audioObjectStream, { httpMetadata: { contentType: "audio/wav", cacheControl: "public, max-age=31536000, immutable" } });
+  const duration = durationSecondsFromAudio(headerBytes, fileSize);
   const configuredBase = env.AUDIO_PUBLIC_BASE_URL.replace(/\/+$/, "");
   const audioBase = configuredBase.endsWith("/audio") ? configuredBase : `${configuredBase}/audio`;
   const deliveryUrl = `${audioBase}/${objectKey.split("/").map(encodeURIComponent).join("/")}`;
-  const [waveform] = await Promise.all([generateWaveformData(peakStream, info), audioWrite]);
+  if (flac) {
+    await env.AUDIO.put(objectKey, audioStream, { httpMetadata: { contentType: "audio/flac", cacheControl: "public, max-age=31536000, immutable" } });
+    const patched = await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, undefined, env, duration);
+    return Response.json({ deliveryUrl, published: patched });
+  }
+  const [audioObjectStream, peakStream] = audioStream.tee();
+  const audioWrite = env.AUDIO.put(objectKey, audioObjectStream, { httpMetadata: { contentType: "audio/wav", cacheControl: "public, max-age=31536000, immutable" } });
+  const [waveform] = await Promise.all([generateWaveformData(peakStream, info!), audioWrite]);
   const peaksKey = `${objectKey}.spectrum-v2.json`;
   await env.AUDIO.put(peaksKey, JSON.stringify(waveform), { httpMetadata: { contentType: "application/json", cacheControl: "public, max-age=31536000, immutable" } });
   const peaksUrl = `${audioBase}/${peaksKey.split("/").map(encodeURIComponent).join("/")}`;

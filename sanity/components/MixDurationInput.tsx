@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { type NumberInputProps, set, unset, useClient, useFormValue } from "sanity";
-import { durationSecondsFromWav } from "@/lib/audio-duration";
+import { durationSecondsFromAudio } from "@/lib/audio-duration";
 
 type FileValue = { asset?: { _ref?: string } };
 
@@ -35,8 +35,8 @@ async function durationFromAudioUrl(url: string, fileSize?: number) {
     const length = Number(header.headers.get("content-length") || 0);
     const total = rangeTotal(header.headers.get("content-range")) || fileSize;
     if (header.status === 206 || (header.ok && length > 0 && length <= 262144)) {
-      const wav = durationSecondsFromWav(new Uint8Array(await header.arrayBuffer()), total);
-      if (wav) return wav;
+      const duration = durationSecondsFromAudio(new Uint8Array(await header.arrayBuffer()), total);
+      if (duration) return duration;
     } else {
       await header.body?.cancel();
     }
