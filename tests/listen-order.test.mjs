@@ -19,22 +19,35 @@ test("listen mixes are ordered by release date, newest first", () => {
   );
 });
 
-test("home, soundroom, and archive use CMS order with a date tie break", async () => {
+test("all set lists use the shared date order", async () => {
   const query = await source("lib/sanity.ts");
   const provider = await source("components/ListenContentProvider.tsx");
   const home = await source("components/HomeTransmissionDeck.tsx");
   const archive = await source("components/SoundroomCatalog.tsx");
   const soundroom = await source("components/SoundroomFrame.tsx");
+  const player = await source("components/AudioProvider.tsx");
 
   assert.match(query, /order\(releaseDate desc\)/);
   assert.doesNotMatch(query, /playerOrder asc/);
   assert.match(provider, /sortMixesByLatest/);
   assert.match(home, /homeOrder/);
   assert.match(archive, /archiveOrder/);
-  assert.match(soundroom, /soundroomOrder/);
+  for (const component of [home, archive, soundroom, player]) {
+    assert.match(component, /sortMixesForPlacement/);
+  }
 });
 
-test("placement order takes priority and equal positions use release date", () => {
-  const records = [{ slug: "old", dateISO: "2026-01-01", homeOrder: 1 }, { slug: "new", dateISO: "2026-09-01", homeOrder: 100 }, { slug: "middle", dateISO: "2026-06-01" }];
-  assert.deepEqual(sortMixesForPlacement(records, "homeOrder").map(record => record.slug), ["old", "new", "middle"]);
-});
+for (const field of ["homeOrder", "soundroomOrder", "archiveOrder", "playerOrder"]) {
+  test(`${field} cannot override release date`, () => {
+    const records = [
+      { slug: "old", dateISO: "2026-01-01", [field]: -100 },
+      { slug: "new", dateISO: "2026-09-01", [field]: 999 },
+      { slug: "middle", dateISO: "2026-06-01" },
+      { slug: "undated", [field]: -999 },
+      { slug: "same-day", dateISO: "2026-06-01", [field]: 1 },
+    ];
+    const original = [...records];
+    assert.deepEqual(sortMixesForPlacement(records, field).map(record => record.slug), ["new", "middle", "same-day", "old", "undated"]);
+    assert.deepEqual(records, original);
+  });
+}
