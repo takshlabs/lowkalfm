@@ -1,6 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getMixStartOffset, getYouTubeVideoId, getYouTubeVideoUrl, resolveMixPlayback } from "../lib/audio-source.ts";
+import { getMixStartOffset, getYouTubeVideoId, getYouTubeVideoUrl, resolveMixPlayback, resolveMixWaveform } from "../lib/audio-source.ts";
+
+test("a missing CMS waveform URL uses the sidecar for the exact delivery asset", () => {
+  const base = "https://lowkal-audio-sync.lowkal-audio-737a.workers.dev/audio/mixes/mix-test/";
+  for (const extension of ["wav", "flac"]) {
+    const delivery = `${base}file-aabbcc-${extension}-Test.${extension}`;
+    assert.equal(resolveMixWaveform(delivery), `${delivery}.spectrum-v2.json`);
+    assert.notEqual(resolveMixWaveform(delivery.replace("aabbcc", "ddeeff")), resolveMixWaveform(delivery), "replacement masters must not reuse old waveform data");
+    assert.equal(resolveMixWaveform(`${delivery}?download=1#position`), `${delivery}.spectrum-v2.json`);
+  }
+  assert.equal(resolveMixWaveform(`${base}Test.flac`, "https://audio.example/explicit.json"), "https://audio.example/explicit.json");
+});
+
+test("waveform recovery does not guess sidecars on unrelated audio hosts", () => {
+  for (const url of [undefined, "", "not a URL", "https://cdn.sanity.io/files/project/production/asset.flac", "https://audio.example/master.wav", "https://youtube.com/watch?v=60O126HehGA", "https://lowkal-audio-sync.lowkal-audio-737a.workers.dev/listen-counts", "http://lowkal-audio-sync.lowkal-audio-737a.workers.dev/audio/mixes/test/file.flac"]) {
+    assert.equal(resolveMixWaveform(url), undefined);
+  }
+});
 
 test("each mix resolves to one playback source with no master or source fallback", () => {
   assert.deepEqual(resolveMixPlayback({ deliveryUrl: "https://audio.example/direct.wav", youtubeUrl: "https://www.youtube.com/watch?v=fw2mtwgCeGo" }), { provider: "cloudflare", url: "https://audio.example/direct.wav" });

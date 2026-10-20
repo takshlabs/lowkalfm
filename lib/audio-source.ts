@@ -39,3 +39,17 @@ export function resolveMixPlayback({ deliveryUrl, youtubeUrl }: MixPlaybackInput
   const videoId = getYouTubeVideoId(youtubeUrl);
   return videoId ? { provider: "youtube", videoId } : undefined;
 }
+
+export function resolveMixWaveform(deliveryUrl?: string, peaksUrl?: string) {
+  if (peaksUrl) return peaksUrl;
+  // A CMS publish can replace derived audio fields with an older draft.
+  // The sidecar belongs to the delivery file, whose key includes its asset ID.
+  try {
+    const url = new URL(deliveryUrl || "");
+    if (url.protocol !== "https:" || url.hostname !== "lowkal-audio-sync.lowkal-audio-737a.workers.dev" || !url.pathname.startsWith("/audio/mixes/") || !/\.(wav|flac)$/i.test(url.pathname)) return undefined;
+    url.pathname += ".spectrum-v2.json";
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch { return undefined; }
+}

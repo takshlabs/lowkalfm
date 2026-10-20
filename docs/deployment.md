@@ -118,6 +118,7 @@ Use `npm run audio:peaks -- <mix-slug>` to repair one published mix. Use `npm ru
 - If the CDN URL does not appear, check the Cloudflare Worker logs and the Sanity webhook delivery log.
 - HTTP 202 confirms that the audio job is saved. Use `npx wrangler workflows instances describe lowkal-audio-copy <job-id> --config wrangler.audio-sync.toml` to check the copy result. Publish the mix again to restart a failed job.
 - If the CMS works but the site does not show the latest content, check the Sanity document is published, not a draft.
+- If a CMS publish removes `audio.peaksUrl`, the catalogue uses the version 2 sidecar beside the current Cloudflare delivery file. Its asset ID prevents a replacement master from using an older waveform. A missing sidecar still shows the playback position display. Generate the sidecar with `npm run audio:peaks -- <mix-slug>` when needed.
 - If a new audio file gives an old sound, upload a new master. The asset ID changes the R2 object key.
 - If the Vercel release fails, do not deploy elsewhere. Check the Vercel build log, repair the source, run `npm run check`, then deploy again.
 

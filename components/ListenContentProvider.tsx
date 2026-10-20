@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { track } from "@vercel/analytics";
-import { getMixStartOffset, getYouTubeVideoUrl, resolveMixPlayback } from "@/lib/audio-source";
+import { getMixStartOffset, getYouTubeVideoUrl, resolveMixPlayback, resolveMixWaveform } from "@/lib/audio-source";
 import { artistProfiles, livePrograms, soundRecords, type ArchiveSection, type ArtistProfile, type LiveProgram, type SoundFormat, type SoundRecord } from "@/lib/content";
 import { sortMixesByLatest } from "@/lib/listen-order";
 import { isSanityConfigured, listenContentQuery, sanityFetch, sanityImageUrl } from "@/lib/sanity";
@@ -95,7 +95,7 @@ function mapMix(mix: SanityMix): SoundRecord | null {
     listenCount: mix.listenCount,
     startOffset: getMixStartOffset(mix.audioStartOffset),
     playback,
-    waveformPeaksUrl: mix.audioPeaksUrl,
+    waveformPeaksUrl: resolveMixWaveform(mix.audioDeliveryUrl, mix.audioPeaksUrl),
     youtubeVideoUrl: getYouTubeVideoUrl(mix.youtubeVideoUrl ?? mix.youtubeUrl),
     artwork: sanityImageUrl(mix.artwork),
     genres: mix.genres ?? [],
