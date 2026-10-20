@@ -111,7 +111,7 @@ export function ArtistsDirectory() {
         </header>
 
         <section className="artist-profile-body" aria-label={`${artist.name} biography`}>
-          <header><span className="section-kicker">01 · Profile</span><p>Maximum 200 words.<br />The person behind the selections.</p></header>
+          <header><span className="section-kicker">01 · Profile</span><p>The person behind the selections.</p></header>
           <div className="artist-profile-bio"><ArtistBio blocks={artist.bio} fallback={artist.shortBio} /></div>
           <aside className="artist-profile-links">
             <SiteLink href={sitePath("/artists")}>All artists ←</SiteLink>
