@@ -22,8 +22,8 @@ async function putObject(key, data) {
 const slug = process.argv[2];
 if (!slug) throw new Error("Usage: npm run audio:peaks -- <mix-slug|--all>");
 const projection = '{_id,_rev,"slug":slug.current,"masterUrl":audio.master.asset->url,"masterSize":audio.master.asset->size,"masterFilename":audio.master.asset->originalFilename,"masterId":audio.master.asset._ref,"deliveryUrl":audio.deliveryUrl,"peaksUrl":audio.peaksUrl}';
-const mixes = await client.fetch(`*[_type == "mix" && !(_id in path("drafts.**")) && defined(audio.deliveryUrl) && ($all || slug.current == $slug)]${projection}`, { all: slug === "--all", slug });
-if (!mixes.length) throw new Error("No published direct-audio mixes found");
+const mixes = await client.fetch(`*[_type == "mix" && !(_id in path("drafts.**")) && defined(audio.master.asset._ref) && ($all || slug.current == $slug)]${projection}`, { all: slug === "--all", slug });
+if (!mixes.length) throw new Error("No published mixes with audio masters found");
 for (const mix of mixes) {
   if (!mix.masterUrl || !mix.masterId) throw new Error(`${mix.slug}: Audio master is missing`);
   if (slug === "--all" && mix.peaksUrl?.includes(".spectrum-v2.json")) { console.log(`${mix.slug}: spectrum data already available`); continue; }

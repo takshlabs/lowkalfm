@@ -135,6 +135,40 @@ test("audio sync writes waveform peaks before it makes the delivery URL public",
   }
 });
 
+test("a saved waveform completes a CPU-limited copy without another waveform scan", async () => {
+  const audio = wavAudio(1);
+  const sourceUrl = "https://cdn.sanity.io/files/project/production/aabbcc.wav";
+  const payload = { _id: "mix-test", _type: "mix", audioMasterUrl: sourceUrl, audioMasterId: "file-aabbcc-wav", audioMasterFilename: "Test.wav" };
+  const saved = { version: 2, duration: 1, sampleRate: 44100, peaks: Array(2048).fill(0.5), bands: { bass: Array(2048).fill(0.2), mids: Array(2048).fill(0.1), highs: Array(2048).fill(0.05) } };
+  const previous = globalThis.fetch;
+  const writes = [], patches = [], reads = [];
+  globalThis.fetch = async (input, init) => {
+    if (String(input) === sourceUrl) return new Response(audio);
+    if (String(input).includes("/data/query/")) return Response.json({ result: { _rev: "current", master: payload.audioMasterId } });
+    if (init?.method === "POST") { patches.push(JSON.parse(init.body).mutations[0].patch); return Response.json({}); }
+    throw new Error(`Unexpected fetch: ${input}`);
+  };
+  try {
+    for (const cached of [saved, { ...saved, duration: 2 }, { ...saved, peaks: [0.5] }, { ...saved, bands: { ...saved.bands, highs: Array(2048).fill(-1) } }, null]) {
+      writes.length = 0;
+      const json = JSON.stringify(cached);
+      const response = await copyAudioMaster(payload, {
+        AUDIO: {
+          get: async key => { reads.push(key); return { size: json.length, body: new Blob([json]).stream() }; },
+          put: async (key, value) => { writes.push({ key, bytes: new Uint8Array(await new Response(value).arrayBuffer()) }); }
+        },
+        SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "test", AUDIO_PUBLIC_BASE_URL: "https://worker.example"
+      });
+      assert.equal(response.status, 200);
+      assert.deepEqual(writes[0].bytes, audio);
+      assert.equal(writes.length, cached === saved ? 1 : 2, "only a complete waveform for this master can skip the scan");
+      assert.equal((await response.json()).peaksUrl, `https://worker.example/audio/${reads.at(-1)}`);
+      assert.equal(patches.at(-1).ifRevisionID, "current");
+    }
+    assert.ok(reads.every(key => key === "mixes/mix-test/file-aabbcc-wav-Test.wav.spectrum-v2.json"));
+  } finally { globalThis.fetch = previous; }
+});
+
 function wavHeader(seconds = 2) {
   const byteRate = 176400;
   const dataBytes = byteRate * seconds;
@@ -227,7 +261,7 @@ test("an older WAV upload cannot replace a newer master", async () => {
   try {
     const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
       SANITY_WEBHOOK_SECRET: secret, SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "test", AUDIO_PUBLIC_BASE_URL: "https://worker.example",
-      AUDIO: { put: async (_, value) => { await new Response(value).arrayBuffer(); master = "file-new-master-wav"; } }
+      AUDIO: { get: async () => null, put: async (_, value) => { await new Response(value).arrayBuffer(); master = "file-new-master-wav"; } }
     });
     assert.equal(response.status, 200);
     assert.equal((await response.json()).published, false);
@@ -253,7 +287,7 @@ test("WAV delivery preserves all master bytes without transcoding", async () => 
   try {
     const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, secret) }, body: payload }), {
       SANITY_WEBHOOK_SECRET: secret, SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "test", AUDIO_PUBLIC_BASE_URL: "https://worker.example",
-      AUDIO: { put: async (key, value, options) => { const bytes = new Uint8Array(await new Response(value).arrayBuffer()); if (!key.endsWith('.json')) stored = { bytes, type: options.httpMetadata.contentType }; } }
+      AUDIO: { get: async () => null, put: async (key, value, options) => { const bytes = new Uint8Array(await new Response(value).arrayBuffer()); if (!key.endsWith('.json')) stored = { bytes, type: options.httpMetadata.contentType }; } }
     });
     assert.equal(response.status, 200);
     assert.deepEqual(stored.bytes, audio);

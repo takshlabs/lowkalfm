@@ -143,6 +143,22 @@ async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">>
   throw new Error("Sanity source changed during audio update");
 }
 
+async function hasSavedWaveform(env: Env, key: string, duration: number, sampleRate: number, count: number) {
+  const object = await env.AUDIO.get(key);
+  if (!object) return false;
+  if (object.size > 1024 * 1024) { void object.body.cancel().catch(() => {}); return false; }
+  try {
+    const data = await new Response(object.body).json() as {
+      version?: number; duration?: number; sampleRate?: number; peaks?: unknown;
+      bands?: { bass?: unknown; mids?: unknown; highs?: unknown };
+    } | null;
+    const validBand = (values: unknown) => Array.isArray(values) && values.length === count && values.every(value => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1);
+    return data?.version === 2 && data.sampleRate === sampleRate && typeof data.duration === "number"
+      && Math.abs(data.duration - duration) <= 1 / sampleRate
+      && [data.peaks, data.bands?.bass, data.bands?.mids, data.bands?.highs].every(validBand);
+  } catch { return false; }
+}
+
 async function queueAudioMaster(payload: AudioSyncPayload, env: Env) {
   // One job per mix and master. Publish retries must not start duplicate copies.
   const digest = await crypto.subtle.digest("SHA-256", encoder.encode(JSON.stringify([payload._id, payload.audioMasterId])));
@@ -196,11 +212,18 @@ export async function copyAudioMaster(payload: AudioSyncPayload, env: Env) {
     const patched = await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, undefined, env, duration);
     return Response.json({ deliveryUrl, published: patched });
   }
-  const [audioObjectStream, peakStream] = audioStream.tee();
-  const audioWrite = env.AUDIO.put(objectKey, audioObjectStream, { httpMetadata: { contentType: "audio/wav", cacheControl: "public, max-age=31536000, immutable" } });
-  const [waveform] = await Promise.all([generateWaveformData(peakStream, info!), audioWrite]);
   const peaksKey = `${objectKey}.spectrum-v2.json`;
-  await env.AUDIO.put(peaksKey, JSON.stringify(waveform), { httpMetadata: { contentType: "application/json", cacheControl: "public, max-age=31536000, immutable" } });
+  const frames = info!.dataSize / info!.blockAlign;
+  if (await hasSavedWaveform(env, peaksKey, frames / info!.sampleRate, info!.sampleRate, Math.min(2048, frames))) {
+    // The key contains the master asset ID. A locally measured waveform can
+    // complete a copy that exceeded the Worker's CPU limit.
+    await env.AUDIO.put(objectKey, audioStream, { httpMetadata: { contentType: "audio/wav", cacheControl: "public, max-age=31536000, immutable" } });
+  } else {
+    const [audioObjectStream, peakStream] = audioStream.tee();
+    const audioWrite = env.AUDIO.put(objectKey, audioObjectStream, { httpMetadata: { contentType: "audio/wav", cacheControl: "public, max-age=31536000, immutable" } });
+    const [waveform] = await Promise.all([generateWaveformData(peakStream, info!), audioWrite]);
+    await env.AUDIO.put(peaksKey, JSON.stringify(waveform), { httpMetadata: { contentType: "application/json", cacheControl: "public, max-age=31536000, immutable" } });
+  }
   const peaksUrl = `${audioBase}/${peaksKey.split("/").map(encodeURIComponent).join("/")}`;
   const patched = await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, peaksUrl, env, duration);
   return Response.json({ deliveryUrl, peaksUrl, published: patched });
