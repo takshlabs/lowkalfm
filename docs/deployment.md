@@ -115,6 +115,7 @@ Use `npm run audio:peaks -- <mix-slug>` to repair one published mix. Use `npm ru
 
 ## Troubleshooting
 
+- Keep the Studio tab open until the audio file is saved. The master field shows the upload percentage. If no progress is saved for two minutes, it shows a warning. Cancel the incomplete upload and select the file again. Studio blocks publication while a master upload is incomplete. The warning does not cancel an upload automatically.
 - If the CDN URL does not appear, check the Cloudflare Worker logs and the Sanity webhook delivery log.
 - HTTP 202 confirms that the audio job is saved. Use `npx wrangler workflows instances describe lowkal-audio-copy <job-id> --config wrangler.audio-sync.toml` to check the copy result. Publish the mix again to restart a failed job.
 - If the CMS works but the site does not show the latest content, check the Sanity document is published, not a draft.

@@ -1,7 +1,9 @@
 import { defineArrayMember, defineField, defineType } from "sanity";
 import { MixDurationInput } from "@/sanity/components/MixDurationInput";
 import { CueTracklistInput } from "@/sanity/components/CueTracklistInput";
+import { AudioMasterInput } from "@/sanity/components/AudioMasterInput";
 import { getYouTubeVideoUrl } from "@/lib/audio-source";
+import { validateAudioMaster } from "@/lib/audio-upload";
 
 export const mixType = defineType({
   name: "mix",
@@ -58,6 +60,8 @@ export const mixType = defineType({
           title: "WAV or FLAC master",
           type: "file",
           options: { accept: "audio/wav,audio/x-wav,.wav,audio/flac,audio/x-flac,.flac" },
+          components: { input: AudioMasterInput },
+          validation: (rule) => rule.custom(validateAudioMaster),
           description: "Use a FLAC master, a PCM WAV master (16, 24, or 32 bit), or a 32-bit float WAV master. Duration is read from this file. The site streams the original file from Cloudflare after publication."
         }),
         defineField({
