@@ -46,7 +46,7 @@ export async function uploadAudioMaster(client: SanityClient, file: File, option
       try {
         const response = await fetch(`${AUDIO_UPLOAD_BASE}/uploads/${path}`, {
           ...init, headers: { Authorization: `Bearer ${token}`, ...init.headers },
-          signal: AbortSignal.any([options.signal, AbortSignal.timeout(120_000)])
+          signal: AbortSignal.any([options.signal, AbortSignal.timeout(300_000)])
         });
         const data = await response.json() as T & { error?: string };
         if (response.status === 401) { try { storage?.removeItem(key); } catch { /* storage unavailable */ } }
