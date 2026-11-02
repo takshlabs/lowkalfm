@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { type NumberInputProps, set, unset, useClient, useFormValue } from "sanity";
 import { durationSecondsFromAudio } from "@/lib/audio-duration";
 
-type FileValue = { asset?: { _ref?: string } };
+type FileValue = { r2Id?: string; duration?: number; asset?: { _ref?: string } };
 
 function rangeTotal(contentRange: string | null) {
   const match = /\/(\d+)$/.exec(contentRange || "");
@@ -48,7 +48,8 @@ async function durationFromAudioUrl(url: string, fileSize?: number) {
 
 export function MixDurationInput(props: NumberInputProps) {
   const master = useFormValue(["audio", "master"]) as FileValue | undefined;
-  const assetId = master?.asset?._ref;
+  const assetId = master?.r2Id || master?.asset?._ref;
+  const directDuration = master?.duration;
   const client = useClient({ apiVersion: "2026-08-24" });
   const valueRef = useRef(props.value);
   const onChangeRef = useRef(props.onChange);
@@ -69,6 +70,11 @@ export function MixDurationInput(props: NumberInputProps) {
     if (assetId === lastAssetId.current) return;
     lastAssetId.current = assetId;
 
+    if (directDuration) {
+      if (valueRef.current !== directDuration) onChangeRef.current(set(directDuration));
+      return;
+    }
+
     (async () => {
       const asset = await client.fetch<{ url?: string; size?: number } | null>("*[_id == $id][0]{url, size}", { id: assetId });
       const url = typeof asset?.url === "string" ? asset.url : "";
@@ -81,7 +87,7 @@ export function MixDurationInput(props: NumberInputProps) {
     return () => {
       cancelled = true;
     };
-  }, [assetId, client]);
+  }, [assetId, client, directDuration]);
 
   return props.renderDefault({ ...props, readOnly: true });
 }

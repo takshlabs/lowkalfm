@@ -21,8 +21,8 @@ async function putObject(key, data) {
 
 const slug = process.argv[2];
 if (!slug) throw new Error("Usage: npm run audio:peaks -- <mix-slug|--all>");
-const projection = '{_id,_rev,"slug":slug.current,"masterUrl":audio.master.asset->url,"masterSize":audio.master.asset->size,"masterFilename":audio.master.asset->originalFilename,"masterId":audio.master.asset._ref,"deliveryUrl":audio.deliveryUrl,"peaksUrl":audio.peaksUrl}';
-const mixes = await client.fetch(`*[_type == "mix" && !(_id in path("drafts.**")) && defined(audio.master.asset._ref) && ($all || slug.current == $slug)]${projection}`, { all: slug === "--all", slug });
+const projection = '{_id,_rev,"slug":slug.current,"masterUrl":coalesce(audio.master.url,audio.master.asset->url),"masterSize":coalesce(audio.master.size,audio.master.asset->size),"masterFilename":coalesce(audio.master.filename,audio.master.asset->originalFilename),"r2Key":audio.master.r2Key,"masterId":coalesce(audio.master.r2Id,audio.master.asset._ref),"deliveryUrl":audio.deliveryUrl,"peaksUrl":audio.peaksUrl}';
+const mixes = await client.fetch(`*[_type == "mix" && !(_id in path("drafts.**")) && defined(coalesce(audio.master.r2Id,audio.master.asset._ref)) && ($all || slug.current == $slug)]${projection}`, { all: slug === "--all", slug });
 if (!mixes.length) throw new Error("No published mixes with audio masters found");
 for (const mix of mixes) {
   if (!mix.masterUrl || !mix.masterId) throw new Error(`${mix.slug}: Audio master is missing`);
@@ -41,10 +41,10 @@ for (const mix of mixes) {
   });
   const data = flac ? await generateFlacWaveformData(stream, flac) : await generateWaveformData(stream, info);
   const filename = safeSegment(mix.masterFilename || `${mix.masterId}.${flac ? "flac" : "wav"}`);
-  const key = `mixes/${safeSegment(mix._id)}/${safeSegment(mix.masterId)}-${filename}.spectrum-v2.json`;
+  const key = mix.r2Key ? `${mix.r2Key}.spectrum-v2.json` : `mixes/${safeSegment(mix._id)}/${safeSegment(mix.masterId)}-${filename}.spectrum-v2.json`;
   await putObject(key, data);
   const peaksUrl = `${workerBase}/audio/${key.split("/").map(encodeURIComponent).join("/")}`;
-  const current = await client.fetch('*[_id == $id][0]{_rev,"masterId":audio.master.asset._ref}', { id: mix._id });
+  const current = await client.fetch('*[_id == $id][0]{_rev,"r2Key":audio.master.r2Key,"masterId":coalesce(audio.master.r2Id,audio.master.asset._ref)}', { id: mix._id });
   if (current?.masterId !== mix.masterId) { console.log(`${mix.slug}: master changed; skipped publication`); continue; }
   await client.patch(mix._id).ifRevisionId(current._rev).set({ "audio.peaksUrl": peaksUrl }).commit({ returnDocuments: false });
   console.log(JSON.stringify({ slug: mix.slug, peaksUrl, intervals: data.peaks.length, duration: data.duration }));

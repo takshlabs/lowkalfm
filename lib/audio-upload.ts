@@ -1,4 +1,7 @@
 type AudioMaster = {
+  r2Key?: string;
+  r2Id?: string;
+  url?: string;
   asset?: { _ref?: string };
   _upload?: {
     progress?: number;
@@ -24,6 +27,6 @@ export function audioUploadStatus(value: AudioMaster | undefined, now: number) {
 
 export function validateAudioMaster(value: AudioMaster | undefined) {
   if (value?._upload) return "Wait for the audio upload to finish. If it stopped, cancel it and select the file again.";
-  if (value && !value.asset?._ref) return "Select an audio master and wait for the upload to finish.";
+  if (value && !(value.asset?._ref || (value.r2Id && value.r2Key && value.url))) return "Select an audio master and wait for the upload to finish.";
   return true;
 }

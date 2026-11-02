@@ -429,3 +429,37 @@ test("a failed job submission is not acknowledged as a successful publish", asyn
     assert.equal(response.status, 500);
   } finally { console.error = previous; }
 });
+
+test("an existing webhook publishes a direct R2 master without copying or sending it through Sanity", async () => {
+  const key = "mixes/mix-test/r2-direct-master.wav";
+  const bytes = wavAudio(2);
+  const original = globalThis.fetch;
+  const writes = [];
+  const mutations = [];
+  globalThis.fetch = async (input, init) => {
+    const url = new URL(String(input));
+    if (url.pathname.includes("/data/query/")) {
+      if (url.searchParams.get("query").includes('"master":audio.master,')) return Response.json({ result: { master: { r2Key: key, r2Id: "r2-direct", filename: "master.wav", url: `https://worker.example/audio/${key}` } } });
+      return Response.json({ result: { _rev: "current", master: "r2-direct" } });
+    }
+    if (url.pathname.includes("/data/mutate/")) { mutations.push(JSON.parse(init.body)); return Response.json({}); }
+    throw new Error(`A direct R2 master must not fetch an external audio URL: ${url}`);
+  };
+  try {
+    const payload = JSON.stringify({ _id: "mix-test", _type: "mix", audioMasterUrl: null });
+    const response = await syncAudioNow(new Request("https://worker.example/sanity/audio-sync", { method: "POST", headers: { "sanity-webhook-signature": await signature(payload, "secret") }, body: payload }), {
+      SANITY_WEBHOOK_SECRET: "secret", SANITY_API_PROJECT_ID: "project", SANITY_API_DATASET: "production", SANITY_API_WRITE_TOKEN: "server-test-token", AUDIO_PUBLIC_BASE_URL: "https://worker.example",
+      AUDIO: {
+        get: async name => name === key ? { body: new Blob([bytes]).stream(), size: bytes.length } : null,
+        put: async (name, body) => { writes.push(name); assert.equal(typeof body, "string"); }
+      }
+    });
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    assert.equal(result.deliveryUrl, `https://worker.example/audio/${key}`);
+    assert.equal(result.published, true);
+    assert.deepEqual(writes, [`${key}.spectrum-v2.json`]);
+    assert.equal(mutations[0].mutations[0].patch.set["audio.sourceAssetId"], "r2-direct");
+    assert.equal(mutations[0].mutations[0].patch.ifRevisionID, "current");
+  } finally { globalThis.fetch = original; }
+});

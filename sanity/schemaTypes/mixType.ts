@@ -53,13 +53,21 @@ export const mixType = defineType({
       title: "Audio",
       type: "object",
       group: "playback",
-      description: "Use this for a Cloudflare audio mix. Publish the mix to copy the audio master to Lowkal's audio CDN.",
+      description: "Upload the original WAV or FLAC to Cloudflare. Publish the mix to prepare its CDN delivery and waveform.",
       fields: [
         defineField({
           name: "master",
           title: "WAV or FLAC master",
           type: "file",
           options: { accept: "audio/wav,audio/x-wav,.wav,audio/flac,audio/x-flac,.flac" },
+          fields: [
+            defineField({ name: "r2Key", type: "string", hidden: true }),
+            defineField({ name: "r2Id", type: "string", hidden: true }),
+            defineField({ name: "filename", type: "string", hidden: true }),
+            defineField({ name: "size", type: "number", hidden: true }),
+            defineField({ name: "url", type: "url", hidden: true }),
+            defineField({ name: "duration", type: "number", hidden: true })
+          ],
           components: { input: AudioMasterInput },
           validation: (rule) => rule.custom(validateAudioMaster),
           description: "Use a FLAC master, a PCM WAV master (16, 24, or 32 bit), or a 32-bit float WAV master. Duration is read from this file. The site streams the original file from Cloudflare after publication."

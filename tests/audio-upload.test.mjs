@@ -24,3 +24,10 @@ test("incomplete masters block publication, including replacements of an existin
   assert.equal(validateAudioMaster({ asset: { _ref: "file-master-wav" } }), true);
   assert.equal(validateAudioMaster(undefined), true);
 });
+
+test("a complete direct R2 master is valid and a partial direct master cannot publish", () => {
+  const direct = { r2Key: "mixes/test/r2-master.wav", r2Id: "r2-master", url: "https://worker.example/audio/mixes/test/r2-master.wav" };
+  assert.equal(validateAudioMaster(direct), true);
+  assert.equal(typeof validateAudioMaster({ ...direct, _upload: { progress: 99 } }), "string");
+  assert.equal(typeof validateAudioMaster({ r2Id: "r2-master" }), "string");
+});

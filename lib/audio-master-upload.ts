@@ -1,104 +1,86 @@
 import type { SanityClient } from "@sanity/client";
 
 export const AUDIO_UPLOAD_ATTEMPTS = 3;
-
-export function audioUploadError(error: unknown) {
-  const code = (error as { statusCode?: number })?.statusCode;
-  if (code === 401 || code === 403) return "Sanity refused the upload. Check your Studio sign-in and file upload permission.";
-  if (code === 413) return "Sanity rejected the file size. Select a smaller lossless master.";
-  return error instanceof Error ? error.message : "The audio upload failed.";
-}
-
-function canRetry(error: unknown) {
-  const code = (error as { statusCode?: number })?.statusCode;
-  return !code || code === 408 || code === 429 || code >= 500;
-}
-
-function abortError() {
-  return new DOMException("Upload cancelled.", "AbortError");
-}
-
+export const AUDIO_UPLOAD_BASE = "https://lowkal-audio-sync.lowkal-audio-737a.workers.dev";
+export type DirectAudioMaster = { r2Key: string; r2Id: string; filename: string; size: number; url: string; duration?: number };
+type Checkpoint = { fingerprint: string; token: string; partBytes: number; parts: { partNumber: number; etag: string }[] };
 type Options = {
   signal: AbortSignal;
+  mixId: string;
   onAttempt: (attempt: number) => void;
   onProgress: (percent: number) => void;
-  idleMs?: number;
-  saveMs?: number;
+  storage?: Pick<Storage, "getItem" | "setItem" | "removeItem">;
   retryMs?: number;
 };
-
-// Keep the original File for retries. Sanity's asset API restarts the transfer;
-// it cannot resume a partially uploaded file.
-export async function uploadAudioMaster(client: SanityClient, file: File, options: Options) {
-  for (let attempt = 1; attempt <= AUDIO_UPLOAD_ATTEMPTS; attempt += 1) {
-    options.signal.throwIfAborted();
-    options.onAttempt(attempt);
-    try {
-      return await uploadAttempt(client, file, options);
-    } catch (error) {
-      options.signal.throwIfAborted();
-      if (!canRetry(error) || attempt === AUDIO_UPLOAD_ATTEMPTS) throw error;
-      await new Promise<void>((resolve, reject) => {
-        const cancel = () => { clearTimeout(timer); reject(abortError()); };
-        const timer = setTimeout(() => {
-          options.signal.removeEventListener("abort", cancel);
-          resolve();
-        }, (options.retryMs ?? 2000) * attempt);
-        options.signal.addEventListener("abort", cancel, { once: true });
-      });
-    }
-  }
-  throw new Error("The audio upload failed.");
+export function audioUploadError(error: unknown) {
+  return error instanceof Error ? error.message : "The audio upload failed.";
+}
+function storageKey(mixId: string) { return `lowkal-audio-parts-v1:${mixId}`; }
+function browserStorage() {
+  try { return typeof window === "undefined" ? undefined : window.sessionStorage; } catch { return undefined; }
+}
+export async function cancelAudioUpload(mixId: string) {
+  const storage = browserStorage();
+  try {
+    const checkpoint = JSON.parse(storage?.getItem(storageKey(mixId)) || "null") as Checkpoint | null;
+    storage?.removeItem(storageKey(mixId));
+    if (checkpoint) await fetch(`${AUDIO_UPLOAD_BASE}/uploads/abort`, { method: "DELETE", headers: { Authorization: `Bearer ${checkpoint.token}` }, signal: AbortSignal.timeout(15_000) });
+  } catch { /* R2 also expires unfinished multipart uploads. */ }
 }
 
-function uploadAttempt(client: SanityClient, file: File, options: Options): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const transport: { subscription?: { unsubscribe: () => void } } = {};
-    let timer: ReturnType<typeof setTimeout>;
-    let settled = false;
-    let loaded = 0;
-    const finish = (error?: unknown, assetId?: string) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      options.signal.removeEventListener("abort", cancel);
-      transport.subscription?.unsubscribe();
-      if (assetId) resolve(assetId);
-      else reject(error);
-    };
-    const cancel = () => finish(abortError());
-    const armTimer = (saving = false) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => finish(new Error(saving
-        ? "Sanity did not confirm that the file was saved. Check your connection and retry."
-        : "No audio data was sent for 2 minutes. Check your connection and retry.")),
-      saving ? (options.saveMs ?? 300_000) : (options.idleMs ?? 120_000));
-    };
-    options.signal.addEventListener("abort", cancel, { once: true });
-    if (options.signal.aborted) { cancel(); return; }
-    armTimer();
-    try {
-      transport.subscription = client.observable.assets.upload("file", file, { filename: file.name, contentType: file.type || "application/octet-stream", timeout: 0 }).subscribe({
-        next(event) {
-          if (settled) return;
-          if (event.type === "response") {
-            const id = event.body.document?._id;
-            finish(id ? undefined : new Error("Sanity did not return a saved audio file."), id);
-          } else if (event.type === "progress") {
-            // A large file can send many bytes without changing its rounded percentage.
-            if ((event.loaded ?? 0) > loaded) {
-              loaded = event.loaded ?? 0;
-              armTimer(event.percent >= 100);
-            }
-            options.onProgress(Math.min(100, Math.max(0, event.percent)));
-          }
-        },
-        error: (error: unknown) => finish(error),
-        complete: () => finish(new Error("The upload ended before Sanity confirmed the file."))
-      });
-      if (settled) transport.subscription.unsubscribe();
-    } catch (error) {
-      finish(error);
+export async function uploadAudioMaster(client: SanityClient, file: File, options: Options): Promise<DirectAudioMaster> {
+  const storage = options.storage ?? browserStorage();
+  const key = storageKey(options.mixId);
+  const digest = await crypto.subtle.digest("SHA-256", await file.slice(0, 65536).arrayBuffer());
+  const fingerprint = JSON.stringify([file.name, file.size, file.lastModified, Array.from(new Uint8Array(digest)).join(",")]);
+  let saved: Checkpoint | undefined;
+  try {
+    const value = JSON.parse(storage?.getItem(key) || "null") as Checkpoint | null;
+    if (value?.fingerprint === fingerprint && value.token && value.partBytes === 8 * 1024 * 1024 && Array.isArray(value.parts)) saved = value;
+  } catch { /* Storage can be blocked. The current upload still works. */ }
+  const persist = () => { try { storage?.setItem(key, JSON.stringify(saved)); } catch { /* Keep the in-memory checkpoint. */ } };
+  const request = async <T>(path: string, init: RequestInit, token: string): Promise<T> => {
+    for (let attempt = 1; ; attempt += 1) {
+      options.signal.throwIfAborted();
+      options.onAttempt(attempt);
+      try {
+        const response = await fetch(`${AUDIO_UPLOAD_BASE}/uploads/${path}`, {
+          ...init, headers: { Authorization: `Bearer ${token}`, ...init.headers },
+          signal: AbortSignal.any([options.signal, AbortSignal.timeout(120_000)])
+        });
+        const data = await response.json() as T & { error?: string };
+        if (response.status === 401) { try { storage?.removeItem(key); } catch { /* storage unavailable */ } }
+        if (!response.ok) throw Object.assign(new Error(data.error || `Audio upload failed (${response.status}).`), { statusCode: response.status });
+        return data;
+      } catch (error) {
+        options.signal.throwIfAborted();
+        const code = (error as { statusCode?: number })?.statusCode;
+        if ((code && code < 500 && code !== 408 && code !== 429) || attempt >= AUDIO_UPLOAD_ATTEMPTS) throw error;
+        await new Promise<void>((resolve, reject) => {
+          const cancel = () => { clearTimeout(timer); reject(options.signal.reason); };
+          const timer = setTimeout(() => { options.signal.removeEventListener("abort", cancel); resolve(); }, (options.retryMs ?? 1500) * attempt);
+          options.signal.addEventListener("abort", cancel, { once: true });
+        });
+      }
     }
-  });
+  };
+  if (!saved) {
+    const token = client.config().token;
+    if (!token) throw new Error("Your Studio session is unavailable. Sign in again before uploading audio.");
+    const session = await request<{ token: string; partBytes: number }>("start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name, size: file.size, mixId: options.mixId }) }, token);
+    saved = { fingerprint, ...session, parts: [] };
+    persist();
+  }
+  for (let offset = saved.parts.length * saved.partBytes; offset < file.size; offset += saved.partBytes) {
+    options.onProgress(Math.floor(offset / file.size * 100));
+    const partNumber = saved.parts.length + 1;
+    const part = await request<{ partNumber: number; etag: string }>(`part?part=${partNumber}`, { method: "PUT", body: file.slice(offset, offset + saved.partBytes) }, saved.token);
+    saved.parts.push(part);
+    persist();
+    options.onProgress(Math.min(100, Math.floor((offset + saved.partBytes) / file.size * 100)));
+  }
+  const result = await request<DirectAudioMaster>("complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ parts: saved.parts }) }, saved.token);
+  // Retain the checkpoint until the CMS patch is applied. A refresh or a lost
+  // complete response can repeat completion without sending the audio again.
+  return result;
 }

@@ -2,11 +2,14 @@
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Button, Card, Stack, Text } from "@sanity/ui";
-import { set, setIfMissing, unset, useClient, type FileInputProps } from "sanity";
-import { audioUploadError, uploadAudioMaster, AUDIO_UPLOAD_ATTEMPTS } from "@/lib/audio-master-upload";
+import { set, setIfMissing, unset, useClient, useFormValue, type FileInputProps } from "sanity";
+import { audioUploadError, uploadAudioMaster, cancelAudioUpload, AUDIO_UPLOAD_ATTEMPTS } from "@/lib/audio-master-upload";
 
 export function AudioMasterInput(props: FileInputProps) {
   const client = useClient({ apiVersion: "2026-01-01" });
+  const documentId = useFormValue(["_id"]) as string;
+  const mixId = documentId?.replace(/^drafts\./, "");
+  const direct = props.value as typeof props.value & { r2Id?: string; filename?: string; size?: number };
   const input = useRef<HTMLInputElement>(null);
   const controller = useRef<AbortController | null>(null);
   const selectedFile = useRef<File | null>(null);
@@ -29,6 +32,8 @@ export function AudioMasterInput(props: FileInputProps) {
   function cancel() {
     controller.current?.abort();
     controller.current = null;
+    void cancelAudioUpload(mixId);
+    selectedFile.current = null;
     setRunning(false);
     props.onChange(unset(["_upload"]));
     setMessage("Upload cancelled. Select the audio master to try again.");
@@ -50,17 +55,18 @@ export function AudioMasterInput(props: FileInputProps) {
     setMessage("");
     const createdAt = new Date().toISOString();
     let lastPercent = -1;
+    setProgress(0);
+    props.onChange([
+      setIfMissing({ _type: "file" }),
+      set({ createdAt, updated: createdAt, progress: 0, file: { name: file.name, type: file.type } }, ["_upload"])
+    ]);
     try {
-      const assetId = await uploadAudioMaster(client, file, {
+      const master = await uploadAudioMaster(client, file, {
         signal: active.signal,
+        mixId,
         onAttempt(number) {
           setAttempt(number);
-          setProgress(0);
-          lastPercent = -1;
-          props.onChange([
-            setIfMissing({ _type: "file" }),
-            set({ createdAt, updated: new Date().toISOString(), progress: 0, file: { name: file.name, type: file.type } }, ["_upload"])
-          ]);
+
         },
         onProgress(percent) {
           if (active.signal.aborted || percent === lastPercent) return;
@@ -70,7 +76,7 @@ export function AudioMasterInput(props: FileInputProps) {
         }
       });
       if (active.signal.aborted) return;
-      props.onChange([set({ _type: "reference", _ref: assetId }, ["asset"]), unset(["_upload"])]);
+      props.onChange(set({ _type: "file", ...master }));
       selectedFile.current = null;
       setMessage("Audio uploaded. Wait for Studio to save, then publish the mix.");
     } catch (failure) {
@@ -93,9 +99,10 @@ export function AudioMasterInput(props: FileInputProps) {
 
   return (
     <Stack gap={3}>
+      {direct?.r2Id && !props.value?._upload ? <Text size={1}>{direct.filename} — {Math.round((direct.size || 0) / 1024 / 1024)} MB saved in Cloudflare.</Text> : null}
       {props.value?.asset && !props.value._upload ? props.renderDefault({ ...props, readOnly: true }) : null}
       <div>
-        <Button text={props.value?.asset ? "Replace audio master" : "Choose audio master"} tone="primary" disabled={props.readOnly || running} onClick={() => input.current?.click()} />
+        <Button text={(props.value?.asset || direct?.r2Id) ? "Replace audio master" : "Choose audio master"} tone="primary" disabled={props.readOnly || running} onClick={() => input.current?.click()} />
         <input ref={input} type="file" hidden aria-label="Choose WAV or FLAC master" accept=".wav,.flac,audio/wav,audio/flac" disabled={props.readOnly || running} onChange={selectFile} />
       </div>
       {running ? (
@@ -103,9 +110,9 @@ export function AudioMasterInput(props: FileInputProps) {
           <Stack gap={3}>
             <Text size={1}>{filename}</Text>
             <progress aria-label="Audio upload progress" value={progress} max={100} style={{ width: "100%" }} />
-            <Text size={1} role="status">{progress >= 100 ? "File sent. Waiting for Sanity to save it." : `Upload: ${progress}%. Attempt ${attempt} of ${AUDIO_UPLOAD_ATTEMPTS}.`}</Text>
-            {attempt > 1 ? <Text size={1}>The connection stopped. The upload restarted from the beginning.</Text> : null}
-            <Text size={1}>Keep this Studio tab open. A stopped upload retries automatically.</Text>
+            <Text size={1} role="status">{progress >= 100 ? "File sent. Checking the saved Cloudflare master." : `Upload: ${progress}%. Attempt ${attempt} of ${AUDIO_UPLOAD_ATTEMPTS}.`}</Text>
+            {attempt > 1 ? <Text size={1}>This audio part is being retried. Completed parts are kept.</Text> : null}
+            <Text size={1}>Keep this Studio tab open. Audio uploads in 8 MB parts. Completed parts are kept if you select the same file again.</Text>
             <Button text="Cancel upload" tone="critical" disabled={props.readOnly} onClick={cancel} />
           </Stack>
         </Card>

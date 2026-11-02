@@ -1,5 +1,6 @@
 import { durationSecondsFromAudio, flacInfo, readStreamPrefix } from "../lib/audio-duration.ts";
 import { generateWaveformData, wavInfo } from "../lib/waveform-data.ts";
+import { handleAudioUpload, type MultipartBucket } from "./audio-upload.ts";
 import { handleListenCounts } from "./listen-counts.ts";
 
 interface AudioObject {
@@ -10,7 +11,7 @@ interface AudioObject {
   httpMetadata?: { contentType?: string };
 }
 
-interface AudioObjectBucket {
+interface AudioObjectBucket extends MultipartBucket {
   get(key: string, options?: { range?: Headers }): Promise<AudioObject | null>;
   put(key: string, value: ReadableStream<Uint8Array> | string, options: { httpMetadata: { contentType: string; cacheControl: string } }): Promise<unknown>;
 }
@@ -37,6 +38,7 @@ export type AudioSyncPayload = {
   audioMasterFilename?: string;
   audioMasterId?: string;
   audioSourceAssetId?: string;
+  audioR2Key?: string;
 };
 
 const encoder = new TextEncoder();
@@ -126,7 +128,7 @@ async function patchSanityAudio(payload: Required<Pick<AudioSyncPayload, "_id">>
   // not replace a newer master, even when the two jobs finish out of order.
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const queryUrl = new URL(`https://${env.SANITY_API_PROJECT_ID}.api.sanity.io/v2026-08-24/data/query/${env.SANITY_API_DATASET}`);
-    queryUrl.searchParams.set("query", '*[_id == $id][0]{_rev,"master":audio.master.asset._ref}');
+    queryUrl.searchParams.set("query", '*[_id == $id][0]{_rev,"master":coalesce(audio.master.r2Id,audio.master.asset._ref)}');
     queryUrl.searchParams.set("$id", JSON.stringify(payload._id));
     const currentResponse = await fetch(queryUrl, { headers: { Authorization: `Bearer ${env.SANITY_API_WRITE_TOKEN}` } });
     if (!currentResponse.ok) throw new Error(`Sanity source check failed: ${currentResponse.status}`);
@@ -181,7 +183,20 @@ export async function syncAudioRequest(request: Request, env: Env, processMaster
   if (!await validSanitySignature(rawBody, request.headers.get("sanity-webhook-signature"), env.SANITY_WEBHOOK_SECRET)) return new Response("Unauthorized", { status: 401 });
   let payload: AudioSyncPayload;
   try { payload = JSON.parse(rawBody) as AudioSyncPayload; } catch { return new Response("Invalid JSON", { status: 400 }); }
-  if (payload._type !== "mix" || !payload._id || !payload.audioMasterUrl) return new Response(null, { status: 204 });
+  if (payload._type !== "mix" || !payload._id || payload._id.startsWith("drafts.")) return new Response(null, { status: 204 });
+  // Existing webhooks project Sanity assets only. Read a direct R2 master from
+  // the published document so no webhook or existing mix migration is needed.
+  if (!payload.audioMasterUrl) {
+    const url = new URL(`https://${env.SANITY_API_PROJECT_ID}.api.sanity.io/v2026-08-24/data/query/${env.SANITY_API_DATASET}`);
+    url.searchParams.set("query", '*[_id==$id][0]{"master":audio.master,"source":audio.sourceAssetId}');
+    url.searchParams.set("$id", JSON.stringify(payload._id));
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${env.SANITY_API_WRITE_TOKEN}` } });
+    if (!response.ok) throw new Error("Cannot read the published audio master");
+    const { result } = await response.json() as { result?: { master?: { r2Key?: string; r2Id?: string; filename?: string; url?: string }; source?: string } };
+    if (!result?.master?.r2Key || !result.master.r2Id) return new Response(null, { status: 204 });
+    payload = { ...payload, audioR2Key: result.master.r2Key, audioMasterId: result.master.r2Id, audioMasterFilename: result.master.filename, audioMasterUrl: result.master.url, audioSourceAssetId: result.source };
+  }
+  if (!payload.audioMasterUrl) return new Response(null, { status: 204 });
   const audioMasterId = payload.audioMasterId || sourceAssetId(payload.audioMasterUrl);
   if (!audioMasterId || payload.audioSourceAssetId === audioMasterId) return new Response(null, { status: 204 });
   const syncPayload = { ...payload, audioMasterId };
@@ -192,7 +207,11 @@ export async function copyAudioMaster(payload: AudioSyncPayload, env: Env) {
   if (!payload._id || !payload.audioMasterUrl) throw new Error("Audio master is missing");
   const audioMasterId = payload.audioMasterId || sourceAssetId(payload.audioMasterUrl);
   const syncPayload = { ...payload, audioMasterId };
-  const source = await fetch(payload.audioMasterUrl);
+  if (payload.audioR2Key && !payload.audioR2Key.startsWith(`mixes/${safeSegment(payload._id)}/r2-`)) throw new Error("Invalid direct audio key");
+  const direct = payload.audioR2Key ? await env.AUDIO.get(payload.audioR2Key) : null;
+  const source = payload.audioR2Key
+    ? direct ? new Response(direct.body, { headers: { "content-length": String(direct.size) } }) : new Response(null, { status: 404 })
+    : await fetch(payload.audioMasterUrl);
   if (!source.ok || !source.body) return new Response("Could not download audio master", { status: 502 });
   const [headerStream, audioStream] = source.body.tee();
   const headerBytes = await readStreamPrefix(headerStream, 131072);
@@ -201,14 +220,15 @@ export async function copyAudioMaster(payload: AudioSyncPayload, env: Env) {
   if (!info && !flac) { void audioStream.cancel().catch(() => {}); return new Response("Use a FLAC, PCM WAV, or 32-bit float WAV master", { status: 422 }); }
   const extension = flac ? "flac" : "wav";
   const filename = safeSegment(payload.audioMasterFilename || `${audioMasterId}.${extension}`);
-  const objectKey = `mixes/${safeSegment(payload._id)}/${safeSegment(audioMasterId)}-${filename}`;
+  const objectKey = payload.audioR2Key || `mixes/${safeSegment(payload._id)}/${safeSegment(audioMasterId)}-${filename}`;
   const fileSize = Number(source.headers.get("content-length")) || undefined;
   const duration = durationSecondsFromAudio(headerBytes, fileSize);
   const configuredBase = env.AUDIO_PUBLIC_BASE_URL.replace(/\/+$/, "");
   const audioBase = configuredBase.endsWith("/audio") ? configuredBase : `${configuredBase}/audio`;
   const deliveryUrl = `${audioBase}/${objectKey.split("/").map(encodeURIComponent).join("/")}`;
   if (flac) {
-    await env.AUDIO.put(objectKey, audioStream, { httpMetadata: { contentType: "audio/flac", cacheControl: "public, max-age=31536000, immutable" } });
+    if (direct) void audioStream.cancel().catch(() => {});
+    else await env.AUDIO.put(objectKey, audioStream, { httpMetadata: { contentType: "audio/flac", cacheControl: "public, max-age=31536000, immutable" } });
     const patched = await patchSanityAudio(syncPayload as Required<Pick<AudioSyncPayload, "_id">> & AudioSyncPayload, deliveryUrl, undefined, env, duration);
     return Response.json({ deliveryUrl, published: patched });
   }
@@ -217,7 +237,11 @@ export async function copyAudioMaster(payload: AudioSyncPayload, env: Env) {
   if (await hasSavedWaveform(env, peaksKey, frames / info!.sampleRate, info!.sampleRate, Math.min(2048, frames))) {
     // The key contains the master asset ID. A locally measured waveform can
     // complete a copy that exceeded the Worker's CPU limit.
-    await env.AUDIO.put(objectKey, audioStream, { httpMetadata: { contentType: "audio/wav", cacheControl: "public, max-age=31536000, immutable" } });
+    if (direct) void audioStream.cancel().catch(() => {});
+    else await env.AUDIO.put(objectKey, audioStream, { httpMetadata: { contentType: "audio/wav", cacheControl: "public, max-age=31536000, immutable" } });
+  } else if (direct) {
+    const waveform = await generateWaveformData(audioStream, info!);
+    await env.AUDIO.put(peaksKey, JSON.stringify(waveform), { httpMetadata: { contentType: "application/json", cacheControl: "public, max-age=31536000, immutable" } });
   } else {
     const [audioObjectStream, peakStream] = audioStream.tee();
     const audioWrite = env.AUDIO.put(objectKey, audioObjectStream, { httpMetadata: { contentType: "audio/wav", cacheControl: "public, max-age=31536000, immutable" } });
@@ -232,6 +256,7 @@ export async function copyAudioMaster(payload: AudioSyncPayload, env: Env) {
 const worker = {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/uploads/")) return handleAudioUpload(request, env);
     if (url.pathname === "/listen-counts") {
       try { return await handleListenCounts(request, env); } catch (error) { console.error(error); return new Response("Count unavailable", { status: 503 }); }
     }

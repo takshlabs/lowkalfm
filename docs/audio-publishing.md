@@ -6,7 +6,7 @@ The Lowkal site and CMS run at `https://lowkalfm.in`. Cloudflare R2 stores and d
 
 1. Open the mix in Lowkal CMS at `https://lowkalfm.in/studio`.
 2. Open **Playback**, then **Audio**.
-3. Upload the lossless master to **WAV or FLAC master**.
+3. Upload the lossless master to **WAV or FLAC master**. Studio sends the original file directly to Cloudflare in small parts. If a transfer fails, select the same file again in the same tab to keep completed parts. Wait for the saved confirmation.
 4. Set **Start playback at (seconds)** only when the file has leading silence. Use `0` for no skip.
 5. Publish the mix.
    The publish request saves a background audio job. The copy continues after the request ends. Failed copies retry automatically. Publish the same mix again to restart a failed job; a new upload is not required.
