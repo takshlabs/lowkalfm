@@ -60,3 +60,20 @@ test("no write permission, bad origin, and missing upload ticket cannot write R2
     assert.equal(bad.status, 403);
   } finally { globalThis.fetch = original; }
 });
+
+test("cookie-based Studio can authorize uploads with a hashed permit and no session token", async () => {
+  const original = globalThis.fetch;
+  const secret = "one-use-secret";
+  const secretHash = Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret))).toString("hex");
+  globalThis.fetch = async (url, init) => {
+    assert.match(String(url), /data\/query/);
+    assert.notEqual(init.headers.Authorization, `Bearer ${secret}`, "the upload secret is not a Sanity session");
+    return Response.json({ result: { secretHash, expires: Date.now() + 60000, mixId: "mix", filename: "master.wav", size: 48 } });
+  };
+  try {
+    const f = setup();
+    const body = JSON.stringify({ filename: "master.wav", size: 48, mixId: "mix", permitId: "audio-upload-permit-00000000-0000-0000-0000-000000000000" });
+    assert.equal((await f.request("start", "POST", body, "incorrect-secret")).status, 403);
+    assert.equal((await f.request("start", "POST", body, secret)).status, 200);
+  } finally { globalThis.fetch = original; }
+});

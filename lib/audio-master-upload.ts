@@ -65,9 +65,13 @@ export async function uploadAudioMaster(client: SanityClient, file: File, option
     }
   };
   if (!saved) {
-    const token = client.config().token;
-    if (!token) throw new Error("Your Studio session is unavailable. Sign in again before uploading audio.");
-    const session = await request<{ token: string; partBytes: number }>("start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name, size: file.size, mixId: options.mixId }) }, token);
+    // Studio can use cookies or bearer tokens. A one-use permit created through
+    // its configured client supports both, without exposing its session to R2.
+    const secret = `${crypto.randomUUID()}${crypto.randomUUID()}`;
+    const secretHash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret))), byte => byte.toString(16).padStart(2, "0")).join("");
+    const permitId = `audio-upload-permit-${crypto.randomUUID()}`;
+    await client.create({ _id: permitId, _type: "lowkalAudioUploadPermit", secretHash, mixId: options.mixId, filename: file.name, size: file.size, expires: Date.now() + 24 * 60 * 60 * 1000 });
+    const session = await request<{ token: string; partBytes: number }>("start", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ filename: file.name, size: file.size, mixId: options.mixId, permitId }) }, secret);
     saved = { fingerprint, ...session, parts: [] };
     persist();
   }

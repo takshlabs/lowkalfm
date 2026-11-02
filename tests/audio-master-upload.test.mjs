@@ -3,7 +3,7 @@ import test from "node:test";
 import { uploadAudioMaster } from "../lib/audio-master-upload.ts";
 const partBytes = 8 * 1024 * 1024;
 const master = { r2Id: "r2-test", r2Key: "mixes/test/r2-test.wav", filename: "master.wav", size: partBytes + 4, url: "https://worker/audio/master.wav", duration: 10 };
-const client = { config: () => ({ token: "test-studio-session" }) };
+const client = { create: async permit => { assert.equal(permit._type, "lowkalAudioUploadPermit"); assert.match(permit.secretHash, /^[a-f0-9]{64}$/); return permit; } };
 function fixture() {
   let value;
   return { getItem: () => value, setItem: (_key, next) => { value = next; }, removeItem: () => { value = undefined; } };
@@ -18,7 +18,7 @@ test("a failed part retries without resending completed parts or changing audio 
   globalThis.fetch = async (url, init) => {
     const path = String(url).split("/uploads/")[1];
     calls.push(path);
-    if (path === "start") { assert.equal(init.headers.Authorization, "Bearer test-studio-session"); return Response.json({ token: "test-scoped-ticket", partBytes }); }
+    if (path === "start") { assert.match(init.headers.Authorization, /^Bearer [a-f0-9-]{72}$/); return Response.json({ token: "test-scoped-ticket", partBytes }); }
     assert.equal(init.headers.Authorization, "Bearer test-scoped-ticket");
     if (path === "part?part=2" && failures++ === 0) throw new Error("network interrupted");
     if (path.startsWith("part")) {
