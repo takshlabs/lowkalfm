@@ -1302,8 +1302,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .transmission-frame .media-frame-guard { display: none; }
 .transmission-card:hover .media-frame-image { transform: scale(1.025); }
 .transmission-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(5, 5, 8, 0.9), transparent 62%); pointer-events: none; }
-.transmission-channel { position: absolute; top: 12px; left: 12px; z-index: 2; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.06em; }
-.transmission-channel span { color: #c8ff24; }
 .transmission-media > button { position: absolute; top: 12px; right: 12px; z-index: 3; display: grid; width: 42px; height: 42px; padding: 0; border: 0; border-radius: 50%; place-items: center; color: #101014; background: #f5f1e8; cursor: pointer; }
 .transmission-media > button svg { width: 17px; height: 17px; fill: currentColor; }
 .transmission-overlay { position: absolute; right: 18px; bottom: 17px; left: 18px; z-index: 2; }
